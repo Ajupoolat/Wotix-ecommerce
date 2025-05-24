@@ -34,7 +34,8 @@ import {
   removeFromWishlist,
   getWishlist,
 } from "@/api/users/shop/wishlistmgt";
-import ReactImageMagnify from "react-image-magnify";
+// import ReactImageMagnify from "react-image-magnify";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import WebSocketListener from "@/Sockets/webSocketListner";
 import { useAuth } from "@/context/authuser";
 import { useCart } from "@/context/cartcon";
@@ -381,48 +382,30 @@ const ProductViewPage = () => {
                     {product.offer.title} {product.offer.discountValue}% OFF
                   </div>
                 )}
-                <ReactImageMagnify
-                  {...{
-                    smallImage: {
-                      alt: product.name,
-                      src: product.images?.[currentImageIndex] || watchImage,
-                      isFluidWidth: false,
-                      width: 400,
-                      height: 400,
-                      className: "object-contain mx-auto",
-                    },
-                    largeImage: {
-                      src: product.images?.[currentImageIndex] || watchImage,
-                      width: 800,
-                      height: 800,
-                    },
-                    enlargedImagePosition: "over",
-                    enlargedImageContainerDimensions: {
-                      width: "150%",
-                      height: "150%",
-                    },
-                    enlargedImageContainerStyle: {
-                      zIndex: 20,
-                      backgroundColor: "white",
-                      border: "1px solid #ddd",
-                      boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                    },
-                    enlargedImageStyle: {
-                      objectFit: "contain",
-                    },
-                    isHintEnabled: true,
-                    shouldHideHintAfterFirstActivation: false,
-                    style: {
-                      height: "100%",
-                      width: "100%",
+
+                <TransformWrapper
+                  initialScale={1}
+                  minScale={1}
+                  maxScale={3}
+                  wheel={{ disabled: true }} // Disable zoom on scroll
+                  pinch={{ disabled: true }} // Disable pinch zoom for desktop-like behavior
+                >
+                  <TransformComponent
+                    wrapperStyle={{
+                      width: "400px",
+                      height: "400px",
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
-                    },
-                  }}
-                />
+                    }}
+                  >
+                    <img
+                      src={product.images?.[currentImageIndex] || watchImage}
+                      alt={product.name}
+                      className="object-contain max-w-full max-h-full"
+                    />
+                  </TransformComponent>
+                </TransformWrapper>
                 <button
                   onClick={() => handleWishlistToggle(product._id)}
                   className="absolute top-2 right-2 p-2 rounded-full bg-white shadow-md z-10"
