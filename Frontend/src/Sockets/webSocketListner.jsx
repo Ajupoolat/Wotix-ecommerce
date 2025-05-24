@@ -11,13 +11,12 @@ const WebSocketListener = () => {
   useEffect(() => {
     if (!isAuthenticated || !userId) return;
 
-    const socket = io('http://localhost:5000', {
-      withCredentials: true,
-      autoConnect: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
-
+  const socket = io({
+  withCredentials: true,
+  autoConnect: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+});
     socket.emit('register_user', userId);
 
     // Handle account blocked event
