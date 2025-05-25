@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/form";
 import { useWishlistCount } from "@/context/wishlistCount";
 
-const API_BASE_URL = "http://localhost:5000/userapi/user";
+const API_BASE_URL = "https://wotix.myftp.org/userapi/user";
 
 // Schema for coupon validation
 const couponSchema = z.object({

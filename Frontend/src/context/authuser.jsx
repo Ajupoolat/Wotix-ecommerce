@@ -9,7 +9,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const API_BASE_URL = "http://localhost:5000";
+  const API_BASE_URL = "https://wotix.myftp.org";
   const [socket, setSocket] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem("isAuthenticated") === "true";
