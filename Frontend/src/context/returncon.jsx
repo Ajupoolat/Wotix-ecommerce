@@ -8,7 +8,7 @@ export const WebSocketProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    const socketInstance = io("http://localhost:5000", {
+    const socketInstance = io("https://wotix.myftp.org", {
       withCredentials: true,
       autoConnect: true,
     });

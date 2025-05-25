@@ -99,7 +99,7 @@ const Signup = () => {
 
   const handleGoogleSignup = (e) => {
     e.preventDefault();
-    window.open('http://localhost:5000/userapi/user/google', '_self');
+    window.open('https://wotix.myftp.org/userapi/user/google', '_self');
   };
 
   return (

@@ -11,7 +11,7 @@ export const WebSocketProviderAdmin = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    const newSocket = io("http://localhost:5000", {
+    const newSocket = io("https://wotix.myftp.org", {
       withCredentials: true,
     });
 
