@@ -415,7 +415,7 @@ const googleauth = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "strict",
       maxAge: 24 * 60 * 60 * 1000,
     });
@@ -460,7 +460,7 @@ const login = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
+      secure: true,
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -498,7 +498,7 @@ const verifyToken = async (req, res) => {
 const logoutuser = (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: false,
+    secure: true,
     sameSite: "strict",
     path: "/",
   });

@@ -59,7 +59,7 @@ const adminlogin = async (req, res) => {
 
     res.cookie("tokenadmin", tokenadmin, {
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: "strict",
       maxAge: 24 * 60 * 60 * 1000,
     });
@@ -145,7 +145,7 @@ const blockuser = async (req, res) => {
     if (isBlocked) {
       res.clearCookie("token", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         sameSite: "strict",
         path: "/",
       });
