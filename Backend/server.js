@@ -20,7 +20,7 @@ const server = http.createServer(app);
 //  WebSocket server
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", 
+    origin: ["http://localhost:5173", "https://wotix-ecommerce-frontend.vercel.app"],
     credentials: true
   }
 });
@@ -53,7 +53,7 @@ io.on('connection', (socket) => {
 // Middleware
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "https://wotix-ecommerce-frontend.vercel.app"],
     credentials: true
   })
 );
