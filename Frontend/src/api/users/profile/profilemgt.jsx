@@ -1,8 +1,7 @@
-import api from "@/api/Api_Instances/instance";
-
+import apiUser from "@/api/Api_Instances/userInstance";
 export const viewprofile = async (userId, email) => {
   try {
-    const response = await api.get(`/userapi/user/profile/${userId}/${email}`);
+    const response = await apiUser.get(`/profile/${userId}/${email}`);
     return response.data;
   } catch (error) {
     throw error;
@@ -11,7 +10,7 @@ export const viewprofile = async (userId, email) => {
 
 export const editprofile = async (formData) => {
   try {
-    const response = await api.patch(`/userapi/user/updateprofile/`, formData);
+    const response = await apiUser.patch(`/updateprofile/`, formData);
     return response.data;
   } catch (error) {
     throw error;
@@ -20,7 +19,7 @@ export const editprofile = async (formData) => {
 
 export const sendotpedit = async (email, userId) => {
   try {
-    const response = await api.post(`/userapi/user/otpediting`, {
+    const response = await apiUser.post(`/otpediting`, {
       email,
       userId,
     });
@@ -32,7 +31,7 @@ export const sendotpedit = async (email, userId) => {
 
 export const sendotpchangepassword = async ({ emailId, userId }) => {
   try {
-    const response = await api.post(`/userapi/user/sendotpchangepassword`, {
+    const response = await apiUser.post(`/sendotpchangepassword`, {
       emailId,
       userId,
     });
@@ -47,8 +46,8 @@ export const sendotpchangepassword = async ({ emailId, userId }) => {
 export const getaddress = async (userId) => {
   const email = localStorage.getItem("email");
   try {
-    const response = await api.get(
-      `/userapi/user/alladdress/${userId}/${email}`
+    const response = await apiUser.get(
+      `/alladdress/${userId}/${email}`
     );
     return response.data;
   } catch (error) {
@@ -59,8 +58,8 @@ export const getaddress = async (userId) => {
 export const addaddress = async (fromdata) => {
   const userId = localStorage.getItem("userId");
   try {
-    const response = await api.post(
-      `/userapi/user/newaddress/${userId}`,
+    const response = await apiUser.post(
+      `/newaddress/${userId}`,
       fromdata
     );
     return response.data;
@@ -73,8 +72,8 @@ export const deleteaddress = async (categoryId) => {
   const userId = localStorage.getItem("userId");
 
   try {
-    const response = await api.delete(
-      `/userapi/user/removeaddress/${categoryId}/${userId}`
+    const response = await apiUser.delete(
+      `/removeaddress/${categoryId}/${userId}`
     );
     return response.data;
   } catch (error) {
@@ -86,8 +85,8 @@ export const changePassword = async (updatedata) => {
   const userId = localStorage.getItem("userId");
 
   try {
-    const response = await api.patch(
-      `/userapi/user/changepassword/${userId}`,
+    const response = await apiUser.patch(
+      `/changepassword/${userId}`,
       updatedata
     );
     return response.data;
@@ -100,8 +99,8 @@ export const editaddress = async (categoryId, updatedata) => {
   const userId = localStorage.getItem("userId");
 
   try {
-    const response = await api.patch(
-      `/userapi/user/updateaddress/${categoryId}/${userId}`,
+    const response = await apiUser.patch(
+      `/updateaddress/${categoryId}/${userId}`,
       updatedata
     );
     return response.data;
@@ -115,7 +114,7 @@ export const setdefaultadress = async (addressid) => {
 
   try {
     const response = await api.put(
-      `/userapi/user/setdefault/${addressid}/${userId}`
+      `/setdefault/${addressid}/${userId}`
     );
     return response.data;
   } catch (error) {

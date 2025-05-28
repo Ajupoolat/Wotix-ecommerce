@@ -1,8 +1,8 @@
-import api from "@/api/Api_Instances/instance";
+import apiAdmin from "@/api/Api_Instances/adminInstance";
 
 export const getuserdetails = async ({ page, limit, search }) => {
   try {
-    const response = await api.get(`/api/admin/getuserdetails`, {
+    const response = await apiAdmin.get(`/getuserdetails`, {
       params: { page, limit, search },
     });
     return response.data;
@@ -13,7 +13,7 @@ export const getuserdetails = async ({ page, limit, search }) => {
 
 export const blockuser = async ({ userId, isBlocked }) => {
   try {
-    const response = await api.patch(`/api/admin/blockuser/${userId}`, {
+    const response = await apiAdmin.patch(`/blockuser/${userId}`, {
       isBlocked,
     });
     return response.data;
@@ -24,7 +24,7 @@ export const blockuser = async ({ userId, isBlocked }) => {
 
 export const searchuser = async (query) => {
   try {
-    const response = await api.get(`/api/admin/searchuser?query=${query}`);
+    const response = await apiAdmin.get(`/searchuser?query=${query}`);
     return response.data;
   } catch (error) {
     throw error;

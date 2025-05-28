@@ -11,6 +11,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [searchParams] = useSearchParams();
+  const API_URL_ = import.meta.env.VITE_API_URL_USER
 
   useEffect(() => {
     const error = searchParams.get("error");
@@ -47,7 +48,7 @@ const Login = () => {
 
   const handleGoogleLogin = (e) => {
     e.preventDefault();
-    window.open("https://wotix.myftp.org/userapi/user/google", "_self");
+    window.open(`${API_URL_}/google`, "_self");
   };
 
   return (

@@ -1,9 +1,9 @@
-import api from "@/api/Api_Instances/instance";
+import apiUser from "@/api/Api_Instances/userInstance";
 
 // Send OTP API Call
 export const sendOtp = async (email) => {
   try {
-    const response = await api.post(`/userapi/user/send-otp`, {
+    const response = await apiUser.post(`/send-otp`, {
       email,
     });
     return response.data;
@@ -14,7 +14,7 @@ export const sendOtp = async (email) => {
 
 export const sendOtpforgot = async (email) => {
   try {
-    const response = await api.post(`/userapi/user/sendotpforgot`, {
+    const response = await apiUser.post(`/sendotpforgot`, {
       email,
     });
     return response.data;
@@ -23,10 +23,10 @@ export const sendOtpforgot = async (email) => {
   }
 };
 
-// Signup API Call (Verify OTP & Create User)
+// Signup apiUser Call (Verify OTP & Create User)
 export const usersignup = async (form) => {
   try {
-    const response = await api.post(`/userapi/user/signup`, form, {
+    const response = await apiUser.post(`/signup`, form, {
       headers: { "Content-Type": "application/json" },
     });
     return response.data;
@@ -35,10 +35,10 @@ export const usersignup = async (form) => {
   }
 };
 
-//login api call
+//login apiUser call
 export const userlogin = async (credentials) => {
   try {
-    const response = await api.post(`/userapi/user/login`, credentials);
+    const response = await apiUser.post(`/login`, credentials);
 
     return response.data;
   } catch (error) {
@@ -48,7 +48,7 @@ export const userlogin = async (credentials) => {
 //user verification
 export const checkuser = async () => {
   try {
-    const response = await api.get(`/userapi/user/verifyuser`);
+    const response = await apiUser.get(`/verifyuser`);
     if (response.status === 401 || !response.data.user) {
       return null;
     }
@@ -60,7 +60,7 @@ export const checkuser = async () => {
 
 export const checkotp = async ({ email, otp }) => {
   try {
-    const response = await api.post(`/userapi/user/verifyotp`, { email, otp });
+    const response = await apiUser.post(`/verifyotp`, { email, otp });
 
     return response.data;
   } catch (error) {
@@ -72,7 +72,7 @@ export const checkotp = async ({ email, otp }) => {
 
 export const resetpassword = async (email, otp, newPassword) => {
   try {
-    const response = await api.patch(`/userapi/user/resetpassword`, {
+    const response = await apiUser.patch(`/resetpassword`, {
       email,
       otp,
       newPassword,
@@ -86,7 +86,7 @@ export const resetpassword = async (email, otp, newPassword) => {
 
 export const logoutuser = async () => {
   try {
-    const response = await api.post(`/userapi/user/logoutuser`);
+    const response = await apiUser.post(`/logoutuser`);
     return response.data;
   } catch (error) {
     throw error;

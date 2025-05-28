@@ -35,8 +35,13 @@ import { useWebSocket } from "@/context/returncon";
 import { useWishlistCount } from "@/context/wishlistCount";
 import { retry_payment } from "@/api/users/shop/ordermgt";
 import { useCart } from "@/context/cartcon";
-
-const API_BASE_URL = "http://localhost:5000/userapi/user";
+import { order_details } from "@/api/users/shop/ordermgt";
+import {
+  cancelOrderApi,
+  returnOrderApi,
+  downloadInvoiceApi,
+} from "../../../../api/users/shop/ordermgt";
+import { verifyPayment } from "@/api/users/shop/checkoutmgt";
 
 // ConfirmationDialog component remains unchanged
 function ConfirmationDialog({
@@ -141,13 +146,7 @@ export function OrderDetailsPage() {
     error,
   } = useQuery({
     queryKey: ["order", orderId],
-    queryFn: async () => {
-      const response = await axios.get(
-        `${API_BASE_URL}/orders-details/${userId}/${orderId}`,
-        { withCredentials: true }
-      );
-      return response.data.order;
-    },
+    queryFn: () => order_details(userId, orderId),
     enabled: !!orderId,
   });
 
@@ -174,17 +173,7 @@ export function OrderDetailsPage() {
 
   // Cancel order mutation
   const { mutate: cancelOrder, isLoading: isCancelling } = useMutation({
-    mutationFn: async (cancelData) => {
-      const response = await axios.post(
-        `${API_BASE_URL}/orderscancel/${orderId}`,
-        cancelData,
-        {
-          withCredentials: true,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-      return response.data;
-    },
+    mutationFn: (cancelData) => cancelOrderApi(cancelData, orderId),
     onSuccess: (data) => {
       toast.success(data.message || "Cancellation processed successfully");
       setShowCancelDialog(false);
@@ -217,20 +206,7 @@ export function OrderDetailsPage() {
 
   // Return order mutation
   const { mutate: returnOrder, isPending: isReturnPending } = useMutation({
-    mutationFn: async (returnData) => {
-      try {
-        const response = await axios.post(
-          `${API_BASE_URL}/ordersreturn/${orderId}/return-requests/${userId}`,
-          returnData,
-          { withCredentials: true }
-        );
-        return response.data;
-      } catch (error) {
-        const errorMessage =
-          error.response?.data?.message || "An unexpected error occurred";
-        throw new Error(errorMessage);
-      }
-    },
+    mutationFn: (returnData) => returnOrderApi(returnData, orderId, userId),
     onSuccess: (data) => {
       toast.success(data.message || "Return request submitted successfully");
       setShowReturnDialog(false);
@@ -261,17 +237,10 @@ export function OrderDetailsPage() {
     },
   });
 
-  // Download invoice
-  const downloadInvoice = async (orderId) => {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/invoice/${userId}/${orderId}`,
-        {
-          responseType: "blob",
-          withCredentials: true,
-        }
-      );
-      const blob = new Blob([response.data], { type: "application/pdf" });
+  const { mutate: downloadInvoice, isPending: isDownloading } = useMutation({
+    mutationFn: () => downloadInvoiceApi(orderId, userId),
+    onSuccess: (data) => {
+      const blob = new Blob([data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -281,10 +250,13 @@ export function OrderDetailsPage() {
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
       toast.success("Invoice downloaded successfully!");
-    } catch (error) {
-      toast.error("Failed to download invoice");
-    }
-  };
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to download invoice"
+      );
+    },
+  });
 
   const handleReturnRequest = (productId = null) => {
     if (productId) {
@@ -331,16 +303,12 @@ export function OrderDetailsPage() {
       order_id: razorpayOrder.id,
       handler: async function (response) {
         try {
-          const verifyResponse = await axios.post(
-            `${API_BASE_URL}/verify-payment`,
-            {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              orderId: order._id,
-            },
-            { withCredentials: true }
-          );
+          const verifyResponse = await verifyPayment({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            orderId: order._id,
+          });
           if (verifyResponse.data.success) {
             toast.success("Payment successful! Order updated.");
             queryClient.invalidateQueries(["order", orderId]);

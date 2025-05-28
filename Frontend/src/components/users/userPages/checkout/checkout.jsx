@@ -31,8 +31,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useWishlistCount } from "@/context/wishlistCount";
+import { getdefaultaddress, verifyPayment } from "@/api/users/shop/checkoutmgt";
 
-const API_BASE_URL = "https://wotix.myftp.org/userapi/user";
+const API_BASE_URL = import.meta.env.VITE_API_URL_USER;
 
 // Schema for coupon validation
 const couponSchema = z.object({
@@ -61,9 +62,9 @@ export function CheckoutPage() {
   const [couponError, setCouponError] = useState(null);
   const [countapply, setCountapply] = useState(0); // Renamed for clarity
   const [paymentError, setPaymentError] = useState(null);
+  const [orderid, setorderid] = useState("");
   const email = localStorage.getItem("email");
   const nnn = "681d89c8614d9c397ba7b70d";
-
 
   const couponForm = useForm({
     resolver: zodResolver(couponSchema),
@@ -128,22 +129,8 @@ export function CheckoutPage() {
     refetch: refetchAddress,
   } = useQuery({
     queryKey: ["defaultAddress", userId],
-    queryFn: async () => {
-      if (!userId) return null;
-      try {
-        const response = await axios.get(
-          `${API_BASE_URL}/defaultaddress/${userId}/${email}`,
-          { withCredentials: true }
-        );
-        return response.data[0];
-      } catch (error) {
-        const errorMessage =
-          error.response?.data?.message || "An unexpected error occurred";
-        throw new Error(errorMessage);
-      }
-    },
+    queryFn: () => getdefaultaddress(userId, email),
     enabled: !!userId,
-    staleTime: 1000 * 60 * 5,
   });
 
   // Apply coupon mutation
@@ -157,10 +144,9 @@ export function CheckoutPage() {
       onSuccess: (data) => {
         const updatedCoupons = [...appliedCoupons, data];
         setAppliedCoupons(updatedCoupons);
-        // localStorage.setItem("appliedCoupons", JSON.stringify(updatedCoupons));
         couponForm.reset();
         toast.success("Coupon applied successfully!");
-        setCountapply((prev) => prev + 1); // Increment safely
+        setCountapply((prev) => prev + 1);
       },
       onError: (error) => {
         setCouponError(error.message || "Failed to apply coupon");
@@ -172,6 +158,8 @@ export function CheckoutPage() {
   const { mutate: createOrder, isPending: isCreatingOrder } = useMutation({
     mutationFn: (orderData) => placeOrder(userId, orderData),
     onSuccess: (data) => {
+      setorderid(data.order._id);
+
       if (paymentMethod === "cod") {
         toast.success("Order placed successfully!");
         clearCart();
@@ -217,30 +205,32 @@ export function CheckoutPage() {
     // Calculate discountedPrice for each product
     const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
     const orderData = {
-
       products: cart.items.map((item) => {
-  const itemSubtotal = item.discountedPrice * item.quantity; // Use discountedPrice (after offer)
-  const discountPerItem = totalItems
-    ? (totalDiscount * itemSubtotal) / subtotal / item.quantity
-    : 0; // Coupon discount
-  const finalDiscountedPrice = item.discountedPrice - discountPerItem; // Price after coupon
-  return {
-    productId: item.product._id,
-    name: item.product.name,
-    quantity: item.quantity,
-    price: item.discountedPrice, // Use price after offer
-    discountedPrice: finalDiscountedPrice > 0 ? finalDiscountedPrice : item.discountedPrice,
-    originalPrice: item.originalPrice,
-    offer: item.offer?._id || null,
-    brand: item.product.brand,
-    images: item.product.images,
-  };
-}),
+        const itemSubtotal = item.discountedPrice * item.quantity; // Use discountedPrice (after offer)
+        const discountPerItem = totalItems
+          ? (totalDiscount * itemSubtotal) / subtotal / item.quantity
+          : 0; // Coupon discount
+        const finalDiscountedPrice = item.discountedPrice - discountPerItem; // Price after coupon
+        return {
+          productId: item.product._id,
+          name: item.product.name,
+          quantity: item.quantity,
+          price: item.discountedPrice, // Use price after offer
+          discountedPrice:
+            finalDiscountedPrice > 0
+              ? finalDiscountedPrice
+              : item.discountedPrice,
+          originalPrice: item.originalPrice,
+          offer: item.offer?._id || null,
+          brand: item.product.brand,
+          images: item.product.images,
+        };
+      }),
       address: defaultAddress,
       paymentMethod: paymentMethod,
       subtotal: subtotal,
       discountAmount: totalDiscount,
-      totalPrice: subtotal + shipping, 
+      totalPrice: subtotal + shipping,
       finalAmount: finalTotal, // After discount
       coupons: appliedCoupons.map((c) => c._id),
     };
@@ -270,16 +260,13 @@ export function CheckoutPage() {
       order_id: razorpayOrder.id,
       handler: async function (response) {
         try {
-          const verifyResponse = await axios.post(
-            `${API_BASE_URL}/verify-payment`,
-            {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              orderId: order._id,
-            },
-            { withCredentials: true }
-          );
+          setProcessingPayment(true);
+          const verifyResponse = await verifyPayment({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            orderId: order._id,
+          });
 
           if (verifyResponse.data.success) {
             toast.success("Payment successful! Order placed.");
@@ -362,12 +349,18 @@ export function CheckoutPage() {
           <h3 className="text-xl font-medium text-gray-600 mb-4">
             Payment Failed
           </h3>
-          <p className="text-gray-500 mb-6">{paymentError}</p>
+          <p className="text-gray-500 mb-6">
+            Your order is placed but the payment is not completed . You can pay
+            the amount from the order details page
+          </p>
           <Button
             className="bg-orange-400 hover:bg-orange-500 text-white"
-            onClick={handlePayNow}
+            onClick={() => {
+              const id = orderid;
+              navigate(`/order-details/${id}`);
+            }}
           >
-            Try Again
+            order-details
           </Button>
         </div>
       </div>

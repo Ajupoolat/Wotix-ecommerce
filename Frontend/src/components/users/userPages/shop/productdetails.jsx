@@ -51,7 +51,6 @@ const ProductViewPage = () => {
   const { countwislist } = useWishlistCount();
   const { isAuthenticated, logout } = useAuth();
   const username = localStorage.getItem("username");
-  // const email = localStorage.getItem('email')
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

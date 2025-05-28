@@ -1,9 +1,8 @@
-// dashboardmgt.js
-import api from "@/api/Api_Instances/instance";
+import apiAdmin from "@/api/Api_Instances/adminInstance";
 
 export const getSalesStatistics = async ({ status, search, page = 1, limit = 10 }) => {
   try {
-    const { data } = await api.get(`/api/admin/sales-statistics`, {
+    const { data } = await apiAdmin.get(`/sales-statistics`, {
       params: { status, search, page, limit }
     });
     return data;
@@ -14,7 +13,7 @@ export const getSalesStatistics = async ({ status, search, page = 1, limit = 10 
 
 export const generateSalesReport = async (params) => {
   try {
-    const { data } = await api.get(`/api/admin/sales-report`, {
+    const { data } = await apiAdmin.get(`/sales-report`, {
       params,
     });
     return data;
@@ -25,7 +24,7 @@ export const generateSalesReport = async (params) => {
 
 export const updateOrderStatus = async (orderId, status) => {
   try {
-    const { data } = await api.put(`/api/admin/orders/${orderId}/status`, { status });
+    const { data } = await apiAdmin.put(`/orders/${orderId}/status`, { status });
     return data;
   } catch (error) {
     throw error;

@@ -1,4 +1,5 @@
-import api from "@/api/Api_Instances/instance";
+import apiAdmin from "@/api/Api_Instances/adminInstance";
+import apiUser from "@/api/Api_Instances/userInstance";
 
 export const getorders = async ({
   search,
@@ -8,7 +9,7 @@ export const getorders = async ({
   limit,
 }) => {
   try {
-    const response = await api.get(`/api/admin/orders`, {
+    const response = await apiAdmin.get(`/orders`, {
       params: { search, sortByDate, status, page, limit },
     });
     return response.data;
@@ -19,7 +20,7 @@ export const getorders = async ({
 
 export const getordersdetails = async (orderId) => {
   try {
-    const response = await api.get(`/api/admin/orders/${orderId}`);
+    const response = await apiAdmin.get(`/orders/${orderId}`);
     return response.data;
   } catch (error) {
     throw error;
@@ -28,7 +29,7 @@ export const getordersdetails = async (orderId) => {
 
 export const updateOrderStatus = async (orderId, newStatus) => {
   try {
-    const response = await api.patch(`/api/admin/orders/${orderId}/status`, {
+    const response = await apiAdmin.patch(`/orders/${orderId}/status`, {
       status: newStatus,
     });
     return response.data;
@@ -44,8 +45,8 @@ export const processReturnRequest = async (
   { socket, connectedUsers }
 ) => {
   try {
-    const response = await api.put(
-      `/api/admin/process/${orderId}/${requestId}`,
+    const response = await apiAdmin.put(
+      `/process/${orderId}/${requestId}`,
       { ...data, socketId: socket?.id } // Send socket ID to backend
     );
     return response.data;
@@ -56,9 +57,44 @@ export const processReturnRequest = async (
 
 export const getreturnpending = async () => {
   try {
-    const response = await api.get(`/api/admin/pending`);
+    const response = await apiAdmin.get(`/pending`);
     return response.data;
   } catch (error) {
     throw error;
   }
 };
+
+
+export const cancelOrderApi = async (cancelData,orderid) =>{
+
+  try {
+    const response = await apiUser.post(`/orderscancel/${orderid}`,cancelData,{
+      headers:{"Content-Type" : "application/json"}
+    });
+    return response.data;
+  } catch (error) {
+    throw error
+  }
+}
+
+export const returnOrderApi = async (returnData,orderid,userid) => {
+  try {
+    const response = await apiUser.post(`/ordersreturn/${orderid}/return-requests/${userid}`,returnData);
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+
+export  const downloadInvoiceApi = async (orderId,userId) =>{
+
+  try {
+    const response = await apiUser.get(`/invoice/${userId}/${orderId}`,{
+      responseType:'blob'
+    })
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}

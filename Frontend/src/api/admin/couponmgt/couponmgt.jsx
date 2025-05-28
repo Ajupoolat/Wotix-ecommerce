@@ -1,9 +1,8 @@
-import api from "@/api/Api_Instances/instance";
-
+import apiAdmin from "@/api/Api_Instances/adminInstance";
 // Get all coupons
 export const getAllCoupons = async ({ search, status, page, limit }) => {
   try {
-    const response = await api.get(`/api/admin/coupon`, {
+    const response = await apiAdmin.get(`/coupon`, {
       params: { search, status, page, limit },
     });
     return response.data;
@@ -15,7 +14,7 @@ export const getAllCoupons = async ({ search, status, page, limit }) => {
 // Get coupon by ID
 export const getCouponById = async (id) => {
   try {
-    const response = await api.get(`/api/admin/coupon/${id}`, {});
+    const response = await apiAdmin.get(`/coupon/${id}`, {});
     return response.data;
   } catch (error) {
     throw error;
@@ -25,7 +24,7 @@ export const getCouponById = async (id) => {
 // Create new coupon
 export const createCoupon = async (couponData) => {
   try {
-    const response = await api.post(`/api/admin/coupon`, couponData);
+    const response = await apiAdmin.post(`/coupon`, couponData);
     return response.data;
   } catch (error) {
     throw error;
@@ -35,7 +34,7 @@ export const createCoupon = async (couponData) => {
 // Update coupon
 export const updateCoupon = async (id, updateData) => {
   try {
-    const response = await api.patch(`/api/admin/coupon/${id}`, updateData);
+    const response = await apiAdmin.patch(`/coupon/${id}`, updateData);
     return response.data;
   } catch (error) {
     throw error;
@@ -45,7 +44,7 @@ export const updateCoupon = async (id, updateData) => {
 // Delete coupon
 export const deleteCoupon = async (id) => {
   try {
-    const response = await api.delete(`/api/admin/coupon/${id}`);
+    const response = await apiAdmin.delete(`/coupon/${id}`);
     return response.data;
   } catch (error) {
     throw error;

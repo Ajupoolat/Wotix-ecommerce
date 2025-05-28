@@ -52,6 +52,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const [showReferrerID, setShowReferrerID] = useState(false);
   const [email, setEmail] = useState('');
+  const API_URL_ = import.meta.env.VITE_API_URL_USER
 
   const {
     register,
@@ -99,7 +100,7 @@ const Signup = () => {
 
   const handleGoogleSignup = (e) => {
     e.preventDefault();
-    window.open('https://wotix.myftp.org/userapi/user/google', '_self');
+    window.open(`${API_URL_}/google`, '_self');
   };
 
   return (

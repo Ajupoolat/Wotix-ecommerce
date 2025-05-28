@@ -1,9 +1,9 @@
-import api from "@/api/Api_Instances/instance";
+import apiUser from "@/api/Api_Instances/userInstance";
 
 export const addToWishlist = async (productId, userId) => {
   try {
-    const response = await api.post(
-      `/userapi/user/wishlistadd/${productId}/${userId}`,
+    const response = await apiUser.post(
+      `/wishlistadd/${productId}/${userId}`,
       null
     );
     return response.data;
@@ -14,8 +14,8 @@ export const addToWishlist = async (productId, userId) => {
 
 export const removeFromWishlist = async (productId, userId) => {
   try {
-    const response = await api.delete(
-      `/userapi/user/wishlistremove/${productId}/${userId}`
+    const response = await apiUser.delete(
+      `/wishlistremove/${productId}/${userId}`
     );
     return response.data;
   } catch (error) {
@@ -27,7 +27,7 @@ export const getWishlist = async (userId) => {
   const email = localStorage.getItem("email");
 
   try {
-    const response = await api.get(`/userapi/user/wishlist/${userId}/${email}`);
+    const response = await apiUser.get(`/wishlist/${userId}/${email}`);
 
     return response.data;
   } catch (error) {

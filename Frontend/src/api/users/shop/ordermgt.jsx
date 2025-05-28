@@ -1,9 +1,10 @@
-import api from "@/api/Api_Instances/instance";
+import apiUser from "@/api/Api_Instances/userInstance";
+
 
 export const placeOrder = async (userId, orderData) => {
   try {
-    const response = await api.post(
-      `/userapi/user/placeorder/${userId}`,
+    const response = await apiUser.post(
+      `/placeorder/${userId}`,
       orderData,
       {
         headers: {
@@ -22,8 +23,8 @@ export const placeOrder = async (userId, orderData) => {
 export const getorderslist = async (userId, page = 1, limit = 10) => {
   const email = localStorage.getItem("email");
   try {
-    const response = await api.get(
-      `/userapi/user/orderslist/${email}/${userId}?page=${page}&limit=${limit}`,
+    const response = await apiUser.get(
+      `/orderslist/${email}/${userId}?page=${page}&limit=${limit}`,
       {}
     );
     return response.data;
@@ -33,8 +34,8 @@ export const getorderslist = async (userId, page = 1, limit = 10) => {
 };
 export const retry_payment = async (orderId) => {
   try {
-    const response = await api.get(
-      `/userapi/user/retry-payment/${orderId}`,
+    const response = await apiUser.get(
+      `/retry-payment/${orderId}`,
       {}
     );
     return response.data;
@@ -45,8 +46,8 @@ export const retry_payment = async (orderId) => {
 
 export const ordersearch = async (query) => {
   try {
-    const response = await api.get(
-      `/userapi/user/searchorder?query=${query}`,
+    const response = await apiUser.get(
+      `/searchorder?query=${query}`,
       {}
     );
     return response.data;
@@ -57,8 +58,8 @@ export const ordersearch = async (query) => {
 
 export const applycoupon = async ({ couponcode, currentSubtotal }) => {
   try {
-    const response = await api.post(
-      `/userapi/user/apply-coupon`,
+    const response = await apiUser.post(
+      `/apply-coupon`,
       { couponcode, currentSubtotal },
       { headers: { "Content-Type": "application/json" } }
     );
@@ -81,7 +82,7 @@ export const applycoupon = async ({ couponcode, currentSubtotal }) => {
 };
 export const bestCoupon = async (subtotal) => {
   try {
-    const response = await api.get(`/userapi/user/bestcoupon`, {
+    const response = await apiUser.get(`/bestcoupon`, {
       params: { subtotal },
     });
     return response.data.coupon;
@@ -89,3 +90,48 @@ export const bestCoupon = async (subtotal) => {
     throw error;
   }
 };
+
+export const order_details = async (userId,orderId) => {
+console.log('the orderdetils api call parameters',userId,orderId)
+  try {
+    const response = await apiUser.get(`/orders-details/${userId}/${orderId}`);
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+
+export const cancelOrderApi = async (cancelData,orderid) =>{
+
+  try {
+    const response = await apiUser.post(`/orderscancel/${orderid}`,cancelData,{
+      headers:{"Content-Type" : "application/json"}
+    });
+    return response.data;
+  } catch (error) {
+    throw error
+  }
+}
+
+export const returnOrderApi = async (returnData,orderid,userid) => {
+  try {
+    const response = await apiUser.post(`/ordersreturn/${orderid}/return-requests/${userid}`,returnData);
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+
+export  const downloadInvoiceApi = async (orderId,userId) =>{
+
+  try {
+    const response = await apiUser.get(`/invoice/${userId}/${orderId}`,{
+      responseType:'blob'
+    })
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}

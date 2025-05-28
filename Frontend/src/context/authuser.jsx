@@ -5,11 +5,12 @@ import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import io from "socket.io-client";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { meta } from "eslint-plugin-react-hooks";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const API_BASE_URL = "https://wotix.myftp.org";
+  const API_BASE_URL = "http://localhost:5000";
   const [socket, setSocket] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem("isAuthenticated") === "true";
