@@ -1,40 +1,25 @@
 import React, { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/context/authuser";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  UserIcon,
-  ShoppingCartIcon,
-  HeartIcon,
-  ArrowRightStartOnRectangleIcon,
   WalletIcon,
   CreditCardIcon,
   ArrowPathIcon,
   BanknotesIcon,
-  PlusIcon,
-  MinusIcon,
   ClockIcon,
 } from "@heroicons/react/24/outline";
 import { useNavigate, useParams } from "react-router-dom";
 import { viewprofile } from "@/api/users/profile/profilemgt";
 import { getWallet } from "@/api/users/shop/walletmgt";
-import logo from "@/assets/Wotix removed-BG.png";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useWishlistCount } from "@/context/wishlistCount";
 import toast from "react-hot-toast";
-import { useCart } from "@/context/cartcon";
 import Restricter from "@/components/common/restricter";
+import { Footer } from "@/components/common/footer";
+import IconsArea from "@/components/common/IconsArea";
+import Navbar from "@/components/common/navbar";
+import LoaderSpinner from "@/components/common/spinner";
+import ErrorCommon from "@/components/common/CommonError";
 
 const formatDate = (dateString) => {
   const options = {
@@ -48,13 +33,9 @@ const formatDate = (dateString) => {
 };
 
 const WalletPage = () => {
-  const { user: authUser, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { countwislist } = useWishlistCount();
-  const { totalItems } = useCart();
+
   const email = localStorage.getItem("email");
   const username = localStorage.getItem("username");
   const { id } = useParams();
@@ -120,12 +101,6 @@ const WalletPage = () => {
     queryFn: () => viewprofile(id, email),
   });
 
-  const handleLogout = () => {
-    logout();
-    localStorage.removeItem("username");
-    navigate("/login");
-  };
-
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= walletData?.pagination?.totalPages) {
       setPage(newPage);
@@ -133,104 +108,32 @@ const WalletPage = () => {
   };
 
   if (isLoading || isWalletLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
-      </div>
-    );
+    return <LoaderSpinner />;
   }
 
-  if (isError || isWalletError) {
+  if (
+    (isError && error.message !== `Oops this page is not get !`) ||
+    (isWalletError &&
+      walletError.message !==
+        `This wallet does not exist or you don't have permission to view it.`)
+  ) {
+    return <ErrorCommon />;
+  }
+  if (
+    (error && error.message === `Oops this page is not get !`) ||
+    (walletError &&
+      walletError.message ===
+        `This wallet does not exist or you don't have permission to view it.`)
+  ) {
     return <Restricter />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <img
-              src={logo}
-              alt="Logo"
-              className="object-contain"
-              style={{ height: "150px", width: "150px" }}
-            />
-          </div>
-
-          <div className="flex items-center gap-4">
-            {isAuthenticated && (
-              <div className="hidden sm:flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                  <UserIcon
-                    className="w-4 h-4 text-black"
-                    onClick={() => navigate(`/profile/${id}`)}
-                  />
-                </div>
-                <span className="text-sm font-medium text-gray-700">
-                  {username}
-                </span>
-              </div>
-            )}
-
-            <div className="flex justify-evenly gap-4">
-              {isAuthenticated ? (
-                <button
-                  onClick={() => setShowLogoutAlert(true)}
-                  className="p-1 rounded-full hover:bg-gray-100"
-                >
-                  <ArrowRightStartOnRectangleIcon className="w-5 h-5 text-gray-700 hover:text-gray-900" />
-                </button>
-              ) : (
-                <button
-                  onClick={() => navigate("/signup")}
-                  className="p-1 rounded-full hover:bg-gray-100"
-                >
-                  <UserIcon className="w-5 h-5 text-gray-700 hover:text-gray-900" />
-                </button>
-              )}
-              <div className="relative">
-                <ShoppingCartIcon
-                  className="w-5 h-5 mt-1 text-gray-700 hover:text-gray-900 cursor-pointer"
-                  onClick={() => navigate("/cart")}
-                />
-                {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {totalItems}
-                  </span>
-                )}
-              </div>
-              <div className="relative">
-                <HeartIcon
-                  className="w-5 h-5 mt-1 text-gray-700 hover:text-gray-900 cursor-pointer"
-                  onClick={() => navigate("/wishlist")}
-                />
-                {countwislist > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {countwislist}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
+      <IconsArea />
       {/* Navigation */}
-      <nav className="flex justify-center space-x-8 py-4 border-b bg-gray-50">
-        <a
-          href="/"
-          className="text-base font-medium text-gray-700 hover:text-black hover:underline transition-colors"
-        >
-          HOME
-        </a>
-        <a
-          onClick={() => navigate("/shop")}
-          className="text-base font-medium text-gray-700 hover:text-black hover:underline transition-colors cursor-pointer"
-        >
-          SHOP
-        </a>
-      </nav>
+      <Navbar />
 
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -582,77 +485,7 @@ const WalletPage = () => {
         </div>
       </div>
 
-      <AlertDialog open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to sign out? You'll need to log in again to
-              access your account.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-gray-300 hover:bg-gray-50">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleLogout}
-              className="bg-black hover:bg-gray-800 focus-visible:ring-gray-500"
-            >
-              Logout
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white mt-20 py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <h3 className="text-lg font-bold mb-4">WOTIX WATCHES</h3>
-              <p className="text-gray-400 text-sm">
-                Luxury timepieces crafted with precision and elegance.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold mb-4">QUICK LINKS</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="/shop"
-                    className="text-sm hover:underline text-gray-300"
-                  >
-                    Shop Collection
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold mb-4">STAY CONNECTED</h3>
-              <p className="text-gray-400 text-sm mb-4">
-                Follow us on social media for the latest updates.
-              </p>
-              <div className="flex space-x-4">
-                <a href="#" className="text-white hover:text-gray-300">
-                  FB
-                </a>
-                <a href="#" className="text-white hover:text-gray-300">
-                  IG
-                </a>
-                <a href="#" className="text-white hover:text-gray-300">
-                  TW
-                </a>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-6 text-center text-sm text-gray-400">
-            <p>
-              © {new Date().getFullYear()} WOTIX WATCHES. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

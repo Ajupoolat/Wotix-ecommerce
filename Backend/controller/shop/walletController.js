@@ -19,7 +19,7 @@ const getWallet = async (req, res) => {
 
     if (user.email !== email) {
       return res.status(403).json({
-        message: "This order does not exist or you don't have permission to view it.",
+        message: "This wallet does not exist or you don't have permission to view it.",
       });
     }
 

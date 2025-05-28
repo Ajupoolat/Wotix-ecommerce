@@ -7,11 +7,14 @@ import { toast } from "react-hot-toast";
 const WebSocketListener = () => {
   const { isAuthenticated, logout, userId } = useAuth();
   const navigate = useNavigate();
+  const baseUrl = import.meta.env.VITE_API_URL
+
 
   useEffect(() => {
     if (!isAuthenticated || !userId) return;
 
-  const socket = io({
+  const socket = io(baseUrl,{
+    
   withCredentials: true,
   autoConnect: true,
   reconnectionAttempts: 5,

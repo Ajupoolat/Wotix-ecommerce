@@ -13,6 +13,7 @@ import { WebSocketProviderAdmin } from "./context/adminreturn";
 import { OffersProvider } from "./context/offerprice";
 import { OffersCartProvider } from "./context/cartOffer";
 import { WishlistCountProvider } from "./context/wishlistCount";
+import { WishlistProvider } from "./context/wishlistContext";
 import App from "./App.jsx";
 
 const queryclient = new QueryClient();
@@ -25,7 +26,8 @@ createRoot(document.getElementById("root")).render(
         <OffersProvider>
           <OffersCartProvider>
           <WishlistCountProvider>
-          <CartProvider>
+          <WishlistProvider>
+            <CartProvider>
             <WebSocketProvider>
               <WebSocketProviderAdmin>
                 <AuthProvider>
@@ -34,6 +36,7 @@ createRoot(document.getElementById("root")).render(
               </WebSocketProviderAdmin>
             </WebSocketProvider>
           </CartProvider>
+          </WishlistProvider>
           </WishlistCountProvider>
           </OffersCartProvider>
         </OffersProvider>

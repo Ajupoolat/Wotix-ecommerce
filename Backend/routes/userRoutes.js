@@ -87,6 +87,8 @@ router.post("/sendotpforgot", sendOtpforgot);
 router.patch("/resetpassword", resetPassword);
 router.post("/verifyotp", verifyOtp);
 router.get("/products/:id", productById);
+router.get("/products",userAuthorization, products);
+
 
 // Google auth routes
 router.get(
@@ -140,7 +142,6 @@ router.get("/bestcoupon", userAuthorization, eligiblecoupon);
 router.patch("/changepassword/:id", userAuthorization, changePassword);
 router.get("/retry-payment/:id", userAuthorization, retrypayment);
 router.get("/offers",userAuthorization, offershowing);
-router.get("/products",userAuthorization, products);
 router.get('/categorieslist',userAuthorization,getcategory)
 router.get('/filtercat',userAuthorization,getfiltercategory)
 

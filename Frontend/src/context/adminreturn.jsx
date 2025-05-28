@@ -9,9 +9,10 @@ export const WebSocketProviderAdmin = ({ children }) => {
   const [connectedUsers, setConnectedUsers] = useState(new Map());
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const baseurl = import.meta.env.VITE_API_URL
 
   useEffect(() => {
-    const newSocket = io("https://wotix.myftp.org", {
+    const newSocket = io(baseurl, {
       withCredentials: true,
     });
 
