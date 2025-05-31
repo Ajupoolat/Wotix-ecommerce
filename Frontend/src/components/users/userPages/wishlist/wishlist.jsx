@@ -1,7 +1,4 @@
-import {
-  ShoppingCartIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
+import { ShoppingCartIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,11 +18,13 @@ import ErrorCommon from "@/components/common/CommonError";
 import LoaderSpinner from "@/components/common/spinner";
 import IconsArea from "@/components/common/IconsArea";
 import Navbar from "@/components/common/navbar";
+import BrowseProduct from "@/components/common/browseProduct";
+import PleaseLogin from "@/components/common/pleaseLogin";
 
 export function WishlistPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { addToCart} = useCart();
+  const { addToCart } = useCart();
   const queryClient = useQueryClient();
   const userId = localStorage.getItem("userId");
   const email = localStorage.getItem("email");
@@ -78,10 +77,8 @@ export function WishlistPage() {
     return <LoaderSpinner />;
   }
 
-  if (error || !wishlist?.success) {
-    return (
-      <ErrorCommon/>
-    );
+  if (error) {
+    return <ErrorCommon />;
   }
 
   return (
@@ -96,23 +93,9 @@ export function WishlistPage() {
         </div>
 
         {!isAuthenticated ? (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-medium text-gray-600">
-              Please sign in to view your wishlist
-            </h3>
-            <Button className="mt-4" onClick={() => navigate("/signup")}>
-              Sign In
-            </Button>
-          </div>
+          <PleaseLogin message={"Please sign in to view your wishlist"} />
         ) : wishlist.products.length === 0 ? (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-medium text-gray-600">
-              Your wishlist is empty
-            </h3>
-            <Button className="mt-4" onClick={() => navigate("/shop")}>
-              Browse Products
-            </Button>
-          </div>
+          <BrowseProduct message={"Your wishlist is empty"} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {wishlist.products.map((product) => (

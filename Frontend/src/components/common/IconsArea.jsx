@@ -20,6 +20,7 @@ import {
 import { useCart } from "@/context/cartcon";
 import { useWishlist } from "@/context/wishlistContext";
 import logo from "../../../src/assets/Wotix removed-BG.png";
+import { Button } from "../ui/button";
 
 const IconsArea = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -29,7 +30,7 @@ const IconsArea = () => {
   const userId = localStorage.getItem("userId");
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const username = localStorage.getItem("username");
-     
+
   return (
     <div>
       <header className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 border-b">
@@ -56,21 +57,25 @@ const IconsArea = () => {
             </div>
           )}
           {/* Icons */}
-          <div className="flex justify-evenly gap-4">
+          <div className="flex items-center justify-evenly gap-4">
             {isAuthenticated ? (
-              <ArrowRightStartOnRectangleIcon
-                className="w-5 h-5 cursor-pointer text-gray-700 hover:text-gray-900 transition-colors"
-                onClick={() => {
-                  setShowLogoutAlert(true);
-                }}
-              />
+              <div className="flex items-center">
+                <ArrowRightStartOnRectangleIcon
+                  className="w-5 h-5 cursor-pointer text-gray-700 hover:text-gray-900 transition-colors"
+                  onClick={() => {
+                    setShowLogoutAlert(true);
+                  }}
+                />
+              </div>
             ) : (
-              <UserIcon
-                className="w-5 h-5 cursor-pointer text-gray-700 hover:text-gray-900 transition-colors"
+              <Button
+                className="h-8 cursor-pointer hover:bg-gray-500 font-bold transition-colors"
                 onClick={() => navigate("/signup")}
-              />
+              >
+                Login/Signup
+              </Button>
             )}
-            <div className="relative">
+            <div className="relative flex items-center">
               <ShoppingCartIcon
                 className="w-5 h-5 text-gray-700 hover:text-gray-900 cursor-pointer"
                 onClick={() => navigate("/cart")}
@@ -81,9 +86,9 @@ const IconsArea = () => {
                 </span>
               )}
             </div>
-            <div className="relative">
+            <div className="relative flex items-center">
               <HeartIcon
-                className="w-5 h-5 text-gray-700 hover:text-gray-900  cursor-pointer"
+                className="w-5 h-5 text-gray-700 hover:text-gray-900 cursor-pointer"
                 onClick={() => navigate("/wishlist")}
               />
               {count > 0 && (
@@ -91,7 +96,7 @@ const IconsArea = () => {
                   {count}
                 </span>
               )}
-            </div>{" "}
+            </div>
           </div>
         </div>
       </header>

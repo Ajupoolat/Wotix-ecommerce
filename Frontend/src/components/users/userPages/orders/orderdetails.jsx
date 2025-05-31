@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import {
-  HeartIcon,
-  ShoppingCartIcon,
-  UserIcon,
-  ArrowRightStartOnRectangleIcon,
-} from "@heroicons/react/24/outline";
+import LoaderSpinner from "@/components/common/spinner";
+import { Footer } from "@/components/common/footer";
+import IconsArea from "@/components/common/IconsArea";
+import ErrorCommon from "@/components/common/CommonError";
+import Navbar from "@/components/common/navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/authuser";
 import logo from "@/assets/Wotix removed-BG.png";
 import { toast } from "react-hot-toast";
@@ -42,6 +39,8 @@ import {
   downloadInvoiceApi,
 } from "../../../../api/users/shop/ordermgt";
 import { verifyPayment } from "@/api/users/shop/checkoutmgt";
+import NotAvailable from "@/components/common/notAvailable";
+import Breadcrumbs from "@/components/common/breadCrums";
 
 // ConfirmationDialog component remains unchanged
 function ConfirmationDialog({
@@ -83,19 +82,15 @@ export function OrderDetailsPage() {
   const navigate = useNavigate();
   const { id: orderId } = useParams();
   const { socket } = useWebSocket();
-  const { isAuthenticated, logout } = useAuth();
-  const username = localStorage.getItem("username");
   const userId = localStorage.getItem("userId");
   const queryClient = useQueryClient();
-  const { countwislist } = useWishlistCount();
-  const { totalItems } = useCart();
+
 
   // State for dialogs
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showProductCancelDialog, setShowProductCancelDialog] = useState(false);
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [showProductReturnDialog, setShowProductReturnDialog] = useState(false);
-  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [subtotal, setSubtotal] = useState(0); // New state for subtotal
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
@@ -342,50 +337,15 @@ export function OrderDetailsPage() {
   };
 
   if (isLoading) {
-    return <OrderDetailsSkeleton />;
+    return <LoaderSpinner />;
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center py-12">
-          <h3 className="text-xl font-medium text-gray-600 mb-4">
-            Error loading order details
-          </h3>
-          <p className="text-gray-500 mb-6">
-            {error.response?.data?.message ||
-              "Failed to load order information"}
-          </p>
-          <Button
-            className="bg-orange-400 hover:bg-orange-500 text-white"
-            onClick={() => navigate("/orderslist")}
-          >
-            Back to Orders
-          </Button>
-        </div>
-      </div>
-    );
+    return <ErrorCommon />;
   }
 
   if (!order) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center py-12">
-          <h3 className="text-xl font-medium text-gray-600 mb-4">
-            Order not found
-          </h3>
-          <p className="text-gray-500 mb-6">
-            The requested order could not be found
-          </p>
-          <Button
-            className="bg-orange-400 hover:bg-orange-500 text-white"
-            onClick={() => navigate("/orderslist")}
-          >
-            View All Orders
-          </Button>
-        </div>
-      </div>
-    );
+    return <NotAvailable message={"Order not found"} />;
   }
 
   const isProductEligibleForReturn = (product) => {
@@ -415,81 +375,18 @@ export function OrderDetailsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 border-b">
-        <div className="flex items-center">
-          <img
-            src={logo}
-            alt="Logo"
-            className="object-contain cursor-pointer"
-            style={{ height: "150px", width: "150px" }}
-            onClick={() => navigate("/")}
-          />
-        </div>
-        <div className="flex items-center gap-4">
-          {isAuthenticated && (
-            <div className="hidden sm:flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer"
-                onClick={() => navigate(`/profile/${userId}`)}
-              >
-                <UserIcon className="w-4 h-4 text-gray-600" />
-              </div>
-              <span className="text-sm font-bold text-gray-700">
-                {username || localStorage.getItem("googleuser")}
-              </span>
-            </div>
-          )}
-          <div className="flex justify-evenly gap-4">
-            {isAuthenticated ? (
-              <ArrowRightStartOnRectangleIcon
-                className="w-5 h-5 cursor-pointer text-gray-700 hover:text-gray-900 transition-colors"
-                onClick={() => setShowLogoutAlert(true)}
-              />
-            ) : (
-              <UserIcon
-                className="w-5 h-5 cursor-pointer text-gray-700 hover:text-gray-900 transition-colors"
-                onClick={() => navigate("/signup")}
-              />
-            )}
-            <div className="relative">
-              <ShoppingCartIcon
-                className="w-5 h-5 text-gray-700 hover:text-gray-900 cursor-pointer"
-                onClick={() => navigate("/cart")}
-              />
-              {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
-            </div>
-            <div className="relative">
-              <HeartIcon
-                className="w-5 h-5 text-gray-700 hover:text-gray-900 cursor-pointer"
-                onClick={() => navigate("/wishlist")}
-              />
-              {countwislist > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {countwislist}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* user-control */}
+      <IconsArea />
 
       {/* Navigation Links */}
-      <nav className="flex justify-center space-x-8 py-4 border-b bg-gray-50">
-        <a href="/" className="nav-link">
-          HOME
-        </a>
-        <a
-          onClick={() => navigate("/shop")}
-          className="nav-link cursor-pointer"
-        >
-          SHOP
-        </a>
-      </nav>
+      <Navbar />
+      {/* breadCrumps */}
+      <Breadcrumbs items={[
+        {label:"Home",link:"/"},
+        {label:"My Profile",link:`/profile/${userId}`},
+        {label:"My Orders",link:"/orderslist"},
+        {label:`Order NO:${order?.orderNumber}`}
+      ]}/>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
@@ -678,9 +575,6 @@ export function OrderDetailsPage() {
                     </div>
                   ))}
                 </div>
-
-                {/* Order Total */}
-
                 {/* Order Total */}
                 <div className="mt-6 border-t pt-4">
                   <div className="flex justify-between mb-2">
@@ -1020,125 +914,9 @@ export function OrderDetailsPage() {
           </div>
         </div>
       </ConfirmationDialog>
-
-      <AlertDialog open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Are you sure you want to logout?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              You'll need to sign in again to access your account.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                logout();
-                localStorage.removeItem("username");
-                localStorage.removeItem("userId");
-                navigate("/login");
-              }}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Logout
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       {/* Footer */}
-      <footer className="bg-gray-900 text-white mt-20 py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <h3 className="text-lg font-bold mb-4">WOTIX WATCHES</h3>
-              <p className="text-gray-400 text-sm">
-                Luxury timepieces crafted with precision and elegance.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold mb-4">QUICK LINKS</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="/shop"
-                    className="text-sm hover:underline text-gray-300"
-                  >
-                    Shop Collection
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold mb-4">STAY CONNECTED</h3>
-              <p className="text-gray-400 text-sm mb-4">
-                Follow us on social media for the latest updates.
-              </p>
-              <div className="flex space-x-4">
-                <a href="#" className="text-white hover:text-gray-300">
-                  FB
-                </a>
-                <a href="#" className="text-white hover:text-gray-300">
-                  IG
-                </a>
-                <a href="#" className="text-white hover:text-gray-300">
-                  TW
-                </a>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-6 text-center text-sm text-gray-400">
-            <p>
-              © {new Date().getFullYear()} WOTIX WATCHES. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
-
-function OrderDetailsSkeleton() {
-  return (
-    <div className="min-h-screen bg-white">
-      <header className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 border-b">
-        <Skeleton className="h-[150px] w-[150px]" />
-        <Skeleton className="h-10 w-full max-w-lg mx-4 sm:mx-8" />
-        <div className="flex gap-4">
-          <Skeleton className="h-10 w-10 rounded-full" />
-          <Skeleton className="h-10 w-10 rounded-full" />
-        </div>
-      </header>
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <Skeleton className="h-10 w-64 mb-8" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <Skeleton className="h-6 w-48 mb-4" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-full mb-2" />
-            </div>
-            <div>
-              <Skeleton className="h-6 w-48 mb-4" />
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex mb-4">
-                  <Skeleton className="h-20 w-20 mr-4" />
-                  <div className="flex-1">
-                    <Skeleton className="h-4 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default OrderDetailsPage;

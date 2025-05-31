@@ -1,10 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  getWishlist, 
-  addToWishlist, 
-  removeFromWishlist
- 
+import {
+  getWishlist,
+  addToWishlist,
+  removeFromWishlist,
 } from "@/api/users/shop/wishlistmgt";
 import toast from "react-hot-toast";
 
@@ -13,7 +12,7 @@ const WishlistContext = createContext();
 export const WishlistProvider = ({ children }) => {
   const queryClient = useQueryClient();
   const userId = localStorage.getItem("userId");
-  
+
   // Wishlist data query
   const { data: wishlist } = useQuery({
     queryKey: ["wishlist", userId],
@@ -29,12 +28,15 @@ export const WishlistProvider = ({ children }) => {
       toast.success("Added to wishlist!");
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to add to wishlist");
+      if (error.message === `token is missing`) {
+        toast.error("please login/signup for add products to wishlist");
+      } else {
+        toast.error(error.message || "Failed to add to wishlist");
+      }
     },
   });
 
-
-    const { mutate: removeMutation } = useMutation({
+  const { mutate: removeMutation } = useMutation({
     mutationFn: (productId) => removeFromWishlist(productId, userId),
     onSuccess: () => {
       queryClient.invalidateQueries(["wishlist", userId]);
@@ -47,7 +49,7 @@ export const WishlistProvider = ({ children }) => {
 
   // Check if product is in wishlist
   const isProductInWishlists = (productId) => {
-    return wishlist?.products?.some(item => item._id === productId) || false;
+    return wishlist?.products?.some((item) => item._id === productId) || false;
   };
 
   // Toggle wishlist status
@@ -62,12 +64,15 @@ export const WishlistProvider = ({ children }) => {
   // Count of items in wishlist
   const count = wishlist?.products?.length || 0;
 
-  const value = useMemo(() => ({
-    wishlist,
-    count,
-    isProductInWishlists,
-    toggleWishlist
-  }), [wishlist, count]);
+  const value = useMemo(
+    () => ({
+      wishlist,
+      count,
+      isProductInWishlists,
+      toggleWishlist,
+    }),
+    [wishlist, count]
+  );
 
   return (
     <WishlistContext.Provider value={value}>

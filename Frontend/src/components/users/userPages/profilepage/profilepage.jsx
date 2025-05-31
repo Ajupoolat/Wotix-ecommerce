@@ -16,9 +16,11 @@ import {
   EnvelopeIcon,
   UserPlusIcon,
 } from "@heroicons/react/24/outline";
+import ErrorCommon from "@/components/common/CommonError";
 import { useNavigate, useParams } from "react-router-dom";
 import { viewprofile } from "@/api/users/profile/profilemgt";
 import Restricter from "@/components/common/restricter";
+import Breadcrumbs from "@/components/common/breadCrums";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -40,7 +42,11 @@ const ProfilePage = () => {
     return <LoaderSpinner />;
   }
 
-  if (isError) {
+  if (isError && error.message !== `Oops this page is not get !`) {
+    return <ErrorCommon />;
+  }
+
+  if (error && error.message === `Oops this page is not get !`) {
     return <Restricter />;
   }
 
@@ -52,18 +58,9 @@ const ProfilePage = () => {
       {/* Navigation */}
       <Navbar />
       {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center text-sm text-gray-500">
-          <button
-            onClick={() => navigate("/")}
-            className="hover:text-black cursor-pointer"
-          >
-            Home
-          </button>
-          <span className="mx-2">/</span>
-          <span className="text-gray-900 font-medium">My Profile</span>
-        </div>
-      </div>
+      <Breadcrumbs
+        items={[{ label: "Home", link: "/" }, { label: "My Profile" }]}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

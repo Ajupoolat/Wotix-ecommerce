@@ -22,7 +22,11 @@ export const CartProvider = ({ children }) => {
       toast.success("Added to cart!");
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to add to cart");
+ if (error.message ===`token is missing`) {
+        toast.error("please login/signup for add products to cartlist");
+      } else {
+        toast.error(error.message || "Failed to add to cart");
+      }    
     },
   });
 

@@ -21,7 +21,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { z } from "zod";
+import LoaderSpinner from "@/components/common/spinner";
 import Restricter from "@/components/common/restricter";
+import Breadcrumbs from "@/components/common/breadCrums";
 
 // Zod schema for address validation
 const addressSchema = z.object({
@@ -253,9 +255,7 @@ const AddressComponent = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
+     <LoaderSpinner/>
     );
   }
 
@@ -265,6 +265,13 @@ const AddressComponent = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
+       <div className="w-75 -ml-50 h-20">
+              <Breadcrumbs items={[
+        {label:"Home",link:"/"},
+        {label:"My Profile",link:`/profile/${userId}`},
+        {label:'My Address'}
+        ]}/>
+       </div>
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-bold">Manage Addresses</h2>
         <button

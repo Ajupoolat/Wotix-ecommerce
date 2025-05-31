@@ -1,9 +1,4 @@
-import {
-  HeartIcon,
-  ShoppingCartIcon,
-  UserIcon,
-  ArrowRightStartOnRectangleIcon,
-} from "@heroicons/react/24/outline";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -16,9 +11,10 @@ import { toast } from "react-hot-toast";
 import logo from "@/assets/Wotix removed-BG.png";
 import { useCart } from "@/context/cartcon";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import AddressFormModal from "../../userforms/shopping/addresseditor";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Footer } from "@/components/common/footer";
+import Navbar from "@/components/common/navbar";
+import LoaderSpinner from "@/components/common/spinner";
 import { placeOrder, applycoupon, bestCoupon } from "@/api/users/shop/ordermgt";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,8 +28,9 @@ import {
 } from "@/components/ui/form";
 import { useWishlistCount } from "@/context/wishlistCount";
 import { getdefaultaddress, verifyPayment } from "@/api/users/shop/checkoutmgt";
+import IconsArea from "@/components/common/IconsArea";
+import BrowseProduct from "@/components/common/browseProduct";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL_USER;
 
 // Schema for coupon validation
 const couponSchema = z.object({
@@ -45,13 +42,7 @@ export function CheckoutPage() {
   const { isAuthenticated, logout } = useAuth();
   const username = localStorage.getItem("username");
   const userId = localStorage.getItem("userId");
-  const {
-    cart,
-    clearCart,
-    loading: cartLoading,
-    totalItems,
-    totalPrice,
-  } = useCart();
+  const { cart, clearCart, loading: cartLoading, totalItems } = useCart();
   const { countwislist } = useWishlistCount();
   const [paymentMethod, setPaymentMethod] = useState("upi");
   const [processingPayment, setProcessingPayment] = useState(false);
@@ -326,18 +317,7 @@ export function CheckoutPage() {
   // Loading states
   if (cartLoading || addressLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-full max-w-6xl px-4 py-8">
-          <div className="flex flex-col lg:flex-row gap-8">
-            <div className="w-full lg:w-1/2">
-              <Skeleton className="h-64 w-full rounded-lg" />
-            </div>
-            <div className="w-full lg:w-1/2">
-              <Skeleton className="h-96 w-full rounded-lg" />
-            </div>
-          </div>
-        </div>
-      </div>
+     <LoaderSpinner/>
     );
   }
 
@@ -384,16 +364,7 @@ export function CheckoutPage() {
 
   if (!cart?.items?.length || !cart?.success) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center py-12">
-          <h3 className="text-xl font-medium text-gray-600">
-            {cart?.message || "Your cart is empty"}
-          </h3>
-          <Button className="mt-4" onClick={() => navigate("/shop")}>
-            Browse Products
-          </Button>
-        </div>
-      </div>
+      <BrowseProduct message={'Your cart is empty'}/>
     );
   }
 
@@ -426,7 +397,7 @@ export function CheckoutPage() {
             Error loading address
           </h3>
           <p className="text-gray-500 mb-6">
-            {addressError.response?.data?.message ||
+            {addressError?.message ||
               "Failed to load address information"}
           </p>
           <Button
@@ -442,91 +413,12 @@ export function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 border-b">
-        <div className="flex items-center">
-          <img
-            src={logo}
-            alt="Logo"
-            className="object-contain cursor-pointer"
-            style={{ height: "150px", width: "150px" }}
-            onClick={() => navigate("/")}
-          />
-        </div>
+      {/*user-control*/}
 
-        <div className="flex items-center gap-4">
-          {isAuthenticated && (
-            <div className="hidden sm:flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer"
-                onClick={() => navigate(`/profile/${userId}`)}
-              >
-                <UserIcon className="w-4 h-4 text-gray-600" />
-              </div>
-              <span className="text-sm font-bold text-gray-700">
-                {username || localStorage.getItem("googleuser")}
-              </span>
-            </div>
-          )}
-          <div className="flex justify-evenly gap-4">
-            {isAuthenticated ? (
-              <ArrowRightStartOnRectangleIcon
-                className="w-5 h-5 cursor-pointer text-gray-700 hover:text-gray-900 transition-colors"
-                onClick={() => {
-                  logout();
-                  localStorage.removeItem("username");
-                  localStorage.removeItem("userId");
-                  localStorage.removeItem("appliedCoupons"); // Clear coupons on logout
-                  navigate("/login");
-                }}
-              />
-            ) : (
-              <UserIcon
-                className="w-5 h-5 cursor-pointer text-gray-700 hover:text-gray-900 transition-colors"
-                onClick={() => navigate("/signup")}
-              />
-            )}
-            <div className="relative">
-              <ShoppingCartIcon
-                className="w-5 h-5 text-gray-700 hover:text-gray-900 cursor-pointer transition-colors"
-                onClick={() => navigate("/cart")}
-              />
-              {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
-            </div>
-            <div className="relative">
-              <HeartIcon
-                className="w-5 h-5 text-gray-700 hover:text-gray-900 cursor-pointer transition-colors"
-                onClick={() => navigate("/wishlist")}
-              />
-              {countwislist > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {countwislist}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <IconsArea />
 
       {/* Navigation Links */}
-      <nav className="flex justify-center space-x-8 py-4 border-b bg-gray-50">
-        <a
-          href="/"
-          className="text-base font-medium text-gray-700 hover:text-black hover:underline transition-colors"
-        >
-          HOME
-        </a>
-        <a
-          onClick={() => navigate("/shop")}
-          className="text-base font-medium text-gray-700 hover:text-black hover:underline transition-colors cursor-pointer"
-        >
-          SHOP
-        </a>
-      </nav>
+      <Navbar />
 
       {/* Main Checkout Content */}
       <div className="container mx-auto px-4 py-8">
@@ -886,53 +778,7 @@ export function CheckoutPage() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white mt-20 py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <h3 className="text-lg font-bold mb-4">WOTIX WATCHES</h3>
-              <p className="text-gray-400 text-sm">
-                Luxury timepieces crafted with precision and elegance.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold mb-4">QUICK LINKS</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="/shop"
-                    className="text-sm hover:underline text-gray-300"
-                  >
-                    Shop Collection
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold mb-4">STAY CONNECTED</h3>
-              <p className="text-gray-400 text-sm mb-4">
-                Follow us on social media for the latest updates.
-              </p>
-              <div className="flex space-x-4">
-                <a href="#" className="text-white hover:text-gray-300">
-                  FB
-                </a>
-                <a href="#" className="text-white hover:text-gray-300">
-                  IG
-                </a>
-                <a href="#" className="text-white hover:text-gray-300">
-                  TW
-                </a>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-6 text-center text-sm text-gray-400">
-            <p>
-              © {new Date().getFullYear()} WOTIX WATCHES. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       <AddressFormModal
         showForm={showAddressForm}

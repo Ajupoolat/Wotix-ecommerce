@@ -25,6 +25,7 @@ import LoaderSpinner from "@/components/common/spinner";
 import NotAvailable from "@/components/common/notAvailable";
 import RecommendProducts from "@/components/common/recommandations";
 import { useWishlist } from "@/context/wishlistContext";
+import Breadcrumbs from "@/components/common/breadCrums";
 
 const ProductViewPage = () => {
   const navigate = useNavigate();
@@ -67,7 +68,7 @@ const ProductViewPage = () => {
         toast.success("Added to cart!");
       }
     } catch (error) {
-      toast.error(error.message || "Failed to add to cart");
+      throw error;
     }
   };
 
@@ -92,29 +93,19 @@ const ProductViewPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {isAuthenticated && <WebSocketListener />}
-
+      {/* user-controls */}
       <IconsArea />
+      {/* nav bar */}
       <Navbar />
 
-      <div className="px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center text-sm text-gray-500">
-          <a
-            onClick={() => navigate("/")}
-            className="hover:text-gray-700 cursor-pointer"
-          >
-            Home
-          </a>
-          <span className="mx-2">/</span>
-          <a
-            onClick={() => navigate("/shop")}
-            className="hover:text-gray-700 cursor-pointer"
-          >
-            Shop
-          </a>
-          <span className="mx-2">/</span>
-          <span className="text-gray-900">{product.name}</span>
-        </div>
-      </div>
+      {/* breadCrumps */}
+      <Breadcrumbs
+        items={[
+          { label: "Home", link: "/" },
+          { label: "shop", link: "/shop" },
+          { label: product?.name },
+        ]}
+      />
 
       <section className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -279,7 +270,7 @@ const ProductViewPage = () => {
                 )}
               </ul>
             </div>
-           <div className="mb-6">
+            <div className="mb-6">
               <h3 className="text-sm font-medium mb-2">Quantity</h3>
               <div className="flex items-center border rounded w-32">
                 <button
@@ -313,7 +304,7 @@ const ProductViewPage = () => {
                 </button>
               </div>
             </div>
-              <div className="space-y-4">
+            <div className="space-y-4">
               <Button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4"
                 onClick={handleAddToCart}

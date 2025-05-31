@@ -20,6 +20,8 @@ import IconsArea from "@/components/common/IconsArea";
 import Navbar from "@/components/common/navbar";
 import LoaderSpinner from "@/components/common/spinner";
 import ErrorCommon from "@/components/common/CommonError";
+import Pagination from "@/components/common/pagination";
+import Breadcrumbs from "@/components/common/breadCrums";
 
 const formatDate = (dateString) => {
   const options = {
@@ -136,25 +138,13 @@ const WalletPage = () => {
       <Navbar />
 
       {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center text-sm text-gray-500">
-          <button
-            onClick={() => navigate("/")}
-            className="hover:text-black cursor-pointer"
-          >
-            Home
-          </button>
-          <span className="mx-2">/</span>
-          <button
-            onClick={() => navigate(`/profile/${id}`)}
-            className="hover:text-black cursor-pointer"
-          >
-            My Profile
-          </button>
-          <span className="mx-2">/</span>
-          <span className="text-gray-900 font-medium">Wallet</span>
-        </div>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", link: "/" },
+          { label: "My Profile", link: `/profile/${id}` },
+          { label: "Wallet" },
+        ]}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -404,80 +394,11 @@ const WalletPage = () => {
 
                 {/* Pagination Controls */}
                 {walletData?.pagination?.totalPages > 1 && (
-                  <div className="flex justify-center items-center mt-6 gap-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page === 1}
-                      onClick={() => handlePageChange(page - 1)}
-                      className="flex items-center gap-2 border-gray-300 hover:bg-gray-100 transition-colors"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 19l-7-7 7-7"
-                        />
-                      </svg>
-                      <span>Prev</span>
-                    </Button>
-
-                    <div className="flex items-center gap-2">
-                      {[...Array(walletData?.pagination?.totalPages)].map(
-                        (_, index) => {
-                          const pageNumber = index + 1;
-                          return (
-                            <Button
-                              key={pageNumber}
-                              variant={
-                                page === pageNumber ? "default" : "outline"
-                              }
-                              size="sm"
-                              onClick={() => handlePageChange(pageNumber)}
-                              className={`${
-                                page === pageNumber
-                                  ? "bg-orange-400 text-white hover:bg-orange-500"
-                                  : "text-gray-600 hover:bg-gray-100"
-                              } w-10 h-10 rounded-full transition-colors`}
-                            >
-                              {pageNumber}
-                            </Button>
-                          );
-                        }
-                      )}
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page === walletData?.pagination?.totalPages}
-                      onClick={() => handlePageChange(page + 1)}
-                      className="flex items-center gap-2 border-gray-300 hover:bg-gray-100 transition-colors"
-                    >
-                      <span>Next</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </Button>
-                  </div>
+                  <Pagination
+                    currentPage={walletData?.pagination?.currentPage}
+                    totalPages={walletData?.pagination?.totalPages}
+                    onPageChange={handlePageChange}
+                  />
                 )}
               </div>
             </TabsContent>

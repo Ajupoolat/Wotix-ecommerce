@@ -26,13 +26,16 @@ import { useCart } from "@/context/cartcon";
 import LoaderSpinner from "@/components/common/spinner";
 import SmallSpinner from "@/components/common/smallSpinner";
 import NotAvailable from "@/components/common/notAvailable";
+import Pagination from "@/components/common/pagination";
 import { useWishlist } from "@/context/wishlistContext";
 import SpecialOfferBanner from "@/components/common/SpeacialOfferBanner";
+import SearchBar from "@/components/common/searchBar";
+import Breadcrumbs from "@/components/common/breadCrums";
 
 const ShopPage = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(true);
@@ -53,8 +56,6 @@ const ShopPage = () => {
     strapMaterial: "",
     sortBy: "",
   });
-  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
-
   // Fetch strap materials
   useEffect(() => {
     const fetchStrapMaterials = async () => {
@@ -178,7 +179,7 @@ const ShopPage = () => {
         toast.success("Added to cart!");
       }
     } catch (error) {
-      toast.error(error.message || "Failed to add to cart");
+      throw error;
     }
   };
 
@@ -194,29 +195,20 @@ const ShopPage = () => {
       <IconsArea />
 
       <header className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 ">
-        <div className="flex w-400 justify-center mx-4 sm:mx-8 ">
-          <Input
-            type="text"
-            placeholder="Search"
-            className="w-full max-w-md rounded-full border-gray-300 bg-gray-100 placeholder-gray-500"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button
-              onClick={handlesearchclear}
-              className="ml-2 text-gray-500 hover:text-gray-700"
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+        <SearchBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onClear={handlesearchclear}
+          placeholder="Search for products.."
+        />
       </header>
 
       {/* Navigation */}
       <div>
         <Navbar />
       </div>
+
+      <Breadcrumbs items={[{ label: "Home", link: "/" }, { label: "shop" }]} />
 
       {/* Shop Section */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
@@ -462,46 +454,13 @@ const ShopPage = () => {
                     </div>
                   ))}
                 </div>
-
+                {/* paginations */}
                 {pagination && (
-                  <div className="flex justify-center mt-8 space-x-2">
-                    <Button
-                      disabled={pagination.currentPage === 1}
-                      onClick={() =>
-                        handlePageChange(pagination.currentPage - 1)
-                      }
-                      className="bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    >
-                      Previous
-                    </Button>
-                    {Array.from(
-                      { length: pagination.totalPages },
-                      (_, i) => i + 1
-                    ).map((page) => (
-                      <Button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`${
-                          pagination.currentPage === page
-                            ? "bg-black text-white hover:bg-gray-800"
-                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                        }`}
-                      >
-                        {page}
-                      </Button>
-                    ))}
-                    <Button
-                      disabled={
-                        pagination.currentPage === pagination.totalPages
-                      }
-                      onClick={() =>
-                        handlePageChange(pagination.currentPage + 1)
-                      }
-                      className="bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    >
-                      Next
-                    </Button>
-                  </div>
+                  <Pagination
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
+                    onPageChange={handlePageChange}
+                  />
                 )}
               </>
             )}
