@@ -42,7 +42,6 @@ import { verifyPayment } from "@/api/users/shop/checkoutmgt";
 import NotAvailable from "@/components/common/notAvailable";
 import Breadcrumbs from "@/components/common/breadCrums";
 
-// ConfirmationDialog component remains unchanged
 function ConfirmationDialog({
   isOpen,
   onClose,

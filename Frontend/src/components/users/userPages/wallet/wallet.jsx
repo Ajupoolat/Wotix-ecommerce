@@ -35,7 +35,6 @@ const formatDate = (dateString) => {
 };
 
 const WalletPage = () => {
-  const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const email = localStorage.getItem("email");

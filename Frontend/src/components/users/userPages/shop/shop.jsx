@@ -1,14 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  HeartIcon,
-  XMarkIcon,
-  AdjustmentsHorizontalIcon,
-  ChevronLeftIcon,
-  ShoppingCartIcon,
-} from "@heroicons/react/24/outline";
-import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
@@ -30,10 +20,12 @@ import Pagination from "@/components/common/pagination";
 import { useWishlist } from "@/context/wishlistContext";
 import SpecialOfferBanner from "@/components/common/SpeacialOfferBanner";
 import SearchBar from "@/components/common/searchBar";
+import FilterButton from "./shopComponents/filter/filterButton";
 import Breadcrumbs from "@/components/common/breadCrums";
+import FilterBox from "./shopComponents/filter/filterBox";
+import ProductCard from "./shopComponents/list/shopCarts";
 
 const ShopPage = () => {
-  const navigate = useNavigate();
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
@@ -157,6 +149,11 @@ const ShopPage = () => {
     setShowFilters(!showFilters);
   };
 
+  const applyFilters = () => {
+    setAppliedFilters(filterValues);
+    setCurrentPage(1);
+  };
+
   const handleAddToCart = async (product) => {
     try {
       const wasInWishlist = isProductInWishlists(product._id);
@@ -213,110 +210,20 @@ const ShopPage = () => {
       {/* Shop Section */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <SpecialOfferBanner products={products} />
+        {/* heading and filter button */}
 
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold">SHOP</h2>
-          <Button
-            onClick={toggleFilters}
-            className="flex items-center gap-2 bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors duration-200"
-          >
-            {showFilters ? (
-              <>
-                <ChevronLeftIcon className="w-4 h-4" />
-                Hide Filters
-              </>
-            ) : (
-              <>
-                <AdjustmentsHorizontalIcon className="w-4 h-4" />
-                Show Filters
-              </>
-            )}
-          </Button>
-        </div>
+        <FilterButton showFilters={showFilters} toggleFilters={toggleFilters} />
 
         <div className="flex flex-col lg:flex-row gap-6">
           {showFilters && (
-            <div className="w-full lg:w-1/4 bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">FILTERS</h3>
-              <div className="mb-6">
-                <h4 className="text-sm font-medium mb-2">Category</h4>
-                <select
-                  onChange={handleFilterChange}
-                  value={filterValues.category}
-                  name="category"
-                  className="w-full border p-2"
-                >
-                  <option value="">All</option>
-                  {categories?.map((category) => (
-                    <option key={category._id} value={category.categoryName}>
-                      {category.categoryName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-6">
-                <h4 className="text-sm font-medium mb-2">Price Range</h4>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    className="border p-2 w-20"
-                    onChange={handleFilterChange}
-                    value={filterValues.minPrice}
-                    name="minPrice"
-                  />
-                  <span>-</span>
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    className="border p-2 w-20"
-                    onChange={handleFilterChange}
-                    value={filterValues.maxPrice}
-                    name="maxPrice"
-                  />
-                </div>
-              </div>
-              <div className="mb-6">
-                <h4 className="text-sm font-medium mb-2">Strap Material</h4>
-                <select
-                  onChange={handleFilterChange}
-                  value={filterValues.strapMaterial}
-                  name="strapMaterial"
-                  className="w-full border p-2"
-                >
-                  <option value="">All</option>
-                  {strapMaterials.map((material, index) => (
-                    <option key={index} value={material}>
-                      {material}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-6">
-                <h4 className="text-sm font-medium mb-2">Sort By</h4>
-                <select
-                  onChange={handleFilterChange}
-                  value={filterValues.sortBy}
-                  name="sortBy"
-                  className="w-full border p-2"
-                >
-                  <option value="">Default</option>
-                  <option value="priceLowToHigh">Price: Low to High</option>
-                  <option value="priceHighToLow">Price: High to Low</option>
-                  <option value="aToZ">A to Z</option>
-                  <option value="zToA">Z to A</option>
-                </select>
-              </div>
-              <Button
-                onClick={applyfilters}
-                className="w-full bg-black text-white hover:bg-gray-800"
-              >
-                Apply Filters
-              </Button>
-            </div>
+            <FilterBox
+              filterValues={filterValues}
+              handleFilterChange={handleFilterChange}
+              applyFilters={applyFilters}
+              categories={categories}
+              strapMaterials={strapMaterials}
+            />
           )}
-
           <div className={`w-full ${showFilters ? "lg:w-3/4" : "lg:w-full"}`}>
             {isLoading || isSearching ? (
               <SmallSpinner />
@@ -336,122 +243,15 @@ const ShopPage = () => {
                   } gap-6`}
                 >
                   {products.map((product, index) => (
-                    <div
+                    <ProductCard
                       key={product._id}
-                      className="product-card bg-white rounded-lg overflow-hidden flex flex-col relative h-full border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-lg transition-all duration-300 animate-fadeInUp"
-                      style={{ animationDelay: `${index * 0.05}s` }}
-                    >
-                      <div className="product-image-container relative pt-4 px-4 flex justify-center bg-gray-100">
-                        {product.offer && (
-                          <span className="absolute top-2 left-2 bg-black text-white text-xs font-semibold px-2 py-1 rounded z-10">
-                            {product.offer.title} {product.offer.discountValue}%
-                            Off
-                          </span>
-                        )}
-                        <img
-                          src={product.images[0]}
-                          alt={product.name || "Product"}
-                          className={`product-image w-full object-contain ${
-                            showFilters
-                              ? "h-48 md:h-56"
-                              : "h-56 md:h-64 lg:h-72"
-                          }`}
-                          onClick={() =>
-                            navigate(`/shop/product-view/${product._id}`)
-                          }
-                        />
-
-                        {/* Product actions that appear on hover */}
-                        <div className="product-actions absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center gap-4 opacity-0 transition-opacity">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="bg-white hover:bg-gray-100"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleWishlist(product._id);
-                            }}
-                          >
-                            <HeartIcon
-                              className={`w-5 h-5 ${
-                                isProductInWishlists(product._id)
-                                  ? "text-red-500 fill-red-500"
-                                  : "text-gray-700"
-                              }`}
-                            />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="bg-white hover:bg-gray-100"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddToCart(product);
-                            }}
-                            disabled={product.stock < 1 || product.isHidden}
-                          >
-                            <ShoppingCartIcon className="w-5 h-5 text-gray-700" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="p-4 flex flex-col flex-grow">
-                        <h3
-                          className="text-lg font-medium text-gray-900 text-center hover:text-blue-600 transition-colors cursor-pointer"
-                          onClick={() =>
-                            navigate(`/shop/product-view/${product._id}`)
-                          }
-                        >
-                          {product.name || "Unnamed Product"}
-                        </h3>
-
-                        <div className="text-center mt-2 mb-3">
-                          {product.discountedPrice < product.originalPrice ? (
-                            <div className="flex justify-center gap-2 items-baseline">
-                              <p className="text-gray-500 line-through font-medium text-sm">
-                                ₹{product.originalPrice.toLocaleString("en-IN")}
-                              </p>
-                              <p className="text-green-600 font-bold text-lg">
-                                ₹
-                                {product.discountedPrice.toLocaleString(
-                                  "en-IN"
-                                )}
-                              </p>
-                            </div>
-                          ) : (
-                            <p className="text-gray-800 font-bold text-lg">
-                              ₹{product.originalPrice.toLocaleString("en-IN")}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Stock status */}
-                        {product.stock < 1 ? (
-                          <p className="text-center text-red-500 text-sm font-medium">
-                            Out of Stock
-                          </p>
-                        ) : product.stock < 10 ? (
-                          <p className="text-center text-orange-500 text-sm font-medium">
-                            Only {product.stock} left!
-                          </p>
-                        ) : (
-                          <p className="text-center text-green-500 text-sm font-medium">
-                            In Stock
-                          </p>
-                        )}
-
-                        {/* Quick add to cart button (visible on mobile) */}
-                        <div className="mt-3 sm:hidden">
-                          <Button
-                            className="w-full bg-black text-white hover:bg-gray-800 text-sm py-2"
-                            onClick={() => handleAddToCart(product)}
-                            disabled={product.stock < 1 || product.isHidden}
-                          >
-                            Add to Cart
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                      product={product}
+                      isProductInWishlists={isProductInWishlists}
+                      toggleWishlist={toggleWishlist}
+                      handleAddToCart={handleAddToCart}
+                      showFilters={showFilters}
+                      index={index}
+                    />
                   ))}
                 </div>
                 {/* paginations */}
