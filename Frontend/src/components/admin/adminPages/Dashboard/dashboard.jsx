@@ -45,10 +45,11 @@ import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import AdminSidebar from "../../reuse/sidebar/sidebar";
+import LoadingSpinner from "../../adminCommon/loadingSpinner";
+import CommonError from "../../adminCommon/error";
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [dateRange, setDateRange] = useState("daily");
   const [customStartDate, setCustomStartDate] = useState(null);
@@ -59,17 +60,7 @@ const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: adminLogout,
-    onSuccess: () => {
-      toast.success("Logged out successfully!");
-      queryClient.removeQueries(["auth"]);
-      navigate("/adminlogin");
-    },
-    onError: (err) => {},
-  });
-
-  const { data: salesData, isLoading: salesLoading } = useQuery({
+  const { data: salesData, isLoading: salesLoading ,error:salesError} = useQuery({
     queryKey: ["salesStatistics", statusFilter, searchQuery, currentPage],
     queryFn: () =>
       getSalesStatistics({
@@ -103,16 +94,6 @@ const AdminDashboard = () => {
         !isNaN(customStartDate.getTime()) &&
         !isNaN(customEndDate.getTime())),
   });
-
-  const sidebarItems = [
-    { name: "Dashboard", path: "/admin-dashboard" },
-    { name: "Users", path: "/admin/users" },
-    { name: "Products", path: "/admin/productlist" },
-    { name: "Orders", path: "/admin/orders" },
-    { name: "Offers", path: "/admin/offers" },
-    { name: "Categories", path: "/admin/categories" },
-    { name: "coupon", path: "/admin/coupon" },
-  ];
 
   const handleDateRangeChange = (range) => {
     setDateRange(range);
@@ -327,16 +308,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleUpdateStatus = async (orderId, newStatus) => {
-    try {
-      await updateOrderStatus(orderId, newStatus);
-      toast.success("Order status updated successfully");
-      queryClient.invalidateQueries(["salesStatistics"]);
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
   const PaginationControls = () => (
     <div className="flex justify-between items-center mt-4">
       <p className="text-sm text-gray-600">
@@ -374,54 +345,25 @@ const AdminDashboard = () => {
     </div>
   );
 
+  if (reportLoading || salesLoading) {
+    return (
+      <div className="flex min-h-screen bg-gray-100">
+        <AdminSidebar activeRoute="/admin-dashboard" />
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if(salesError||reportError){
+    return(
+      <CommonError Route={'/admin-dashboard'} m1={'error to load dashboard data'} m2={'Error load Dashboard'}/>
+    )
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside
-        className={`${
-          isSidebarOpen ? "w-64" : "w-20"
-        } bg-white border-r transition-all duration-300`}
-      >
-        <div className="p-4">
-          <h1
-            className={`text-2xl font-bold text-gray-800 ${
-              !isSidebarOpen && "hidden"
-            }`}
-          >
-            WOTIX
-          </h1>
-        </div>
-        <nav className="mt-4">
-          <ul className="space-y-2">
-            {sidebarItems.map((item) => (
-              <li key={item.name}>
-                <button
-                  onClick={() => navigate(item.path)}
-                  className={`w-full text-left px-4 py-2 ${
-                    item.name === "Dashboard"
-                      ? "bg-black text-white"
-                      : "text-gray-600 hover:bg-gray-200"
-                  } ${!isSidebarOpen && "justify-center"}`}
-                >
-                  {isSidebarOpen ? item.name : item.name.charAt(0)}
-                </button>
-              </li>
-            ))}
-            <li>
-              <button
-                onClick={() => mutate()}
-                disabled={isPending}
-                className={`w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200 flex items-center ${
-                  !isSidebarOpen && "justify-center"
-                }`}
-              >
-                <ArrowLeftStartOnRectangleIcon className="w-5 h-5 mr-2" />
-                {isSidebarOpen && (isPending ? "Logging out..." : "Logout")}
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+      <AdminSidebar activeRoute="/admin-dashboard" />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">

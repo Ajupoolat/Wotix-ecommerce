@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
@@ -24,7 +23,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  ArrowLeftStartOnRectangleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   XMarkIcon,
@@ -34,10 +32,11 @@ import {
   getuserdetails,
   blockuser,
 } from "../../../../api/admin/usermanagment/usermanagment";
-import { adminLogout } from "@/api/admin/Login/loginAuth";
+import AdminSidebar from "../../reuse/sidebar/sidebar";
+import LoadingSpinner from "../../adminCommon/loadingSpinner";
+import CommonError from "../../adminCommon/error";
 
 const Userlist = () => {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,18 +74,6 @@ const Userlist = () => {
     },
     onError: (err) => {
       toast.error(err.message || "Failed to update user status");
-    },
-  });
-
-  const { mutate: logout, isPending: isLoggingOut } = useMutation({
-    mutationFn: adminLogout,
-    onSuccess: () => {
-      toast.success("Logged out successfully!");
-      queryClient.removeQueries(["auth"]);
-      navigate("/adminlogin");
-    },
-    onError: (err) => {
-      toast.error(err.message || "Logout failed");
     },
   });
 
@@ -153,81 +140,29 @@ const Userlist = () => {
     return buttons;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen bg-gray-100">
+        <AdminSidebar activeRoute="/admin/users" />
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error || isError) {
+    return (
+      <CommonError
+        Route={"/admin/users"}
+        m1={"error to load user data"}
+        m2={"Error loading userdata"}
+      />
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <aside className="w-64 bg-white border-r">
-        <div className="p-4">
-          <h1 className="text-2xl font-bold text-gray-800">WOTIX</h1>
-        </div>
-        <nav className="mt-4">
-          <ul className="space-y-2">
-            <li>
-              <button
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                onClick={() => navigate("/admin-dashboard")}
-              >
-                Dashboard
-              </button>
-            </li>
-            <li>
-              <button className="w-full text-left px-4 py-2 bg-black text-white">
-                Users
-              </button>
-            </li>
-            <li>
-              <button
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                onClick={() => navigate("/admin/productlist")}
-              >
-                Products
-              </button>
-            </li>
-            <li>
-              <button
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                onClick={() => navigate("/admin/Orders")}
-              >
-                Orders
-              </button>
-            </li>
-            <li>
-              <button
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                onClick={() => navigate("/admin/offers")}
-              >
-                Offers
-              </button>
-            </li>
-            <li>
-              <button
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                onClick={() => navigate("/admin/categories")}
-              >
-                Categories
-              </button>
-            </li>
-            <li>
-              <button
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                onClick={() => navigate("/admin/coupon")}
-              >
-                Coupon
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => logout()}
-                disabled={isLoggingOut}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200 flex items-center"
-              >
-                <ArrowLeftStartOnRectangleIcon className="w-5 h-5 mr-2" />
-                {isLoggingOut ? "Logging out..." : "Logout"}
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-
+      {/* side bar  */}
+      <AdminSidebar activeRoute="/admin/users" />
       <div className="flex-1 flex flex-col">
         <header className="bg-white border-b p-4 flex items-center justify-between">
           <div className="flex items-center space-x-4 relative">
@@ -266,19 +201,6 @@ const Userlist = () => {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Users List</h2>
           </div>
-
-          {isLoading && (
-            <div className="text-center py-4">
-              <p>Loading users...</p>
-            </div>
-          )}
-          {isError && (
-            <div className="text-center py-4 text-red-600">
-              <p>
-                Error fetching users: {error?.message || "Something went wrong"}
-              </p>
-            </div>
-          )}
 
           {!isLoading && !isError && (
             <div className="bg-white rounded-lg shadow">

@@ -60,7 +60,7 @@ const adminlogin = async (req, res) => {
     res.cookie("tokenadmin", tokenadmin, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "None",
       maxAge: 24 * 60 * 60 * 1000,
     });
 

@@ -28,8 +28,9 @@ import {
   ChevronLeftIcon,
 } from "@heroicons/react/24/outline";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
+import AdminSidebar from "../../reuse/sidebar/sidebar";
 import { toast } from "react-hot-toast";
+import LoadingSpinner from "../../adminCommon/loadingSpinner";
 import {
   getordersdetails,
   updateOrderStatus,
@@ -38,6 +39,7 @@ import {
 import { adminLogout } from "@/api/admin/Login/loginAuth";
 import StatusUpdateDialog from "./dropdown/dropdown";
 import NotificationDropdown from "./returnrequest/returnrequest";
+import CommonError from "../../adminCommon/error";
 
 const OrderDetailsAdmin = () => {
   const navigate = useNavigate();
@@ -150,38 +152,8 @@ const OrderDetailsAdmin = () => {
   if (isLoading) {
     return (
       <div className="flex min-h-screen bg-gray-100">
-        <aside className="w-64 bg-white border-r">
-          <div className="p-4">
-            <Skeleton className="h-8 w-32" />
-          </div>
-          <nav className="mt-4 space-y-2 px-4">
-            {[...Array(7)].map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
-          </nav>
-        </aside>
-        <div className="flex-1 flex flex-col">
-          <header className="bg-white border-b p-4 flex items-center justify-between">
-            <Skeleton className="h-10 w-40" />
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <Skeleton className="h-6 w-20" />
-            </div>
-          </header>
-          <main className="p-6">
-            <div className="space-y-4">
-              <Skeleton className="h-12 w-64" />
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Skeleton className="h-96 w-full lg:col-span-2" />
-                <div className="space-y-6">
-                  <Skeleton className="h-32 w-full" />
-                  <Skeleton className="h-32 w-full" />
-                  <Skeleton className="h-32 w-full" />
-                </div>
-              </div>
-            </div>
-          </main>
-        </div>
+        <AdminSidebar activeRoute="/admin/orders" />
+        <LoadingSpinner />
       </div>
     );
   }
@@ -189,127 +161,11 @@ const OrderDetailsAdmin = () => {
   // Error state
   if (isError || !orderDetails) {
     return (
-      <div className="flex min-h-screen bg-gray-100">
-        <aside className="w-64 bg-white border-r">
-          <div className="p-4">
-            <h1 className="text-2xl font-bold text-gray-800">WOTIX</h1>
-          </div>
-          <nav className="mt-4">
-            <ul className="space-y-2">
-              <li>
-                <button
-                  onClick={() => navigate("/admin-dashboard")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Dashboard
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/users")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Users
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/productlist")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Products
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/orders")}
-                  className="w-full text-left px-4 py-2 bg-black text-white"
-                >
-                  Orders
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/offers")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Offers
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/categories")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Categories
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/coupon")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Coupon
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => logoutMutate()}
-                  disabled={isLoggingOut}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200 flex items-center disabled:opacity-50"
-                >
-                  <ArrowLeftStartOnRectangleIcon className="w-5 h-5 mr-2" />
-                  {isLoggingOut ? "Logging out..." : "Logout"}
-                </button>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-        <div className="flex-1 flex flex-col">
-          <header className="bg-white border-b p-4 flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/admin/orders")}
-              className="flex items-center"
-            >
-              <ChevronLeftIcon className="w-4 h-4 mr-1" />
-              Back to Orders
-            </Button>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Avatar>
-                  <AvatarImage
-                    src="https://github.com/shadcn.png"
-                    alt="Admin"
-                  />
-                  <AvatarFallback>AD</AvatarFallback>
-                </Avatar>
-                <span className="text-gray-800">Admin</span>
-              </div>
-            </div>
-          </header>
-          <main className="p-6 flex items-center justify-center h-full">
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-red-500 mb-2">
-                {orderDetails
-                  ? "Error loading order details"
-                  : "Order not found"}
-              </h2>
-              <p className="text-gray-600 mb-4">
-                {error?.message || "Failed to load order information"}
-              </p>
-              <Button
-                onClick={() =>
-                  queryClient.invalidateQueries(["order-details", orderId])
-                }
-                className="bg-black text-white"
-              >
-                Try Again
-              </Button>
-            </div>
-          </main>
-        </div>
-      </div>
+      <CommonError
+        Route={"/admin/orders"}
+        m1={"error load the order details"}
+        m2={"error loading order details"}
+      />
     );
   }
 
@@ -321,81 +177,7 @@ const OrderDetailsAdmin = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <aside className="w-64 bg-white border-r">
-        <div className="p-4">
-          <h1 className="text-2xl font-bold text-gray-800">WOTIX</h1>
-        </div>
-        <nav className="mt-4">
-          <ul className="space-y-2">
-            <li>
-              <button
-                onClick={() => navigate("/admin-dashboard")}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-              >
-                Dashboard
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/admin/users")}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-              >
-                Users
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/admin/productlist")}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-              >
-                Products
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/admin/orders")}
-                className="w-full text-left px-4 py-2 bg-black text-white"
-              >
-                Orders
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/admin/offers")}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-              >
-                Offers
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/admin/categories")}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-              >
-                Categories
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/admin/coupon")}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-              >
-                Coupon
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => logoutMutate()}
-                disabled={isLoggingOut}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200 flex items-center disabled:opacity-50"
-              >
-                <ArrowLeftStartOnRectangleIcon className="w-5 h-5 mr-2" />
-                {isLoggingOut ? "Logging out..." : "Logout"}
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+<AdminSidebar activeRoute="/admin/orders"/>
       <div className="flex-1 flex flex-col">
         <header className="bg-white border-b p-4 flex items-center justify-between">
           <Button

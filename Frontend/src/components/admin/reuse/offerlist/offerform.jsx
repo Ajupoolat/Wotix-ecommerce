@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "react-hot-toast";
+import LoadingSpinner from "../../adminCommon/loadingSpinner";
 import {
   createOffer,
   editoffer,
@@ -42,7 +43,10 @@ const offerSchema = z
       .string()
       .min(1, "Title is required")
       .max(100, "Title must be less than 100 characters")
-      .regex(/^[a-zA-Z0-9\s]+$/, "Title can only contain letters, numbers, and spaces")
+      .regex(
+        /^[a-zA-Z0-9\s]+$/,
+        "Title can only contain letters, numbers, and spaces"
+      )
       .trim()
       .regex(/^\S.*\S$/, "Title cannot have leading or trailing spaces"),
     offerType: z.enum(["product", "category"], {
@@ -53,7 +57,10 @@ const offerSchema = z
       .string()
       .min(10, "Minimum 10 characters required")
       .max(500, "Description must be less than 500 characters")
-      .regex(/^[a-zA-Z0-9\s]*$/, "Description can only contain letters, numbers, and spaces")
+      .regex(
+        /^[a-zA-Z0-9\s]*$/,
+        "Description can only contain letters, numbers, and spaces"
+      )
       .trim()
       .optional(),
     discountType: z.enum(["percentage"], {
@@ -63,7 +70,10 @@ const offerSchema = z
     discountValue: z
       .string()
       .min(1, "Discount value is required")
-      .regex(/^\d*\.?\d{0,2}$/, "Discount value must be a number with up to two decimal places")
+      .regex(
+        /^\d*\.?\d{0,2}$/,
+        "Discount value must be a number with up to two decimal places"
+      )
       .transform((val) => Number(val))
       .refine((val) => !isNaN(val) && val >= 0, {
         message: "Discount value must be a positive number",
@@ -77,9 +87,17 @@ const offerSchema = z
         (val) => {
           const inputDate = new Date(val);
           if (isNaN(inputDate.getTime())) return false;
-          const inputDateOnly = new Date(inputDate.getFullYear(), inputDate.getMonth(), inputDate.getDate());
+          const inputDateOnly = new Date(
+            inputDate.getFullYear(),
+            inputDate.getMonth(),
+            inputDate.getDate()
+          );
           const today = new Date();
-          const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+          const todayDateOnly = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate()
+          );
           return inputDateOnly >= todayDateOnly;
         },
         { message: "Start date must be today or in the future" }
@@ -118,7 +136,9 @@ const offerSchema = z
   .refine(
     (data) => {
       if (data.offerType === "category") {
-        return data.applicableCategories && data.applicableCategories.length > 0;
+        return (
+          data.applicableCategories && data.applicableCategories.length > 0
+        );
       }
       return true;
     },
@@ -151,22 +171,7 @@ const OfferForm = ({
   const [productSearch, setProductSearch] = useState("");
   const [categorySearch, setCategorySearch] = useState("");
 
-  const form = useForm({
-    resolver: zodResolver(offerSchema),
-    mode: "onChange",
-    defaultValues: {
-      title: "",
-      offerType: "product",
-      description: "",
-      discountType: "percentage",
-      discountValue: "",
-      applicableProducts: [],
-      applicableCategories: [],
-      startDate: "",
-      endDate: "",
-      isActive: true,
-    },
-  });
+  
 
   const { data: offerData, isLoading: isOfferLoading } = useQuery({
     queryKey: ["offer", offerId],
@@ -178,11 +183,29 @@ const OfferForm = ({
     },
   });
 
+  const form = useForm({
+    resolver: zodResolver(offerSchema),
+    mode: "onChange",
+    defaultValues: {
+      title: "",
+      offerType: mode === "edit" && offerData?.offerType ? offerData.offerType : "category",
+      description: "",
+      discountType: "percentage",
+      discountValue: "",
+      applicableProducts: [],
+      applicableCategories: [],
+      startDate: "",
+      endDate: "",
+      isActive: true,
+    },
+  });
+
+  console.log(offerData?.offerType);
   useEffect(() => {
     if (mode === "edit" && offerData) {
       form.reset({
         title: offerData.title || "",
-        offerType: offerData.offerType || "product",
+        offerType: offerData.offerType,
         description: offerData.description || "",
         discountType: offerData.discountType || "percentage",
         discountValue: offerData.discountValue?.toString() || "",
@@ -208,7 +231,7 @@ const OfferForm = ({
     }
   }, [offerData, mode, form]);
 
-  const { data: products = [] } = useQuery({
+  const { data: products = [] , isLoading:isProductLoading} = useQuery({
     queryKey: ["products"],
     queryFn: getproductlist,
     select: (data) =>
@@ -218,7 +241,7 @@ const OfferForm = ({
       })),
   });
 
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [] ,isLoading:isCategoriesLoading} = useQuery({
     queryKey: ["categories"],
     queryFn: getcategorylist,
     select: (data) =>
@@ -228,7 +251,7 @@ const OfferForm = ({
       })),
   });
 
-  const createMutation = useMutation({
+  const {mutate:createMutation,isPending:isCreating} = useMutation({
     mutationFn: createOffer,
     onSuccess: () => {
       toast.success("Offer created successfully!");
@@ -240,7 +263,7 @@ const OfferForm = ({
     },
   });
 
-  const editMutation = useMutation({
+  const {mutate:editMutation ,isPending:isupdating}= useMutation({
     mutationFn: (data) => editoffer(data, offerId),
     onSuccess: () => {
       toast.success("Offer updated successfully!");
@@ -272,21 +295,17 @@ const OfferForm = ({
     if (onSubmit) {
       onSubmit(payload);
     } else if (mode === "add") {
-      createMutation.mutate(payload);
+      createMutation(payload);
     } else if (mode === "edit") {
-      editMutation.mutate(payload);
+      editMutation(payload);
     }
   };
 
-  if (mode === "edit" && isOfferLoading) {
+  if (isOfferLoading||isCategoriesLoading||isProductLoading||isCreating||isupdating) {
     return (
       <div className="flex min-h-screen bg-gray-100">
         <AdminSidebar activeRoute="/admin/offers" />
-        <div className="flex-1 flex flex-col">
-          <main className="p-6">
-            <div>Loading...</div>
-          </main>
-        </div>
+        <LoadingSpinner/>
       </div>
     );
   }
@@ -338,7 +357,7 @@ const OfferForm = ({
                     )}
                   />
 
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="offerType"
                     render={({ field }) => (
@@ -347,9 +366,46 @@ const OfferForm = ({
                         <Select
                           onValueChange={(value) =>
                             form.setValue("offerType", value, {
-                              shouldValidate: true,
+                              shouldValidate: false,
                             })
                           }
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select offer type" {...field} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="product">
+                              Product Offer
+                            </SelectItem>
+                            <SelectItem value="category">
+                              Category Offer
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  /> */}
+
+                  <FormField
+                    control={form.control}
+                    name="offerType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Offer Type</FormLabel>
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            form.setValue("applicableProducts", [], {
+                              shouldValidate: true,
+                            });
+                            form.setValue("applicableCategories", [], {
+                              shouldValidate: true,
+                            });
+                          }}
                           value={field.value}
                         >
                           <FormControl>
@@ -358,7 +414,9 @@ const OfferForm = ({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="product">Product Offer</SelectItem>
+                            <SelectItem value="product">
+                              Product Offer
+                            </SelectItem>
                             <SelectItem value="category">
                               Category Offer
                             </SelectItem>
@@ -368,7 +426,6 @@ const OfferForm = ({
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="description"
@@ -705,12 +762,8 @@ const OfferForm = ({
 
                   <Button
                     type="submit"
-                    className="w-full"
-                    disabled={
-                      isSubmitting ||
-                      !form.formState.isValid ||
-                      (mode === "edit" && !form.formState.isDirty)
-                    }
+                    className="w-full hover:bg-gray-600"
+                    disabled={isSubmitting}
                   >
                     {isSubmitting
                       ? mode === "edit"

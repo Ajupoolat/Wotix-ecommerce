@@ -103,7 +103,10 @@ const CategoryForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(handleFormSubmit)}
+        className="space-y-4"
+      >
         <FormField
           control={form.control}
           name="categoryName"
@@ -170,15 +173,17 @@ const CategoryForm = ({
                     ? categoryImage.name
                     : initialData.image?.split("/").pop()}
                 </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRemoveImage}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <XMarkIcon className="w-4 h-4" />
-                </Button>
+                {mode === "add" && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemoveImage}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <XMarkIcon className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -195,12 +200,7 @@ const CategoryForm = ({
           <Button
             type="submit"
             className="bg-black text-white hover:bg-gray-800"
-            disabled={
-              isSubmitting ||
-              !form.formState.isValid ||
-              (mode === "add" && !categoryImage) ||
-              (mode === "edit" && !form.formState.isDirty && !categoryImage)
-            }
+            disabled={isSubmitting || !form.formState.isValid}
           >
             {isSubmitting
               ? mode === "edit"

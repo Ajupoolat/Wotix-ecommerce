@@ -33,13 +33,15 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
-import { adminLogout } from "@/api/admin/Login/loginAuth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getproductdetails,
   deleteproduct,
   handleHide,
 } from "@/api/admin/productmgt/productmgt";
+import AdminSidebar from "../../reuse/sidebar/sidebar";
+import LoadingSpinner from "../../adminCommon/loadingSpinner";
+import CommonError from "../../adminCommon/error";
 
 const Productlist = () => {
   const navigate = useNavigate();
@@ -69,20 +71,6 @@ const Productlist = () => {
         search: searchQuery,
       }),
     keepPreviousData: true, // Retain previous data while fetching new page
-  });
-
-  // Mutation for logging out
-  const { mutate: logoutMutation, isPending: isLoggingOut } = useMutation({
-    mutationFn: adminLogout,
-    onSuccess: () => {
-      toast.success("Logged out successfully!");
-      queryClient.invalidateQueries(["products"]);
-      queryClient.removeQueries(["auth"]);
-      navigate("/adminlogin");
-    },
-    onError: (err) => {
-      toast.error(err.message || "Logout failed");
-    },
   });
 
   // Mutation for deleting product
@@ -145,10 +133,6 @@ const Productlist = () => {
     deleteMutation(productId);
   };
 
-  const handleLogout = () => {
-    logoutMutation();
-  };
-
   const handleClearSearch = () => {
     setSearchQuery("");
   };
@@ -180,81 +164,29 @@ const Productlist = () => {
     return buttons;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen bg-gray-100">
+        <AdminSidebar activeRoute="/admin-dashboard" />
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <CommonError
+        Route={"/admin/productlist"}
+        m1={"error to load product data"}
+        m2={"Error loading product data"}
+      />
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <aside className="w-64 bg-white border-r">
-        <div className="p-4">
-          <h1 className="text-2xl font-bold text-gray-800">WOTIX</h1>
-        </div>
-        <nav className="mt-4">
-          <ul className="space-y-2">
-            <li>
-              <button
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                onClick={() => navigate("/admin-dashboard")}
-              >
-                Dashboard
-              </button>
-            </li>
-            <li>
-              <button
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                onClick={() => navigate("/admin/users")}
-              >
-                Users
-              </button>
-            </li>
-            <li>
-              <button className="w-full text-left px-4 py-2 bg-black text-white">
-                Products
-              </button>
-            </li>
-            <li>
-              <button
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                onClick={() => navigate("/admin/orders")}
-              >
-                Orders
-              </button>
-            </li>
-            <li>
-              <button
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                onClick={() => navigate("/admin/offers")}
-              >
-                Offers
-              </button>
-            </li>
-            <li>
-              <button
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                onClick={() => navigate("/admin/categories")}
-              >
-                Categories
-              </button>
-            </li>
-            <li>
-              <button
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                onClick={() => navigate("/admin/coupon")}
-              >
-                Coupon
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200 flex items-center"
-              >
-                <ArrowLeftStartOnRectangleIcon className="w-5 h-5 mr-2" />
-                {isLoggingOut ? "Logging out..." : "Logout"}
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-
+      {/* side-bar */}
+      <AdminSidebar activeRoute="/admin/productlist" />
       <div className="flex-1 flex flex-col">
         <header className="bg-white border-b p-4 flex items-center justify-between">
           <div className="flex items-center space-x-4 relative">

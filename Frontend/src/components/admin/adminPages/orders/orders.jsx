@@ -43,9 +43,11 @@ import {
   processReturnRequest,
   getreturnpending,
 } from "@/api/admin/ordermanagment/ordermgtad";
-import { Skeleton } from "@/components/ui/skeleton";
+import AdminSidebar from "../../reuse/sidebar/sidebar";
+import LoadingSpinner from "../../adminCommon/loadingSpinner";
 import { toast } from "react-hot-toast";
 import { adminLogout } from "@/api/admin/Login/loginAuth";
+import CommonError from "../../adminCommon/error";
 
 // Custom debounce hook
 const useDebounce = (value, delay) => {
@@ -217,131 +219,9 @@ const OrderList = () => {
   // Loading state
   if (ordersLoading || pendingReturnsLoading) {
     return (
-      <div className="flex min-h-screen bg-gray-100">
-        <aside className="w-64 bg-white border-r">
-          <div className="p-4">
-            <h1 className="text-2xl font-bold text-gray-800">WOTIX</h1>
-          </div>
-          <nav className="mt-4">
-            <ul className="space-y-2">
-              <li>
-                <button
-                  onClick={() => navigate("/admin-dashboard")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Dashboard
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/users")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Users
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/productlist")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Products
-                </button>
-              </li>
-              <li>
-                <button className="w-full text-left px-4 py-2 bg-black text-white">
-                  Orders
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/offers")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Offers
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/categories")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Categories
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/coupon")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Coupon
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200 flex items-center disabled:opacity-50"
-                >
-                  <ArrowLeftStartOnRectangleIcon className="w-5 h-5 mr-2" />
-                  {isLoggingOut ? "Logging out..." : "Logout"}
-                </button>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-        <div className="flex-1 flex flex-col">
-          <header className="bg-white border-b p-4 flex items-center justify-between">
-            <div className="flex items-center space-x-4 relative">
-              <Skeleton className="h-8 w-64" />
-            </div>
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <Skeleton className="h-6 w-20" />
-            </div>
-          </header>
-          <main className="p-6">
-            <div className="flex justify-between items-center mb-4">
-              <Skeleton className="h-8 w-48" />
-              <div className="flex space-x-4">
-                <Skeleton className="h-8 w-40" />
-                <Skeleton className="h-8 w-40" />
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {["Order #", "Customer", "Date", "Items", "Total", "Status", "Payment", "Action"].map((header, i) => (
-                      <TableHead key={i}>
-                        <Skeleton className="h-4 w-24" />
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {[...Array(5)].map((_, i) => (
-                    <TableRow key={i}>
-                      {[...Array(8)].map((_, j) => (
-                        <TableCell key={j}>
-                          <Skeleton className="h-4 w-full" />
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="flex items-center justify-between mt-4">
-              <Skeleton className="h-4 w-40" />
-              <div className="flex space-x-2">
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-8 w-8" />
-                ))}
-              </div>
-            </div>
-          </main>
-        </div>
+     <div className="flex min-h-screen bg-gray-100">
+        <AdminSidebar activeRoute="/admin/orders" />
+        <LoadingSpinner/>
       </div>
     );
   }
@@ -349,209 +229,13 @@ const OrderList = () => {
   // Error state
   if (ordersError || pendingReturnsError) {
     return (
-      <div className="flex min-h-screen bg-gray-100">
-        <aside className="w-64 bg-white border-r">
-          <div className="p-4">
-            <h1 className="text-2xl font-bold text-gray-800">WOTIX</h1>
-          </div>
-          <nav className="mt-4">
-            <ul className="space-y-2">
-              <li>
-                <button
-                  onClick={() => navigate("/admin-dashboard")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Dashboard
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/users")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Users
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/productlist")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Products
-                </button>
-              </li>
-              <li>
-                <button className="w-full text-left px-4 py-2 bg-black text-white">
-                  Orders
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/offers")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Offers
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/categories")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Categories
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/admin/coupon")}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-                >
-                  Coupon
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200 flex items-center disabled:opacity-50"
-                >
-                  <ArrowLeftStartOnRectangleIcon className="w-5 h-5 mr-2" />
-                  {isLoggingOut ? "Logging out..." : "Logout"}
-                </button>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-        <div className="flex-1 flex flex-col">
-          <header className="bg-white border-b p-4 flex items-center justify-between">
-            <div className="flex items-center space-x-4 relative">
-              <Input
-                type="text"
-                placeholder="Search orders..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 rounded-full border-gray-300 bg-gray-100 placeholder-gray-500 pr-10"
-              />
-              {searchQuery && (
-                <div className="absolute right-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearSearch}
-                    className="p-1"
-                  >
-                    <XMarkIcon className="w-4 h-4 text-gray-600" />
-                  </Button>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Avatar>
-                  <AvatarImage src="https://github.com/shadcn.png" alt="Admin" />
-                  <AvatarFallback>AD</AvatarFallback>
-                </Avatar>
-                <span className="text-gray-800">Admin</span>
-              </div>
-            </div>
-          </header>
-          <main className="p-6 flex items-center justify-center h-full">
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-red-500 mb-2">
-                Error loading orders
-              </h2>
-              <p className="text-gray-600 mb-4">
-                {ordersErrorObj?.message ||
-                  pendingReturnsErrorObj?.message ||
-                  "Failed to fetch order data"}
-              </p>
-              <Button
-                onClick={() => queryClient.invalidateQueries(["admin-orders", "pending-return-requests"])}
-                className="bg-black text-white"
-              >
-                Retry
-              </Button>
-            </div>
-          </main>
-        </div>
-      </div>
+     <CommonError Route={'/admin/orders'} m1={'error to load orders data'} m2={'Error loading orders data'}/>
     );
   }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <aside className="w-64 bg-white border-r">
-        <div className="p-4">
-          <h1 className="text-2xl font-bold text-gray-800">WOTIX</h1>
-        </div>
-        <nav className="mt-4">
-          <ul className="space-y-2">
-            <li>
-              <button
-                onClick={() => navigate("/admin-dashboard")}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-              >
-                Dashboard
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/admin/users")}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-              >
-                Users
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/admin/productlist")}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-              >
-                Products
-              </button>
-            </li>
-            <li>
-              <button className="w-full text-left px-4 py-2 bg-black text-white">
-                Orders
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/admin/offers")}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-              >
-                Offers
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/admin/categories")}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-              >
-                Categories
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/admin/coupon")}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200"
-              >
-                Coupon
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-200 flex items-center disabled:opacity-50"
-              >
-                <ArrowLeftStartOnRectangleIcon className="w-5 h-5 mr-2" />
-                {isLoggingOut ? "Logging out..." : "Logout"}
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+ <AdminSidebar activeRoute="/admin/orders"/>
       <div className="flex-1 flex flex-col">
         <header className="bg-white border-b p-4 flex items-center justify-between">
           <div className="flex items-center space-x-4 relative">

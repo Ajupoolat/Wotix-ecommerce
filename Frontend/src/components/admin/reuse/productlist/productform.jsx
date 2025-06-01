@@ -19,10 +19,9 @@ import { X } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { adminLogout } from "@/api/admin/Login/loginAuth";
-import { ArrowLeftStartOnRectangleIcon } from "@heroicons/react/24/outline";
 import AdminSidebar from "../sidebar/sidebar";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const productSchema = z.object({
   productName: z
@@ -125,9 +124,6 @@ const ProductForm = ({
   onCancel,
   isSubmitting = false,
 }) => {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
   const [imagePreviews, setImagePreviews] = useState(
     mode === "edit" ? initialData.images || [] : []
   );
@@ -168,23 +164,6 @@ const ProductForm = ({
       productImages: mode === "edit" ? initialData.images || [] : [],
     },
   });
-
-  const { mutate: logoutMutation, isPending: isLoggingOut } = useMutation({
-    mutationFn: adminLogout,
-    onSuccess: () => {
-      toast.success("Logged out successfully!");
-      queryClient.invalidateQueries(["products"]);
-      queryClient.removeQueries(["auth"]);
-      navigate("/adminlogin");
-    },
-    onError: (err) => {
-      toast.error(err.message || "Logout failed");
-    },
-  });
-
-  const handleLogout = () => {
-    logoutMutation();
-  };
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
@@ -719,12 +698,7 @@ const ProductForm = ({
                 <Button
                   type="submit"
                   className="bg-black text-white hover:bg-gray-800 px-6 py-2"
-                  disabled={
-                    isSubmitting ||
-                    imagePreviews.length !== 3 ||
-                    (mode === "edit" && !isDirty) ||
-                    !isValid
-                  }
+                  disabled={!isValid || imagePreviews.length !== 3}
                 >
                   {isSubmitting
                     ? mode === "edit"

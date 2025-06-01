@@ -329,7 +329,7 @@ const CouponForm = ({
           <Button
             type="submit"
             className="bg-black text-white"
-            disabled={isSubmitting || !form.formState.isValid}
+            disabled={isSubmitting}
           >
             {isSubmitting
               ? mode === "edit"

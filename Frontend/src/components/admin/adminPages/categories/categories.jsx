@@ -44,9 +44,7 @@ import {
   PlusIcon,
   PencilIcon,
 } from "@heroicons/react/24/outline";
-import { Skeleton } from "@/components/ui/skeleton";
 import toast from "react-hot-toast";
-import { adminLogout } from "@/api/admin/Login/loginAuth";
 import {
   addcategory,
   getcategory,
@@ -56,9 +54,10 @@ import {
 } from "@/api/admin/categorymgt/categorymgt";
 import AdminSidebar from "../../reuse/sidebar/sidebar";
 import CategoryForm from "../../reuse/category/categoryform";
+import LoadingSpinner from "../../adminCommon/loadingSpinner";
+import CommonError from "../../adminCommon/error";
 
 const CategoryList = () => {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const addFileInput = useRef(null);
   const editFileInput = useRef(null);
@@ -99,18 +98,6 @@ const CategoryList = () => {
     keepPreviousData: true,
     onError: (err) => {
       toast.error(err.message || "Failed to fetch categories");
-    },
-  });
-
-  const { mutate: logoutMutate, isPending: isLoggingOut } = useMutation({
-    mutationFn: adminLogout,
-    onSuccess: () => {
-      toast.success("Logged out successfully!");
-      queryClient.removeQueries(["auth"]);
-      navigate("/adminlogin");
-    },
-    onError: (err) => {
-      toast.error(err.message || "Logout failed");
     },
   });
 
@@ -180,7 +167,6 @@ const CategoryList = () => {
     setSearchQuery("");
     setCurrentPage(1);
   };
-  const handleLogout = () => logoutMutate();
 
   const handleEditCategory = (category) => {
     setSelectedCategory(category);
@@ -256,116 +242,22 @@ const CategoryList = () => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter]);
 
-  if (isLoading) {
+  if (isLoading||isAdding||isEditing) {
     return (
       <div className="flex min-h-screen bg-gray-100">
         <AdminSidebar activeRoute="/admin/categories" />
-        <div className="flex-1 flex flex-col">
-          <header className="bg-white border-b p-4 flex items-center justify-between">
-            <div className="flex items-center space-x-4 relative">
-              <Skeleton className="h-10 w-64 rounded-full" />
-            </div>
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-6 w-6 rounded-full" />
-              <Skeleton className="h-10 w-10 rounded-full" />
-            </div>
-          </header>
-          <main className="p-6">
-            <div className="flex justify-between items-center mb-4">
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-10 w-40" />
-            </div>
-            <div className="bg-white rounded-lg shadow">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {[...Array(5)].map((_, i) => (
-                      <TableHead key={i}>
-                        <Skeleton className="h-4 w-24" />
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {[...Array(4)].map((_, i) => (
-                    <TableRow key={i}>
-                      {[...Array(5)].map((_, j) => (
-                        <TableCell key={j}>
-                          <Skeleton className="h-4 w-full" />
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </main>
-        </div>
+        <LoadingSpinner />
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="flex min-h-screen bg-gray-100">
-        <AdminSidebar activeRoute="/admin/categories" />
-        <div className="flex-1 flex flex-col">
-          <header className="bg-white border-b p-4 flex items-center justify-between">
-            <div className="flex items-center space-x-4 relative">
-              <Input
-                type="text"
-                placeholder="Search categories..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-64 rounded-full border-gray-300 bg-gray-100 placeholder-gray-500 pr-20"
-              />
-              {searchQuery && (
-                <div className="absolute right-4 flex space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearSearch}
-                    className="p-1"
-                  >
-                    <XMarkIcon className="w-4 h-4 text-gray-600" />
-                  </Button>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Avatar>
-                  <AvatarImage
-                    src="https://github.com/shadcn.png"
-                    alt="Admin"
-                  />
-                  <AvatarFallback>AD</AvatarFallback>
-                </Avatar>
-                <span className="text-gray-800">Admin</span>
-              </div>
-            </div>
-          </header>
-          <main className="p-6 flex items-center justify-center h-full">
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-red-500 mb-2">
-                Error loading categories
-              </h2>
-              <p className="text-gray-600 mb-4">
-                {error?.message || "Failed to fetch category data"}
-              </p>
-              <Button
-                onClick={() => window.location.reload()}
-                className="bg-black text-white"
-              >
-                Retry
-              </Button>
-            </div>
-          </main>
-        </div>
-      </div>
+      <CommonError
+        Route={"/admin/categories"}
+        m1={"Failed to fetch categories data"}
+        m2={"Error loading categories"}
+      />
     );
   }
 

@@ -416,17 +416,17 @@ const googleauth = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "None",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
     res.redirect(
-      `http://localhost:5173?success=true&name=${encodeURIComponent(
+      `${process.env.FRONTEND_URL}?success=true&name=${encodeURIComponent(
         userfind.firstName || ""
       )}&id=${userfind._id || ""}`
     );
   } catch (error) {
-    res.redirect("http://localhost:5173/login?error=auth_failed");
+    res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
   }
 };
 
