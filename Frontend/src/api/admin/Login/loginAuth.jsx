@@ -21,6 +21,7 @@ export const checkauth = async () => {
 export const adminLogout = async () => {
   try {
     const response = await apiAdmin.post(`/adminlogout`, {});
+    localStorage.removeItem('admin')
     return response.data;
   } catch (error) {
     throw error;

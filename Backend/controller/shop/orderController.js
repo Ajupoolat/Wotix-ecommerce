@@ -9,6 +9,8 @@ const userSchema = require("../../models/userSchema");
 const productSchema = require("../../models/productSchema");
 const offerSchema = require("../../models/offerSchema");
 const { OrderResponses } = require("../../enums/order/user/orderuserEnum");
+const ADMIN_ID_ = process.env.ADMIN_ID
+const {createNotification} = require('../../controller/notifications/notificationControllers')
 require("dotenv").config();
 
 const razorpay = new Razorpay({
@@ -904,6 +906,22 @@ const submitReturnRequest = async (req, res) => {
 
     await order.save({ session });
     await session.commitTransaction();
+
+
+    //creating notification for the admin 
+   const io = req.app.get('io')
+   const adminId = ADMIN_ID_
+   const type = 'return_request'
+   const role = 'admin'
+   const message = `a user has requested for return. The Order ID:${order.orderNumber}`
+    await createNotification(
+       io,
+       adminId,
+       role,
+       type,
+       message,
+       orderId
+    )
 
     res.status(OrderResponses.RETURN_REQUEST_SUCCESS.statusCode).json({
       success: true,

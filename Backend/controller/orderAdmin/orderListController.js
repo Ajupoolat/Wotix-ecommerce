@@ -3,10 +3,19 @@ const userschema = require("../../models/userSchema");
 const walletModel = require("../../models/wallet");
 const productModel = require("../../models/productSchema");
 const mongoose = require("mongoose");
+const {
+  createNotification,
+} = require("../../controller/notifications/notificationControllers");
 
 const getorders = async (req, res) => {
   try {
-    const { search = "", status, sortByDate = "desc", page = 1, limit = 5 } = req.query;
+    const {
+      search = "",
+      status,
+      sortByDate = "desc",
+      page = 1,
+      limit = 5,
+    } = req.query;
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
     const skip = (pageNum - 1) * limitNum;
@@ -15,11 +24,13 @@ const getorders = async (req, res) => {
     if (search.trim()) {
       // Find users with matching email
       const users = await userschema
-        .find({ email: { $regex: search, $options: "i" }})
+        .find({ email: { $regex: search, $options: "i" } })
         .select("_id")
         .lean();
       const userIds = users.map((user) => user._id);
-      query.userId = { $in: userIds.length ? userIds : [new mongoose.Types.ObjectId()] }; // Fallback to avoid empty results
+      query.userId = {
+        $in: userIds.length ? userIds : [new mongoose.Types.ObjectId()],
+      }; // Fallback to avoid empty results
     }
     if (status && status !== "all") {
       query.status = status;
@@ -49,11 +60,11 @@ const getorders = async (req, res) => {
       limit: limitNum,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message || "Failed to fetch orders" });
+    res
+      .status(500)
+      .json({ message: error.message || "Failed to fetch orders" });
   }
 };
-
-
 
 const detailsorder = async (req, res) => {
   const orderId = req.params.id;
@@ -180,19 +191,17 @@ const updateOrderStatus = async (req, res) => {
       res.status(200).json(updatedOrder);
     }
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Server error while updating order status",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Server error while updating order status",
+      error: error.message,
+    });
   }
 };
 
 const processReturnRequest = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-
+  console.log("this is working for return process");
   try {
     const { orderId } = req.params;
     const { status, adminNotes } = req.body;
@@ -319,6 +328,24 @@ const processReturnRequest = async (req, res) => {
 
     await order.save({ session });
     await session.commitTransaction();
+
+    //creating the notifications for user
+
+    const io = req.app.get("io");
+    const userID = order.userId;
+    const role = "user";
+    const user = await userschema.findById(userID).select("firstName lastName");
+    if (!user) {
+      console.error("User not found");
+      return;
+    }
+
+    const fullUserName = `${user.firstName} ${user.lastName}`;
+    const type = "return_approved";
+    const message = `Hey ${fullUserName}, your return request for order ${order.orderNumber} has been approved.`;
+
+    console.log(fullUserName, "the fullname of user for notification");
+    await createNotification(io, userID, role, type, message, orderId);
 
     res.status(200).json({
       success: true,

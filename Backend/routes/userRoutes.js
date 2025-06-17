@@ -72,6 +72,7 @@ const {userAuthorization} = require('../Middleware/authorization/userAuth')
 const {getcategory} = require('../controller/categoryByAdmin/categoryController')
 const router = express.Router();
 const passport = require("passport");
+const {getnotificationsUsers,updateNotificationUser,deletionNotificationUser} = require('../controller/notifications/notificationControllers')
 
 // Public routes (no authentication needed)
 router.post("/send-otp", sendOtp); 
@@ -145,7 +146,9 @@ router.patch("/changepassword/:id", userAuthorization, changePassword);
 router.get("/retry-payment/:id", userAuthorization, retrypayment);
 router.get("/offers",userAuthorization, offershowing);
 router.get('/categorieslist',userAuthorization,getcategory)
-
+router.get('/noficationsusers/:userId',userAuthorization,getnotificationsUsers)
+router.patch('/notificationsusers/:id',userAuthorization,updateNotificationUser)
+router.delete('/notificationsusers/:id',userAuthorization,deletionNotificationUser)
 
 
 module.exports = router;

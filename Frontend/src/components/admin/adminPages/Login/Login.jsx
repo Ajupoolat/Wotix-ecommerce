@@ -16,8 +16,9 @@ const AdminLogin = () => {
     mutationFn: adminLogin,
     onSuccess: (data) => {
       toast.success("Login successful!");
-
+      
       navigate("/admin-dashboard");
+      localStorage.setItem('admin','yes')
     },
     onError: (err) => {},
   });

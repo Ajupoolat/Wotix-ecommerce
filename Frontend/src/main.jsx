@@ -5,11 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router } from "react-router-dom";
 import "./index.css";
 import { Toaster } from "react-hot-toast";
-
 import { AuthProvider } from "./context/authuser";
 import { CartProvider } from "./context/cartcon";
-import { WebSocketProvider } from "./context/returncon";
-import { WebSocketProviderAdmin } from "./context/adminreturn";
 import { OffersProvider } from "./context/offerprice";
 import { OffersCartProvider } from "./context/cartOffer";
 import { WishlistCountProvider } from "./context/wishlistCount";
@@ -25,19 +22,15 @@ createRoot(document.getElementById("root")).render(
       <QueryClientProvider client={queryclient}>
         <OffersProvider>
           <OffersCartProvider>
-          <WishlistCountProvider>
-          <WishlistProvider>
-            <CartProvider>
-            <WebSocketProvider>
-              <WebSocketProviderAdmin>
-                <AuthProvider>
-                  <App />
-                </AuthProvider>
-              </WebSocketProviderAdmin>
-            </WebSocketProvider>
-          </CartProvider>
-          </WishlistProvider>
-          </WishlistCountProvider>
+            <WishlistCountProvider>
+              <WishlistProvider>
+                <CartProvider>
+                  <AuthProvider>
+                    <App />
+                  </AuthProvider>
+                </CartProvider>
+              </WishlistProvider>
+            </WishlistCountProvider>
           </OffersCartProvider>
         </OffersProvider>
       </QueryClientProvider>

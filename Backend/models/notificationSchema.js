@@ -1,48 +1,46 @@
 const mongoose = require('mongoose');
 
-const notificationSchema = new mongoose.Schema({
-    recipientId: {
-        type: String,
-        required: true
-      },
-      recipientModel: {
-        type: String,
-        enum: ['User', 'Admin'], 
-        default: 'User'
-      },
-  senderId: { 
-    type: mongoose.Schema.Types.ObjectId,
-    refPath: 'senderModel'
+const notificationSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      refPath: 'role'
+    },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      required: true
+    },
+    type: {
+      type: String,
+      enum: ['return_request', 'return_approved'],
+      required: true
+    },
+    message: {
+      type: String,
+      required: true
+    },
+    relatedId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Order'
+    },
+    isRead: {
+      type: Boolean,
+      default: false
+    },
+    readAt: {
+      type: Date,
+      default: null
+    }
   },
-  senderModel: {
-    type: String,
-    enum: ['User', 'Admin', 'System']
-  },
-  type: {
-    type: String,
-    required: true,
-    enum: ['order_notification', 'order_update', 'return_request', 'status_update']
-  },
-  message: {
-    type: String,
-    required: true
-  },
-  relatedEntity: {
-    type: mongoose.Schema.Types.Mixed,
-    required: true,
-    refPath: 'entityModel'
-  },
-  entityModel: {
-    type: String,
-    required: true,
-    enum: ['Order', 'ReturnRequest']
-  },
-  read: {
-    type: Boolean,
-    default: false
+  {
+    timestamps: true
   }
-}, { 
-  timestamps: true 
-});
+);
+
+notificationSchema.index({ userId: 1 });
+notificationSchema.index({ isRead: 1 });
+notificationSchema.index({ role: 1 });
 
 module.exports = mongoose.model('Notification', notificationSchema);

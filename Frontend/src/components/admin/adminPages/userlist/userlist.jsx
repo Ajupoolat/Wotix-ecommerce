@@ -35,6 +35,7 @@ import {
 import AdminSidebar from "../../reuse/sidebar/sidebar";
 import LoadingSpinner from "../../adminCommon/loadingSpinner";
 import CommonError from "../../adminCommon/error";
+import NotificationsAdmin from "../../adminCommon/notificationAdmin";
 
 const Userlist = () => {
   const queryClient = useQueryClient();
@@ -187,6 +188,9 @@ const Userlist = () => {
             )}
           </div>
           <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <NotificationsAdmin/>
+            </div>
             <div className="flex items-center space-x-2">
               <Avatar>
                 <AvatarImage src="https://github.com/shadcn.png" alt="Admin" />

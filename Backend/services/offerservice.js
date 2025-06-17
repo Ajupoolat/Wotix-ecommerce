@@ -1,5 +1,4 @@
 const Offers = require("../models/offerSchema");
-const product = require("../models/productSchema");
 
 const calculateProductdiscount = async (product) => {
   if (!product) {

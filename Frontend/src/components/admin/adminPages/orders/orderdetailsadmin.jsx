@@ -38,7 +38,6 @@ import {
 } from "@/api/admin/ordermanagment/ordermgtad";
 import { adminLogout } from "@/api/admin/Login/loginAuth";
 import StatusUpdateDialog from "./dropdown/dropdown";
-import NotificationDropdown from "./returnrequest/returnrequest";
 import CommonError from "../../adminCommon/error";
 
 const OrderDetailsAdmin = () => {
@@ -60,6 +59,8 @@ const OrderDetailsAdmin = () => {
       toast.error(err.message || "Failed to fetch order details");
     },
   });
+
+  console.log('the order details is here :',orderDetails)
 
   // Mutation for updating order status
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useMutation({
@@ -214,15 +215,6 @@ const OrderDetailsAdmin = () => {
                 {orderDetails.paymentMethod.replace("_", " ")} •{" "}
                 {orderDetails.paymentStatus ? "Paid" : "Pending"}
               </Badge>
-              {(orderDetails.status === "return_requested" ||
-                orderDetails.status === "partially_return_requested") && (
-                <NotificationDropdown
-                  orderId={orderId}
-                  returnRequests={orderDetails.returnRequests}
-                  processReturn={processReturn}
-                  isProcessing={isProcessingReturn}
-                />
-              )}
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

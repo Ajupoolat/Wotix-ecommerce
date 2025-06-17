@@ -21,6 +21,7 @@ import { useCart } from "@/context/cartcon";
 import { useWishlist } from "@/context/wishlistContext";
 import logo from "../../../src/assets/Wotix removed-BG.png";
 import { Button } from "../ui/button";
+import NotificationsUser from "../users/userComponents/nofications";
 
 const IconsArea = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -30,6 +31,7 @@ const IconsArea = () => {
   const userId = localStorage.getItem("userId");
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const username = localStorage.getItem("username");
+
 
   return (
     <div>
@@ -43,6 +45,7 @@ const IconsArea = () => {
           />
         </div>
         <div className="flex items-center gap-4">
+          {isAuthenticated&&<NotificationsUser/>}
           {isAuthenticated && (
             <div className="hidden sm:flex items-center gap-2">
               <div
@@ -67,6 +70,9 @@ const IconsArea = () => {
                   }}
                 />
               </div>
+
+            
+              
             ) : (
               <Button
                 className="h-8 cursor-pointer hover:bg-gray-500 font-bold transition-colors"

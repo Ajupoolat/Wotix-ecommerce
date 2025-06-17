@@ -7,7 +7,6 @@ const adminroutes = require("../Backend/routes/adminRoutes");
 const bodyparser = require("body-parser");
 const userroutes = require('./routes/userRoutes')
 require('../Backend/config/passport')
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const passport = require('passport')
 const http = require('http'); 
 const { Server } = require('socket.io'); 

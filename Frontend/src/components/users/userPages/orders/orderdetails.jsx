@@ -8,7 +8,6 @@ import ErrorCommon from "@/components/common/CommonError";
 import Navbar from "@/components/common/navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/context/authuser";
 import logo from "@/assets/Wotix removed-BG.png";
 import { toast } from "react-hot-toast";
 import {
@@ -28,10 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useWebSocket } from "@/context/returncon";
-import { useWishlistCount } from "@/context/wishlistCount";
 import { retry_payment } from "@/api/users/shop/ordermgt";
-import { useCart } from "@/context/cartcon";
 import { order_details } from "@/api/users/shop/ordermgt";
 import {
   cancelOrderApi,
@@ -80,10 +76,8 @@ function ConfirmationDialog({
 export function OrderDetailsPage() {
   const navigate = useNavigate();
   const { id: orderId } = useParams();
-  const { socket } = useWebSocket();
   const userId = localStorage.getItem("userId");
   const queryClient = useQueryClient();
-
 
   // State for dialogs
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -117,22 +111,6 @@ export function OrderDetailsPage() {
     return () => document.body.removeChild(script);
   }, []);
 
-  // WebSocket setup
-  useEffect(() => {
-    if (!socket) return;
-    const handleNotification = (notification) => {
-      toast.success(`New notification: ${notification.message}`);
-    };
-    socket.on("new_notification", handleNotification);
-    return () => socket.off("new_notification", handleNotification);
-  }, [socket]);
-
-  useEffect(() => {
-    if (socket && userId) {
-      socket.emit("register_user", userId);
-    }
-  }, [socket, userId]);
-
   // Fetch order details
   const {
     data: order,
@@ -143,6 +121,12 @@ export function OrderDetailsPage() {
     queryFn: () => order_details(userId, orderId),
     enabled: !!orderId,
   });
+
+  console.log(
+    "the order details from the user orderdetails page :",
+    order?.products
+  );
+  console.log("the another check of the order :", order);
 
   useEffect(() => {
     if (order?.products) {
@@ -380,12 +364,14 @@ export function OrderDetailsPage() {
       {/* Navigation Links */}
       <Navbar />
       {/* breadCrumps */}
-      <Breadcrumbs items={[
-        {label:"Home",link:"/"},
-        {label:"My Profile",link:`/profile/${userId}`},
-        {label:"My Orders",link:"/orderslist"},
-        {label:`Order NO:${order?.orderNumber}`}
-      ]}/>
+      <Breadcrumbs
+        items={[
+          { label: "Home", link: "/" },
+          { label: "My Profile", link: `/profile/${userId}` },
+          { label: "My Orders", link: "/orderslist" },
+          { label: `Order NO:${order?.orderNumber}` },
+        ]}
+      />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
