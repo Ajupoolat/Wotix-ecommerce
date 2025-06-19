@@ -31,6 +31,7 @@ const getAllCoupons = async (req, res) => {
     const totalCoupons = await couponSchema.countDocuments(query);
     const coupons = await couponSchema
       .find(query)
+      .sort({createdAt:-1})
       .skip(skip)
       .limit(limitNum)
       .lean();
@@ -254,7 +255,6 @@ const eligiblecoupon = async (req, res) => {
       minPurchaseAmount: { $lte: subtotal }
     });
 
-    console.log(bestCoupon);
     res.status(200).json({
       success: true,
       coupon: bestCoupon || null,

@@ -16,13 +16,6 @@ export const verifyPayment = async ({
   razorpay_signature,
   orderId,
 }) => {
-  console.log(
-    "the api call is working :",
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature,
-    orderId
-  );
   try {
     const response = await apiUser.post(`/verify-payment`, {
       razorpay_order_id,

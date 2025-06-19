@@ -9,7 +9,6 @@ const OrderSummary = ({
   onContinueShopping,
   onClearCart,
 }) => {
-  const navigate = useNavigate();
   const total = totalPrice + shippingFee;
 
   return (

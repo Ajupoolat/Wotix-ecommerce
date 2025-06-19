@@ -39,6 +39,7 @@ import {
 import { adminLogout } from "@/api/admin/Login/loginAuth";
 import StatusUpdateDialog from "./dropdown/dropdown";
 import CommonError from "../../adminCommon/error";
+import NotificationsAdmin from "../../adminCommon/notificationAdmin";
 
 const OrderDetailsAdmin = () => {
   const navigate = useNavigate();
@@ -60,7 +61,6 @@ const OrderDetailsAdmin = () => {
     },
   });
 
-  console.log('the order details is here :',orderDetails)
 
   // Mutation for updating order status
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useMutation({
@@ -190,6 +190,9 @@ const OrderDetailsAdmin = () => {
             Back to Orders
           </Button>
           <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <NotificationsAdmin/>
+            </div>
             <div className="flex items-center space-x-2">
               <Avatar>
                 <AvatarImage src="https://github.com/shadcn.png" alt="Admin" />

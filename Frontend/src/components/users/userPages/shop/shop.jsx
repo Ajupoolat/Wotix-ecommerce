@@ -132,7 +132,6 @@ const ShopPage = () => {
   const pagination =
     searchQuery.trim() === "" ? data?.pagination : searchedProducts?.pagination;
 
-  console.log("the products in the shop page :", products);
 
   const handlesearchclear = () => {
     setSearchQuery("");

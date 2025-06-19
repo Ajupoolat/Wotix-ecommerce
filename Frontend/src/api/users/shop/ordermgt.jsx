@@ -92,7 +92,6 @@ export const bestCoupon = async (subtotal) => {
 };
 
 export const order_details = async (userId,orderId) => {
-console.log('the orderdetils api call parameters',userId,orderId)
   try {
     const response = await apiUser.get(`/orders-details/${userId}/${orderId}`);
     return response.data

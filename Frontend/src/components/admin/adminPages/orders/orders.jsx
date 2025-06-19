@@ -46,8 +46,8 @@ import {
 import AdminSidebar from "../../reuse/sidebar/sidebar";
 import LoadingSpinner from "../../adminCommon/loadingSpinner";
 import { toast } from "react-hot-toast";
-import { adminLogout } from "@/api/admin/Login/loginAuth";
 import CommonError from "../../adminCommon/error";
+import NotificationsAdmin from "../../adminCommon/notificationAdmin";
 
 // Custom debounce hook
 const useDebounce = (value, delay) => {
@@ -123,21 +123,8 @@ const OrderList = () => {
     },
   });
 
-  // Mutation for logout
-  const { mutate: logoutMutate, isPending: isLoggingOut } = useMutation({
-    mutationFn: adminLogout,
-    onSuccess: () => {
-      toast.success("Logged out successfully!");
-      queryClient.removeQueries(["auth"]);
-      navigate("/adminlogin");
-    },
-    onError: (err) => {
-      toast.error(err.message || "Logout failed");
-    },
-  });
 
   // Handlers
-  const handleLogout = () => logoutMutate();
   const handlePreviousPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
   const handleNextPage = () => currentPage < orderData.totalPages && setCurrentPage(currentPage + 1);
   const handleClearSearch = () => {
@@ -260,6 +247,9 @@ const OrderList = () => {
             )}
           </div>
           <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <NotificationsAdmin/>
+            </div>
             <div className="flex items-center space-x-2">
               <Avatar>
                 <AvatarImage src="https://github.com/shadcn.png" alt="Admin" />

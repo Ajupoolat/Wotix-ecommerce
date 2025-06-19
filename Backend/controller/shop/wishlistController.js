@@ -100,7 +100,7 @@ const addToWishlist = async (req, res) => {
 
 const getWishlist = async (req, res) => {
   try {
-    const userId = req.user ? req.user.id : req.params.id;
+    const userId = req.user ? req.user.userId : req.params.id;
     const email = req.params.email;
 
     const user = await userSchema.findById(userId);

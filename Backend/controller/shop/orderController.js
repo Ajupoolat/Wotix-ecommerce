@@ -332,7 +332,6 @@ const placeOrder = async (req, res) => {
 };
 
 const verifyPayment = async (req, res) => {
-  console.log('the verify payment is working ')
   try {
     const {
       razorpay_order_id,
@@ -460,7 +459,6 @@ const getOrders = async (req, res) => {
 };
 
 const getOrderDetails = async (req, res) => {
-  console.log('the order parameters are there ,',req.params.userId,req.params.id)
   const userId = req.params.userId;
 
   try {
@@ -478,7 +476,6 @@ const getOrderDetails = async (req, res) => {
       });
     }
      
-    console.log('the response data :',order)
     res.status(200).json(order);
   } catch (error) {
     res.status(OrderResponses.SERVER_ERROR.statusCode).json({
@@ -741,7 +738,6 @@ const orderSearching = async (req, res) => {
 };
 
 const submitReturnRequest = async (req, res) => {
-  console.log('the order returning is working here')
   const session = await mongoose.startSession();
   session.startTransaction();
 

@@ -1,24 +1,24 @@
 const categorySchema = require("../../models/categorySchema");
 const uploadcategories = require("../../multers/multercategory");
 const productSchema = require('../../models/productSchema')
-
+const {CategoryMessages} = require('../../enums/categories/categoryEnums')
 //add the category
 
 const addcategory = async (req, res) => {
   try {
     // Check for file type error first
     if (req.fileTypeError) {
-      return res.status(400).json({ message: req.fileTypeError });
+      return res.status(CategoryMessages.ADD_ERROR.status).json({ message: req.fileTypeError });
     }
 
     const { categoryName, description } = req.body;
 
     if (!categoryName || !description) {
-      return res.status(400).json({ message: "Category name and description are required" });
+      return res.status(CategoryMessages.ADD_ERROR.status).json({ message: CategoryMessages.ADD_ERROR.message});
     }
 
     if (!req.file) {
-      return res.status(400).json({ message: "Category image is required" });
+      return res.status(CategoryMessages.ADD_ERROR.status).json({ message: CategoryMessages.ADD_ERROR.message });
     }
 
     // Rest of your checks (existing category, etc.)
@@ -27,7 +27,7 @@ const addcategory = async (req, res) => {
     });
 
     if (existingCategory) {
-      return res.status(400).json({ message: "Category with this name already exists" });
+      return res.status(CategoryMessages.CATEGORY_EXISTS.status).json({ message:CategoryMessages.CATEGORY_EXISTS.message });
     }
 
     const newCategory = new categorySchema({
@@ -37,9 +37,9 @@ const addcategory = async (req, res) => {
     });
 
     await newCategory.save();
-    res.status(201).json({ message: "Category added successfully", category: newCategory });
+    res.status(CategoryMessages.ADD_SUCCESS.status).json({ message:CategoryMessages.ADD_SUCCESS.message, category: newCategory });
   } catch (error) {
-    res.status(500).json({ message: "Server error while adding category" });
+    res.status(CategoryMessages.ADD_ERROR.status).json({ message: CategoryMessages.ADD_ERROR.message });
   }
 };
 
@@ -86,7 +86,7 @@ const getCategoriesWithStock = async (req, res) => {
       .lean();
 
     if (!categories.length && totalCategories === 0) {
-      return res.status(404).json({ message: 'No categories found' });
+      return res.status(CategoryMessages.NO_CATEGORIES_FOUND.status).json({ message: CategoryMessages.NO_CATEGORIES_FOUND.message });
     }
 
     const categoriesWithStock = categories.map((category) => ({
@@ -96,7 +96,7 @@ const getCategoriesWithStock = async (req, res) => {
 
     const totalPages = Math.ceil(totalCategories / limitNum);
 
-    res.status(200).json({
+    res.status(CategoryMessages.FETCH_SUCCESS.status).json({
       categories: categoriesWithStock,
       totalCategories,
       totalPages,
@@ -104,9 +104,8 @@ const getCategoriesWithStock = async (req, res) => {
       limit: limitNum,
     });
   } catch (error) {
-    res.status(500).json({
-      message: 'Server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    res.status(CategoryMessages.FETCH_ERROR.status).json({
+     message:CategoryMessages.FETCH_ERROR.message
     });
   }
 };
@@ -117,11 +116,11 @@ const getcategory = async (req,res) =>{
   try {
     const categories = await categorySchema.find();
 
-    if(!categories)return res.status(404).json({message:"the categories is not founded"})
+    if(!categories)return res.status(CategoryMessages.NO_CATEGORIES_FOUND.status).json({message:CategoryMessages.NO_CATEGORIES_FOUND.message})
 
       res.status(200).json(categories)
   } catch (error) {
-     res.status(500).json({ message: "Server error while fecthing categories" });
+     res.status(CategoryMessages.FETCH_SUCCESS.status).json({ message: CategoryMessages.FETCH_ERROR.message });
   }
 }
 
@@ -135,19 +134,19 @@ const toggleCategoryVisibilty = async (req, res) => {
       // Find the product and get current isHidden status
       const category = await categorySchema.findById(categoryId);
       if (!category) {
-          return res.status(404).json({ message: "Product not found" });
+          return res.status(CategoryMessages.NO_CATEGORIES_FOUND.status).json({ message: CategoryMessages.NO_CATEGORIES_FOUND.message});
       }
       
       // Toggle the isHidden status
       category.isHiddenCat = !category.isHiddenCat;
       await category.save();
       
-      res.status(200).json({
+      res.status(CategoryMessages.UPDATE_SUCCESS.status).json({
           message: `Product ${category.isHiddenCat ? 'hidden' : 'visible'} successfully`,
           category
       });
   } catch (error) {
-      res.status(500).json({ message: "Server error while toggling product visibility" });
+      res.status(CategoryMessages.UPDATE_ERROR.status).json({ message: CategoryMessages.TOGGLE_VISIBILITY_ERROR.message });
   }
 };
 
@@ -158,10 +157,10 @@ const deletecategory = async (req,res)=>{
 
     try {
         await categorySchema.findByIdAndDelete({_id:categoryid})
-        res.status(200).json({message:"the category is deleted"})
+        res.status(CategoryMessages.DELETE_SUCCESS.status).json({message:CategoryMessages.DELETE_ERROR.status})
 
     } catch (error) {
-      res.status(400).json({message:"there is something issue!"})
+      res.status(CategoryMessages.DELETE_ERROR.status).json({message:CategoryMessages.DELETE_ERROR.message})
     }
 }
 
@@ -170,11 +169,11 @@ const editcategory = async (req, res) => {
   const categoryid = req.params.id;
   const { categoryName, description } = req.body;
 
-  if (req.fileTypeError) return res.status(400).json({ message: req.fileTypeError });
+  if (req.fileTypeError) return res.status(CategoryMessages.UPDATE_ERROR.status).json({ message: req.fileTypeError });
 
   try {
     const category = await categorySchema.findById(categoryid);
-    if (!category) return res.status(404).json({ message: "Category not found" });
+    if (!category) return res.status(CategoryMessages.NO_CATEGORIES_FOUND.status).json({ message: CategoryMessages.NO_CATEGORIES_FOUND.message });
 
     const oldCategoryName = category.categoryName;
     const lowName = categoryName.toLowerCase().trim();
@@ -182,7 +181,7 @@ const editcategory = async (req, res) => {
     const updateFields = { categoryName: lowName, description: description.trim() };
     if (req.file) updateFields.image = req.file.path;
 
-    const editingcategory = await categorySchema.findByIdAndUpdate(
+      await categorySchema.findByIdAndUpdate(
       { _id: categoryid },
       { $set: updateFields },
       { new: true }
@@ -193,9 +192,9 @@ const editcategory = async (req, res) => {
       { $set: { category: lowName } }
     );
 
-    res.status(200).json(editingcategory);
+    res.status(CategoryMessages.UPDATE_SUCCESS.status).json({message:CategoryMessages.UPDATE_SUCCESS.message});
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    res.status(CategoryMessages.UPDATE_ERROR.status).json({ message: CategoryMessages.UPDATE_ERROR.message });
   }
 };
 
@@ -207,10 +206,10 @@ const categorySearch = async (req,res)=>{
         const categories=await categorySchema.find({
             categoryName:{$regex:query,$options:'i'}
         })
-        res.status(200).json(categories)
+        res.status(CategoryMessages.SEARCH_SUCCESS.status).json(categories)
     } catch (error) {
 
-        res.status(404).json({message:'the category is not found'})
+        res.status(CategoryMessages.SEARCH_ERROR.status).json({message:CategoryMessages.SEARCH_ERROR.message})
     }
 
 }

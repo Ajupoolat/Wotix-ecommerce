@@ -33,6 +33,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
+import NotificationsAdmin from "../../adminCommon/notificationAdmin";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getproductdetails,
@@ -50,7 +51,17 @@ const Productlist = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [deletingProductId, setDeletingProductId] = useState(null);
   const [productToHide, setProductToHide] = useState(null);
+  const [debouncedSearchQuery,setDebouncedSearchQuery] = useState(searchQuery)
   const productsPerPage = 5;
+
+
+  useEffect(() => {
+  const handler = setTimeout(() => {
+    setDebouncedSearchQuery(searchQuery);
+  }, 500); // 500ms delay
+
+  return () => clearTimeout(handler);
+}, [searchQuery]);
 
   // Fetch products with pagination and search
   const {
@@ -63,12 +74,12 @@ const Productlist = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["products", currentPage, searchQuery],
+    queryKey: ["products", currentPage, debouncedSearchQuery],
     queryFn: () =>
       getproductdetails({
         page: currentPage,
         limit: productsPerPage,
-        search: searchQuery,
+        search: debouncedSearchQuery,
       }),
     keepPreviousData: true, // Retain previous data while fetching new page
   });
@@ -134,7 +145,7 @@ const Productlist = () => {
   };
 
   const handleClearSearch = () => {
-    setSearchQuery("");
+    setSearchQuery('')
   };
 
   // Generate pagination buttons dynamically
@@ -211,6 +222,9 @@ const Productlist = () => {
             )}
           </div>
           <div className="flex items-center space-x-4">
+             <div className="flex items-center space-x-2">
+              <NotificationsAdmin/>
+            </div>
             <div className="flex items-center space-x-2">
               <Avatar>
                 <AvatarImage src="https://github.com/shadcn.png" alt="Admin" />

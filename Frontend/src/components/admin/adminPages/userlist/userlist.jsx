@@ -45,27 +45,38 @@ const Userlist = () => {
   const [userToBlock, setUserToBlock] = useState(null);
   const [blockAction, setBlockAction] = useState("");
   const usersPerPage = 10;
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
 
-  const {
-    data: userData = {
-      users: [],
-      totalUsers: 0,
-      totalPages: 0,
-      currentPage: 1,
-    },
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["users", currentPage, searchQuery],
-    queryFn: () =>
-      getuserdetails({
-        page: currentPage,
-        limit: usersPerPage,
-        search: searchQuery,
-      }),
-    keepPreviousData: true, // Retain previous data while fetching new page
-  });
+
+  useEffect(() => {
+  const handler = setTimeout(() => {
+    setDebouncedSearchQuery(searchQuery);
+  }, 500); 
+
+  return () => clearTimeout(handler);
+}, [searchQuery]);
+
+
+const {
+  data: userData = {
+    users: [],
+    totalUsers: 0,
+    totalPages: 0,
+    currentPage: 1,
+  },
+  isLoading,
+  isError,
+  error,
+} = useQuery({
+  queryKey: ["users", currentPage, debouncedSearchQuery],
+  queryFn: () =>
+    getuserdetails({
+      page: currentPage,
+      limit: usersPerPage,
+      search: debouncedSearchQuery,
+    }),
+  keepPreviousData: true,
+});
 
   const { mutate: toggleBlockUser, isPending: isBlocking } = useMutation({
     mutationFn: blockuser,
@@ -78,7 +89,6 @@ const Userlist = () => {
     },
   });
 
-  // Reset to page 1 when search query changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);

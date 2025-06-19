@@ -85,7 +85,6 @@ export const offersdetails = async () => {
 export const products = async () => {
   try {
     const response = await apiUser.get(`/products`, {});
-    console.log('the products api :',response.data)
     return response.data;
   } catch (error) {
     throw error;

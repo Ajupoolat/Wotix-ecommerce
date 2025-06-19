@@ -57,6 +57,7 @@ import AdminSidebar from "../../reuse/sidebar/sidebar";
 import CouponForm from "../../reuse/coupon/couponform";
 import LoadingSpinner from "../../adminCommon/loadingSpinner";
 import CommonError from "../../adminCommon/error";
+import NotificationsAdmin from "../../adminCommon/notificationAdmin";
 
 const CouponList = () => {
   const queryClient = useQueryClient();
@@ -66,7 +67,18 @@ const CouponList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const couponsPerPage = 5;
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
 
+  
+ useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
+  
+  
   const {
     data: couponData = {
       coupons: [],
@@ -78,10 +90,10 @@ const CouponList = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["coupons", { searchQuery, statusFilter, currentPage }],
+    queryKey: ["coupons", { debouncedSearchQuery, statusFilter, currentPage }],
     queryFn: () =>
       getAllCoupons({
-        search: searchQuery,
+        search: debouncedSearchQuery,
         status: statusFilter,
         page: currentPage,
         limit: couponsPerPage,
@@ -263,6 +275,9 @@ const CouponList = () => {
             )}
           </div>
           <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <NotificationsAdmin/>
+            </div>
             <div className="flex items-center space-x-2">
               <Avatar>
                 <AvatarImage src="https://github.com/shadcn.png" alt="Admin" />

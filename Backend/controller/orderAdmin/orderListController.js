@@ -94,6 +94,7 @@ const updateOrderStatus = async (req, res) => {
     "shipped",
     "delivered",
     "cancelled",
+
   ];
 
   const restrictedStatusesForDelivered = [
@@ -101,6 +102,10 @@ const updateOrderStatus = async (req, res) => {
     "processing",
     "shipped",
     "cancelled",
+    "returned",
+    "return_requested",
+    "partially_returned",
+    "partially_return_requested",
   ];
 
   const resforreturned = [
@@ -111,6 +116,11 @@ const updateOrderStatus = async (req, res) => {
     "delivered",
     "return_requested",
   ];
+
+  const thisIsForReturnOrder =[
+    "returned",
+    "return_requested",
+  ]
 
   const resforpartreturned = [
     "placed",
@@ -124,6 +134,8 @@ const updateOrderStatus = async (req, res) => {
   ];
 
   try {
+
+   
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: "Invalid status value" });
     }
@@ -133,6 +145,19 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
+
+    if (
+      (order.status === "return_requested" ||
+        order.status === "partially_return_requested") &&
+      status === "delivered"
+    ) {
+
+      return res.status(400).json({
+        message:
+          "return requested and partially return requested order never changable into delivered",
+      });
+    }
+   
     if (
       order.status === "delivered" &&
       restrictedStatusesForDelivered.includes(status)
@@ -201,7 +226,6 @@ const updateOrderStatus = async (req, res) => {
 const processReturnRequest = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-  console.log("this is working for return process");
   try {
     const { orderId } = req.params;
     const { status, adminNotes } = req.body;
@@ -344,7 +368,6 @@ const processReturnRequest = async (req, res) => {
     const type = "return_approved";
     const message = `Hey ${fullUserName}, your return request for order ${order.orderNumber} has been approved.`;
 
-    console.log(fullUserName, "the fullname of user for notification");
     await createNotification(io, userID, role, type, message, orderId);
 
     res.status(200).json({

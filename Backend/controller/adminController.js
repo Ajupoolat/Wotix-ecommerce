@@ -4,7 +4,7 @@ const adminSchema = require("../models/adminSchema");
 const userSchema = require("../models/userSchema");
 
 const JWT_SECRET_ADMIN =
-  process.env.JWT_SECRET_ADMIN || "your_admin_secret_key";
+  process.env.JWT_SECRET_ADMIN;
 
 //admin intialization
 const intialization = async () => {
@@ -52,7 +52,7 @@ const adminlogin = async (req, res) => {
         .json({ message: "the credentails is not correct" });
     }
     const tokenadmin = jwt.sign(
-      { adminId: adminfind._id },
+      { adminId: adminfind._id ,isAdmin:true},
       process.env.JWT_SECRET_ADMIN,
       { expiresIn: "1d" }
     );

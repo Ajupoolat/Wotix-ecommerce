@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Address = require("../../models/addressSchema");
 const userSchema = require("../../models/userSchema");
+const { AddressMessages } = require("../../enums/AddressEnums/addressUserEnum");
 
 // Add a new address
 const addAddress = async (req, res) => {
@@ -28,13 +29,20 @@ const addAddress = async (req, res) => {
     const newAddress = new Address(addressData);
     const savedAddress = await newAddress.save({ session });
 
+    if (!savedAddress)
+      return res
+        .status(AddressMessages.ADD_ERROR.status)
+        .json({ message: AddressMessages.ADD_ERROR.message });
+
     await session.commitTransaction();
-    res.status(201).json(savedAddress);
+    res
+      .status(AddressMessages.ADD_SUCCESS.status)
+      .json({ message: AddressMessages.ADD_SUCCESS.message });
   } catch (error) {
     await session.abortTransaction();
     res
-      .status(500)
-      .json({ message: "Error adding address", error: error.message });
+      .status(AddressMessages.ADD_ERROR.status)
+      .json({ message: AddressMessages.ADD_SUCCESS.message });
   } finally {
     session.endSession();
   }
@@ -44,8 +52,7 @@ const addAddress = async (req, res) => {
 const getAddresses = async (req, res) => {
   try {
     const userId = req.params.id;
-    const email = req.params.email
-
+    const email = req.params.email;
 
     // Validate userId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -54,18 +61,17 @@ const getAddresses = async (req, res) => {
 
     const addresses = await Address.find({ userId }).sort({ createdAt: -1 });
 
-    const user = await userSchema.findById(userId)
-    if(user.email !== email){
-        if(user.email !== email){
-      return res.status(403).json({message:'Oops this page is not get !'})
+    const user = await userSchema.findById(userId);
+    if (user.email !== email) {
+      if (user.email !== email) {
+        return res.status(403).json({ message: "Oops this page is not get !" });
+      }
     }
-
-    }
-    res.status(200).json(addresses);
+    res.status(AddressMessages.FETCH_SUCCESS.status).json(addresses);
   } catch (error) {
     res
-      .status(500)
-      .json({ message: "Error fetching addresses", error: error.message });
+      .status(AddressMessages.FETCH_ERROR.status)
+      .json({ message: AddressMessages.FETCH_ERROR.message });
   }
 };
 
@@ -81,11 +87,15 @@ const updateAddress = async (req, res) => {
     // Validate IDs
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       await session.abortTransaction();
-      return res.status(400).json({ message: "Invalid user ID" });
+      return res
+        .status(AddressMessages.INVALID_USER_ID.status)
+        .json({ message: AddressMessages.INVALID_USER_ID.message });
     }
     if (!mongoose.Types.ObjectId.isValid(addressId)) {
       await session.abortTransaction();
-      return res.status(400).json({ message: "Invalid address ID" });
+      return res
+        .status(AddressMessages.INVALID_ADDRESS_ID.status)
+        .json({ message: AddressMessages.INVALID_ADDRESS_ID.message });
     }
 
     if (req.body.isDefault) {
@@ -114,12 +124,14 @@ const updateAddress = async (req, res) => {
     }
 
     await session.commitTransaction();
-    res.status(200).json(updated);
+    res
+      .status(AddressMessages.UPDATE_SUCCESS.status)
+      .json({ message: AddressMessages.UPDATE_SUCCESS.message });
   } catch (error) {
     await session.abortTransaction();
     res
-      .status(500)
-      .json({ message: "Error updating address", error: error.message });
+      .status(AddressMessages.UPDATE_ERROR.status)
+      .json({ message: AddressMessages.UPDATE_ERROR.message });
   } finally {
     session.endSession();
   }
@@ -136,11 +148,15 @@ const deleteAddress = async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       await session.abortTransaction();
-      return res.status(400).json({ message: "Invalid user ID" });
+      return res
+        .status(AddressMessages.INVALID_USER_ID.status)
+        .json({ message: AddressMessages.INVALID_ADDRESS_ID.message });
     }
     if (!mongoose.Types.ObjectId.isValid(addressId)) {
       await session.abortTransaction();
-      return res.status(400).json({ message: "Invalid address ID" });
+      return res
+        .status(AddressMessages.INVALID_ADDRESS_ID.status)
+        .json({ message: AddressMessages.INVALID_ADDRESS_ID.message });
     }
 
     const deleted = await Address.findOneAndDelete(
@@ -151,8 +167,8 @@ const deleteAddress = async (req, res) => {
     if (!deleted) {
       await session.abortTransaction();
       return res
-        .status(404)
-        .json({ message: "Address not found or not authorized" });
+        .status(AddressMessages.DELETE_ERROR.status)
+        .json({ message: AddressMessages.DELETE_ERROR.message });
     }
 
     if (deleted.isDefault) {
@@ -169,12 +185,14 @@ const deleteAddress = async (req, res) => {
     }
 
     await session.commitTransaction();
-    res.status(200).json({ message: "Address deleted successfully" });
+    res
+      .status(AddressMessages.DELETE_SUCCESS.status)
+      .json({ message: AddressMessages.DELETE_SUCCESS.message });
   } catch (error) {
     await session.abortTransaction();
     res
-      .status(500)
-      .json({ message: "Error deleting address", error: error.message });
+      .status(AddressMessages.DELETE_ERROR.status)
+      .json({ message: AddressMessages.DELETE_ERROR.message });
   } finally {
     session.endSession();
   }

@@ -31,7 +31,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  ArrowLeftStartOnRectangleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   XMarkIcon,
@@ -40,13 +39,11 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getoffer, deleteoffer } from "@/api/admin/offers/offermgt";
 import { toast } from "react-hot-toast";
 import AdminSidebar from "../../reuse/sidebar/sidebar";
 import LoadingSpinner from "../../adminCommon/loadingSpinner";
-import { adminLogout } from "@/api/admin/Login/loginAuth";
-import CommonError from "../../adminCommon/error";
+import NotificationsAdmin from "../../adminCommon/notificationAdmin";
 
 const OfferList = () => {
   const navigate = useNavigate();
@@ -54,7 +51,17 @@ const OfferList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+
   const offersPerPage = 5;
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
 
   const {
     data: offerData = {
@@ -67,10 +74,13 @@ const OfferList = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["offerlist", { searchQuery, statusFilter, currentPage }],
+    queryKey: [
+      "offerlist",
+      { debouncedSearchQuery, statusFilter, currentPage },
+    ],
     queryFn: () =>
       getoffer({
-        search: searchQuery,
+        search: debouncedSearchQuery,
         status: statusFilter,
         page: currentPage,
         limit: offersPerPage,
@@ -92,21 +102,6 @@ const OfferList = () => {
     },
   });
 
-  const { mutate: logoutMutate, isPending: isLoggingOut } = useMutation({
-    mutationFn: adminLogout,
-    onSuccess: () => {
-      toast.success("Logged out successfully!");
-      queryClient.removeQueries(["auth"]);
-      navigate("/adminlogin");
-    },
-    onError: (err) => {
-      toast.error(err.message || "Logout failed");
-    },
-  });
-
-  const handleLogout = () => {
-    logoutMutate();
-  };
 
   const handlePreviousPage = () =>
     currentPage > 1 && setCurrentPage(currentPage - 1);
@@ -117,15 +112,18 @@ const OfferList = () => {
     setCurrentPage(1);
   };
   const handleCreateOffer = () => navigate("/admin/offers/addoffer");
-  const handleEditOffer = (offerId) =>
-    navigate(`/admin/offers/editoffer/${offerId}`);
+  const handleEditOffer = (offerId) =>{
+      window.location.href = `/admin/offers/editoffer/${offerId}`
+  }
+  
   const handleDelete = (offerId) => deleteoffers(offerId);
 
   const getStatusBadge = (offer) => {
     const now = new Date();
     const startDate = new Date(offer.startDate);
     const endDate = new Date(offer.endDate);
-
+    
+    if(!offer.isActive) return 'destructive'
     if (now < startDate) return "warning";
     if (now > endDate) return "destructive";
     return "success";
@@ -135,7 +133,8 @@ const OfferList = () => {
     const now = new Date();
     const startDate = new Date(offer.startDate);
     const endDate = new Date(offer.endDate);
-
+     
+    if(!offer.isActive) return 'noactive'
     if (now < startDate) return "upcoming";
     if (now > endDate) return "expired";
     return "active";
@@ -179,20 +178,14 @@ const OfferList = () => {
     return (
       <div className="flex min-h-screen bg-gray-100">
         <AdminSidebar activeRoute="/admin/offers" />
-        <LoadingSpinner/>
+        <LoadingSpinner />
       </div>
-    );
-  }
-
-  if (isError) {
-    return (
-     <CommonError Route={'/admin/offers'} m1={'error to load the offer data'} m2={'error Loading offer data'}/>
     );
   }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <AdminSidebar activeRoute="/admin/offers"/>
+      <AdminSidebar activeRoute="/admin/offers" />
       <div className="flex-1 flex flex-col">
         <header className="bg-white border-b p-4 flex items-center justify-between">
           <div className="flex items-center space-x-4 relative">
@@ -217,6 +210,9 @@ const OfferList = () => {
             )}
           </div>
           <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <NotificationsAdmin/>
+            </div>
             <div className="flex items-center space-x-2">
               <Avatar>
                 <AvatarImage src="https://github.com/shadcn.png" alt="Admin" />

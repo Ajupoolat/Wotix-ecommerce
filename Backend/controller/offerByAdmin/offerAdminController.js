@@ -2,7 +2,6 @@ const offerSchema = require('../../models/offerSchema')
 const mongoose = require('mongoose')
 const productSchema = require('../../models/productSchema')
 const categorySchema = require('../../models/categorySchema');
-const { json } = require('body-parser');
 
 //get all offers 
 
@@ -33,6 +32,7 @@ const getalloffers = async (req, res) => {
     const totalOffers = await offerSchema.countDocuments(query);
     const offers = await offerSchema
       .find(query)
+      .sort({createdAt:-1})
       .skip(skip)
       .limit(limitNum)
       .lean();

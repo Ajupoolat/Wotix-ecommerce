@@ -134,8 +134,8 @@ const ProductViewPage = () => {
                   initialScale={1}
                   minScale={1}
                   maxScale={3}
-                  wheel={{ disabled: true }} // Disable zoom on scroll
-                  pinch={{ disabled: true }} // Disable pinch zoom for desktop-like behavior
+                  wheel={{ step: 0.1 }} 
+                  pinch={{ step: 0.1 }} 
                 >
                   <TransformComponent
                     wrapperStyle={{
@@ -144,12 +144,13 @@ const ProductViewPage = () => {
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
+                      overflow:'hidden'
                     }}
                   >
                     <img
                       src={product.images?.[currentImageIndex] || watchImage}
                       alt={product.name}
-                      className="object-contain max-w-full max-h-full"
+                      className="object-contain w-full h-full"
                     />
                   </TransformComponent>
                 </TransformWrapper>

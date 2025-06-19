@@ -6,8 +6,7 @@ const crypto = require("crypto");
 const userSchema = require("../models/userSchema");
 const wallet = require("../models/wallet");
 
-const JWT_USER_SECRET =
-  process.env.JWT_USER_SECRET || "your_user_jwt_secret_key";
+const JWT_USER_SECRET = process.env.JWT_USER_SECRET;
 
 let otpStore = {};
 const transporter = nodemailer.createTransport({
@@ -43,11 +42,9 @@ const sendOtp = async (req, res) => {
     text: `Your OTP is: ${otp}. It is valid for 5 minutes.`,
   };
 
-  console.log(otp)
-
   try {
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "OTP sent successfully"});
+    res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to send OTP", error });
   }
@@ -81,8 +78,6 @@ const sendOtpeditprofile = async (req, res) => {
     text: `Your OTP is: ${otp}. It is valid for 30 seconds.`,
   };
 
-  console.log(otp)
-
   try {
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: "OTP sent successfully" });
@@ -94,7 +89,7 @@ const sendOtpeditprofile = async (req, res) => {
 //send otp for change password
 
 const sendotpchangepassword = async (req, res) => {
-  const { emailId, userId } = req.body; 
+  const { emailId, userId } = req.body;
 
   if (!emailId || !userId) {
     return res.status(400).json({ message: "Email and userId are required" });
@@ -120,8 +115,6 @@ const sendotpchangepassword = async (req, res) => {
     subject: "Your OTP Code",
     text: `Your OTP is: ${otp}. It is valid for 30 seconds.`,
   };
-
-  console.log(otp)
 
   try {
     await transporter.sendMail(mailOptions);
@@ -149,11 +142,9 @@ const sendOtpforgot = async (req, res) => {
     text: `Your OTP is: ${otp}. It is valid for 5 minutes.`,
   };
 
-  console.log(otp)
-
   try {
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "OTP sent successfully"});
+    res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to send OTP", error });
   }
@@ -382,12 +373,12 @@ const googleauth = async (req, res) => {
     let userfind = await userSchema.findOne({ email });
 
     if (userfind && userfind.isBlocked) {
-      return res.redirect("http://localhost:5173/login?error=blocked");
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=blocked`);
     }
 
     if (!userfind) {
       userfind = new userSchema({
-        googleId: req.user.id,
+        googleId: req.user.userId,
         email: email,
         profileImage: profilePicture,
         firstName: firstName,
@@ -396,7 +387,7 @@ const googleauth = async (req, res) => {
       await userfind.save();
     } else {
       if (!userfind.googleId) {
-        userfind.googleId = req.user.id;
+        userfind.googleId = req.user.userId;
       }
       if (profilePicture && !userfind.profileImage) {
         userfind.profileImage = profilePicture;
@@ -408,7 +399,7 @@ const googleauth = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: userfind._id },
+      { userId: userfind._id, isUser: true },
       process.env.JWT_USER_SECRET,
       { expiresIn: "1d" }
     );
@@ -451,7 +442,7 @@ const login = async (req, res) => {
       return res.status(404).json({ message: "invalid username and password" });
 
     const token = jwt.sign(
-      { userId: userfind._id },
+      { userId: userfind._id, isUser: true },
       process.env.JWT_USER_SECRET,
       {
         expiresIn: "1d",
@@ -459,7 +450,7 @@ const login = async (req, res) => {
     );
 
     res.cookie("token", token, {
-     httpOnly: true,
+      httpOnly: true,
       secure: true,
       sameSite: "None",
       maxAge: 24 * 60 * 60 * 1000,
@@ -511,8 +502,8 @@ const logoutuser = (req, res) => {
 const profiledetails = async (req, res) => {
   try {
     const userId = req.params.id;
-    const email = req.params.email
-   
+    const email = req.params.email;
+
     if (!userId) {
       return res
         .status(401)
@@ -524,8 +515,8 @@ const profiledetails = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if(user.email !== email){
-      return res.status(403).json({message:'Oops this page is not get !'})
+    if (user.email !== email) {
+      return res.status(403).json({ message: "Oops this page is not get !" });
     }
 
     if (user.isBlocked) {
@@ -568,11 +559,9 @@ const changePassword = async (req, res) => {
       return res.status(401).json({ message: "Current password is incorrect" });
 
     if (currentPassword === newPassword) {
-      return res
-        .status(400)
-        .json({
-          message: "New password must be different from current password",
-        });
+      return res.status(400).json({
+        message: "New password must be different from current password",
+      });
     }
 
     const salt = await bcrypt.genSalt(10);

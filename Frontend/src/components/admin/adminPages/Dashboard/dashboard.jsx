@@ -1,15 +1,11 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { adminLogout } from "../../../../api/admin/Login/loginAuth";
+import React, { useEffect, useState } from "react";
+import {useQuery} from "@tanstack/react-query";
 import {
   getSalesStatistics,
   generateSalesReport,
-  updateOrderStatus,
 } from "@/api/admin/dashboard/dashboardmgt";
 import {
-  BellIcon,
-  ArrowLeftStartOnRectangleIcon,
+  XMarkIcon
 } from "@heroicons/react/24/outline";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -60,13 +56,23 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
+  const [debouncedSearchQuery,setDebouncedSearchQuery] = useState(searchQuery)
+
+
+  useEffect(()=>{
+    const handle = setTimeout(()=>{
+      setDebouncedSearchQuery(searchQuery)
+    },500)
+
+    return ()=>clearTimeout(handle)
+  },[searchQuery])
 
   const { data: salesData, isLoading: salesLoading ,error:salesError} = useQuery({
-    queryKey: ["salesStatistics", statusFilter, searchQuery, currentPage],
+    queryKey: ["salesStatistics", statusFilter, debouncedSearchQuery, currentPage],
     queryFn: () =>
       getSalesStatistics({
         status: statusFilter,
-        search: searchQuery,
+        search: debouncedSearchQuery,
         page: currentPage,
         limit: ordersPerPage,
       }),

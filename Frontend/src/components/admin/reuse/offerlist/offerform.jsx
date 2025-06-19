@@ -171,8 +171,6 @@ const OfferForm = ({
   const [productSearch, setProductSearch] = useState("");
   const [categorySearch, setCategorySearch] = useState("");
 
-  
-
   const { data: offerData, isLoading: isOfferLoading } = useQuery({
     queryKey: ["offer", offerId],
     queryFn: () => getofferbyId(offerId),
@@ -187,8 +185,8 @@ const OfferForm = ({
     resolver: zodResolver(offerSchema),
     mode: "onChange",
     defaultValues: {
-      title: "",
-      offerType: mode === "edit" && offerData?.offerType ? offerData.offerType : "category",
+      title: "", 
+      offerType: "product",
       description: "",
       discountType: "percentage",
       discountValue: "",
@@ -200,12 +198,17 @@ const OfferForm = ({
     },
   });
 
-  console.log(offerData?.offerType);
   useEffect(() => {
     if (mode === "edit" && offerData) {
+      const validOfferType = ["product", "category"].includes(
+        offerData.offerType
+      )
+        ? offerData.offerType
+        : "product";
+
       form.reset({
         title: offerData.title || "",
-        offerType: offerData.offerType,
+        offerType: validOfferType,
         description: offerData.description || "",
         discountType: offerData.discountType || "percentage",
         discountValue: offerData.discountValue?.toString() || "",
@@ -215,23 +218,10 @@ const OfferForm = ({
         endDate: offerData.endDate ? offerData.endDate.split("T")[0] : "",
         isActive: offerData.isActive ?? true,
       });
-    } else if (mode === "add") {
-      form.reset({
-        title: "",
-        offerType: "product",
-        description: "",
-        discountType: "percentage",
-        discountValue: "",
-        applicableProducts: [],
-        applicableCategories: [],
-        startDate: "",
-        endDate: "",
-        isActive: true,
-      });
     }
   }, [offerData, mode, form]);
 
-  const { data: products = [] , isLoading:isProductLoading} = useQuery({
+  const { data: products = [], isLoading: isProductLoading } = useQuery({
     queryKey: ["products"],
     queryFn: getproductlist,
     select: (data) =>
@@ -241,7 +231,7 @@ const OfferForm = ({
       })),
   });
 
-  const { data: categories = [] ,isLoading:isCategoriesLoading} = useQuery({
+  const { data: categories = [], isLoading: isCategoriesLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: getcategorylist,
     select: (data) =>
@@ -251,7 +241,7 @@ const OfferForm = ({
       })),
   });
 
-  const {mutate:createMutation,isPending:isCreating} = useMutation({
+  const { mutate: createMutation, isPending: isCreating } = useMutation({
     mutationFn: createOffer,
     onSuccess: () => {
       toast.success("Offer created successfully!");
@@ -263,7 +253,7 @@ const OfferForm = ({
     },
   });
 
-  const {mutate:editMutation ,isPending:isupdating}= useMutation({
+  const { mutate: editMutation, isPending: isupdating } = useMutation({
     mutationFn: (data) => editoffer(data, offerId),
     onSuccess: () => {
       toast.success("Offer updated successfully!");
@@ -301,11 +291,17 @@ const OfferForm = ({
     }
   };
 
-  if (isOfferLoading||isCategoriesLoading||isProductLoading||isCreating||isupdating) {
+  if (
+    isOfferLoading ||
+    isCategoriesLoading ||
+    isProductLoading ||
+    isCreating ||
+    isupdating
+  ) {
     return (
       <div className="flex min-h-screen bg-gray-100">
         <AdminSidebar activeRoute="/admin/offers" />
-        <LoadingSpinner/>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -356,39 +352,6 @@ const OfferForm = ({
                       </FormItem>
                     )}
                   />
-
-                  {/* <FormField
-                    control={form.control}
-                    name="offerType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Offer Type</FormLabel>
-                        <Select
-                          onValueChange={(value) =>
-                            form.setValue("offerType", value, {
-                              shouldValidate: false,
-                            })
-                          }
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select offer type" {...field} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="product">
-                              Product Offer
-                            </SelectItem>
-                            <SelectItem value="category">
-                              Category Offer
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  /> */}
 
                   <FormField
                     control={form.control}

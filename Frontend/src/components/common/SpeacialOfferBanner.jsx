@@ -29,7 +29,6 @@ const validateProps = ({ products }) => {
 };
 
 const SpecialOfferBanner = ({ products }) => {
-console.log(products)
   const navigate = useNavigate();
 
   // Validate props

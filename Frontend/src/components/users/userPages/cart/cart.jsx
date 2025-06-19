@@ -20,7 +20,7 @@ export function CartPage() {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [cleardialong, setCleardialong] = useState(false);
-  const { cart, loading, removeFromCart, updateQuantity, clearCart, error } =
+  const { cart, loading, removeFromCart, updateQuantity, clearCart, error ,totalPrice} =
     useCart();
 
   // Handle quantity changes
@@ -37,6 +37,7 @@ export function CartPage() {
   if (error) {
     return <ErrorCommon />;
   }
+
 
   return (
     <div className="min-h-screen bg-white">

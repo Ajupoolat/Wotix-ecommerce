@@ -122,11 +122,7 @@ export function OrderDetailsPage() {
     enabled: !!orderId,
   });
 
-  console.log(
-    "the order details from the user orderdetails page :",
-    order?.products
-  );
-  console.log("the another check of the order :", order);
+
 
   useEffect(() => {
     if (order?.products) {
@@ -340,6 +336,7 @@ export function OrderDetailsPage() {
     const productNotCancelled = !product.cancelled;
     const noExistingReturnStatus =
       !product.returnStatus || product.returnStatus === "none";
+
     const noPendingReturnRequest = !order.returnRequests.some(
       (req) =>
         req.products.some(
@@ -355,6 +352,7 @@ export function OrderDetailsPage() {
   };
 
   const hasReturnableProducts = order.products.some(isProductEligibleForReturn);
+
 
   return (
     <div className="min-h-screen bg-white">

@@ -56,6 +56,7 @@ import AdminSidebar from "../../reuse/sidebar/sidebar";
 import CategoryForm from "../../reuse/category/categoryform";
 import LoadingSpinner from "../../adminCommon/loadingSpinner";
 import CommonError from "../../adminCommon/error";
+import NotificationsAdmin from "../../adminCommon/notificationAdmin";
 
 const CategoryList = () => {
   const queryClient = useQueryClient();
@@ -75,7 +76,15 @@ const CategoryList = () => {
   const [hidingStates, setHidingStates] = useState({});
   const [showUnlistConfirm, setShowUnlistConfirm] = useState(false);
   const [categoryToToggle, setCategoryToToggle] = useState(null);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+  
+ useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
 
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
   const {
     data: categoryData = {
       categories: [],
@@ -87,10 +96,10 @@ const CategoryList = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["categories", { searchQuery, statusFilter, currentPage }],
+    queryKey: ["categories", { debouncedSearchQuery, statusFilter, currentPage }],
     queryFn: () =>
       getcategory({
-        search: searchQuery,
+        search: debouncedSearchQuery,
         status: statusFilter,
         page: currentPage,
         limit: categoriesPerPage,
@@ -288,6 +297,9 @@ const CategoryList = () => {
             )}
           </div>
           <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <NotificationsAdmin/>
+            </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by status" />

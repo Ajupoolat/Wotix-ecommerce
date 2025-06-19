@@ -32,10 +32,8 @@ const createNotification = async (
       isRead: notification.isRead,
       createdAt: notification.createdAt,
     });
-    console.log("completed the notfication creation");
     return notification;
   } catch (error) {
-    console.error("Error creating notification:", error);
     throw error;
   }
 };
@@ -70,7 +68,6 @@ const getnotificationsAdmin = async (req, res) => {
       currentPage: page
     });
   } catch (error) {
-    console.log("something error is here :", error);
     res
       .status(adminNotiResponse.SERVER_ERROR.statusCode)
       .json({ message: adminNotiResponse.SERVER_ERROR.messages });
@@ -80,13 +77,11 @@ const getnotificationsAdmin = async (req, res) => {
 
 
 const getnotificationsUsers = async (req, res) => {
-  console.log("the notifications for the user is working here");
 
   try {
     const { userId } = req.params;
     const { page = 1, limit = 10 } = req.query; 
 
-    console.log("the user is here :", userId);
 
     const skip = (page - 1) * limit;
 
@@ -141,7 +136,6 @@ const updateNotificationUser = async (req, res) => {
       .status(userNotiResponse.SUCCESS.statusCode)
       .json({message:userNotiResponse.SUCCESS.messages});
   } catch (error) {
-    console.log("some thing error is here:", error);
     res
       .status(userNotiResponse.SERVER_ERROR.statusCode)
       .json({message:userNotiResponse.SERVER_ERROR.messages});
@@ -149,7 +143,6 @@ const updateNotificationUser = async (req, res) => {
 };
 
 const updateNotificationAdmin = async (req, res) => {
-  console.log("the api admin mark as read is working");
   try {
     const { id } = req.params;
 
@@ -171,7 +164,6 @@ const updateNotificationAdmin = async (req, res) => {
       .status(adminNotiResponse.SUCCESS.statusCode)
       .json({message:adminNotiResponse.SUCCESS.messages});
   } catch (error) {
-    console.log("some thing error is here:", error);
     res
       .status(adminNotiResponse.SERVER_ERROR.statusCode)
       .json({message:adminNotiResponse.SERVER_ERROR.messages});
@@ -220,12 +212,12 @@ const deletionNotificationAdmin = async (req, res) => {
     const result = await Notifications.deleteOne({ _id: id });
 
     if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "Notification not found." });
+      return res.status(adminNotiResponse.NOT_FOUND.statusCode).json({ message: adminNotiResponse.SUCCESS.messages });
     }
 
     res
-      .status(adminNotiResponse.SUCCESS.statusCode)
-      .json({ message: "The deletion of notification is successful." });
+      .status(adminNotiResponse.SUCCESS_DELETE.statusCode)
+      .json({ message: adminNotiResponse.SUCCESS_DELETE.messages });
 
   } catch (error) {
     res
