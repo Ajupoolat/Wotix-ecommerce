@@ -5,19 +5,18 @@ import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import io from "socket.io-client";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { meta } from "eslint-plugin-react-hooks";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const API_BASE_URL = "http://localhost:5000";
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
   const [socket, setSocket] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem("isAuthenticated") === "true";
   });
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState(null);
-  const [searchParams] = useSearchParams(); 
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,20 +45,17 @@ export const AuthProvider = ({ children }) => {
           }
         );
 
-
         setIsAuthenticated(true);
         localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("userId", googleUserId); 
-        localStorage.setItem('email',response.data.user.email)
+        localStorage.setItem("userId", googleUserId);
+        localStorage.setItem("email", response.data.user.email);
         setUserId(googleUserId);
 
         if (socket) {
           socket.connect();
           socket.emit("register_user", googleUserId);
-      
 
           socket.on("account_blocked", () => {
-          
             handleForcedLogout();
             toast.error("Your account has been blocked by admin", {
               duration: 5000,
@@ -78,19 +74,18 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         localStorage.setItem("isAuthenticated", "true");
         const userId = response.data.user._id;
-        const username = response.data.user.firstName
-      
+        const username = response.data.user.firstName;
+
         setUserId(userId);
         localStorage.setItem("userId", userId);
-        localStorage.setItem("username",username)
-        localStorage.setItem('email',response.data.user.email)
+        localStorage.setItem("username", username);
+        localStorage.setItem("email", response.data.user.email);
 
         if (socket) {
           socket.connect();
           socket.emit("register_user", userId);
 
           socket.on("account_blocked", () => {
-        
             handleForcedLogout();
             toast.error("Your account has been blocked by admin", {
               duration: 5000,
@@ -121,11 +116,11 @@ export const AuthProvider = ({ children }) => {
 
       const username = response.data.userfind.firstName;
       const userId = response.data.userfind._id;
-      const email = response.data.userfind.email
+      const email = response.data.userfind.email;
 
       localStorage.setItem("username", username);
       localStorage.setItem("userId", userId);
-      localStorage.setItem("email",email)
+      localStorage.setItem("email", email);
       setUserId(userId);
 
       if (socket) {
@@ -145,8 +140,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("username");
     localStorage.removeItem("userId");
-    localStorage.removeItem('email')
-      window.location.href='/login'
+    localStorage.removeItem("email");
+    window.location.href = "/login";
     if (socket) {
       socket.disconnect();
     }
@@ -161,7 +156,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("userId");
       toast.success("Logged out successfully!");
       // navigate('/login')
-      window.location.href='/login'
+      window.location.href = "/login";
     },
     onError: (err) => {
       toast.error(err.message || "Something went wrong");
@@ -170,8 +165,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     checkAuthStatus();
-  }, [searchParams]); 
-
+  }, [searchParams]);
 
   const value = {
     isAuthenticated,
