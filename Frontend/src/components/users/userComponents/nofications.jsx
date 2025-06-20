@@ -88,7 +88,7 @@ const NotificationsUser = () => {
       setNotifications(notificationData.notifications);
       setTotalPages(notificationData.totalPages);
       setUnreadCount(
-        notificationData.notifications.filter((n) => !n.isRead).length
+        notificationData?.notifications?.filter((n) => !n.isRead)?.length
       );
     }
   }, [notificationData]);

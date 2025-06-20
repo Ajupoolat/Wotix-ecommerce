@@ -74,6 +74,8 @@ const AdminDashboard = () => {
         limit: ordersPerPage,
       }),
   });
+  
+  console.log(data)
 
   const {
     data: salesReport,
