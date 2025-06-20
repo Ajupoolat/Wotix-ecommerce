@@ -17,7 +17,7 @@ export const WishlistCountProvider = ({ children }) => {
 
   useEffect(() => {
     if (wishlist) {
-      setcountwislist(wishlist.products.length);
+      setcountwislist(wishlist?.products?.length ?? 0);
     }
   }, [wishlist]);
 
