@@ -61,9 +61,9 @@ const adminlogin = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "None",
-      domain:'wotix.myftp.org',
       maxAge: 24 * 60 * 60 * 1000,
     });
+    console.log('the token is completed',tokenadmin)
 
     res
       .status(200)
@@ -79,7 +79,6 @@ const logout = (req, res) => {
   res.clearCookie("tokenadmin",{
     httpOnly: true,
     secure: true,
-    domain:'wotix.myftp.org',
     sameSite: "None",
     path: "/",
   });
@@ -154,7 +153,6 @@ const blockuser = async (req, res) => {
         httpOnly: true,
         secure: true,
         sameSite: "None",
-        domain:'wotix.myftp.org',
         path: "/",
       });
 

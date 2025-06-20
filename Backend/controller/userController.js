@@ -408,7 +408,6 @@ const googleauth = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "None",
-      domain:'wotix.myftp.org',
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -454,7 +453,6 @@ const login = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "None",
-      domain:'wotix.myftp.org',
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -493,7 +491,6 @@ const logoutuser = (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,
-    domain:'wotix.myftp.org',
     sameSite: "None",
     path: "/",
   });
