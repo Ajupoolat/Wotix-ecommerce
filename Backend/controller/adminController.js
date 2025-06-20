@@ -61,7 +61,7 @@ const adminlogin = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "None",
-      Domain:'wotix.myftp.org',
+      domain:'wotix.myftp.org',
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -76,7 +76,13 @@ const adminlogin = async (req, res) => {
 //logout
 
 const logout = (req, res) => {
-  res.clearCookie("tokenadmin");
+  res.clearCookie("tokenadmin",{
+    httpOnly: true,
+    secure: true,
+    domain:'wotix.myftp.org',
+    sameSite: "None",
+    path: "/",
+  });
   res.json({ message: "logged out successfully" });
 };
 
@@ -147,7 +153,8 @@ const blockuser = async (req, res) => {
       res.clearCookie("token", {
         httpOnly: true,
         secure: true,
-        sameSite: "strict",
+        sameSite: "none",
+        domain:'wotix.myftp.org',
         path: "/",
       });
 
