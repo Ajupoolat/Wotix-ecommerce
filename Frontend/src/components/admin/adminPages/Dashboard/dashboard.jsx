@@ -75,7 +75,7 @@ const AdminDashboard = () => {
       }),
   });
   
-  console.log(data)
+  console.log(salesData)
 
   const {
     data: salesReport,
