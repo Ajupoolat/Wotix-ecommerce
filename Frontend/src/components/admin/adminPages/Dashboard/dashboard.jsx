@@ -425,7 +425,7 @@ const AdminDashboard = () => {
               <p className="text-2xl font-bold text-gray-800 mt-2">
                 {salesLoading
                   ? "Loading..."
-                  : salesData?.statistics.today.orders || 0}
+                  : salesData?.statistics?.today?.orders ?? 0}
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
