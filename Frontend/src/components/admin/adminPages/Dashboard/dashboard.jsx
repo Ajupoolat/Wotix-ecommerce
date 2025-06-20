@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
-import {useQuery} from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   getSalesStatistics,
   generateSalesReport,
 } from "@/api/admin/dashboard/dashboardmgt";
-import {
-  XMarkIcon
-} from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,18 +54,17 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
-  const [debouncedSearchQuery,setDebouncedSearchQuery] = useState(searchQuery)
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
 
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
 
-  useEffect(()=>{
-    const handle = setTimeout(()=>{
-      setDebouncedSearchQuery(searchQuery)
-    },500)
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
 
-    return ()=>clearTimeout(handle)
-  },[searchQuery])
-
-  const { data: salesData, isLoading: salesLoading ,error:salesError} = useQuery({
+  const { data: salesData, isLoading: salesLoading, error: salesError } = useQuery({
     queryKey: ["salesStatistics", statusFilter, debouncedSearchQuery, currentPage],
     queryFn: () =>
       getSalesStatistics({
@@ -116,17 +113,15 @@ const AdminDashboard = () => {
     setCustomEndDate(null);
   };
 
-  // Get top 5 products and categories
   const topProducts =
     salesReport?.report?.productSales
-      ?.sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5) || [];
+      ?.sort((a, b) => (b.revenue ?? 0) - (a.revenue ?? 0))
+      .slice(0, 5) ?? [];
   const topCategories =
     salesReport?.report?.categorySales
-      ?.sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5) || [];
+      ?.sort((a, b) => (b.revenue ?? 0) - (a.revenue ?? 0))
+      .slice(0, 5) ?? [];
 
-  // Download PDF report
   const downloadPDF = () => {
     try {
       if (!salesReport?.report) {
@@ -135,7 +130,6 @@ const AdminDashboard = () => {
       }
 
       const doc = new jsPDF();
-      // Apply autoTable plugin
       autoTable(doc, {});
 
       const report = salesReport.report;
@@ -146,7 +140,6 @@ const AdminDashboard = () => {
           )}`
         : dateRange;
 
-      // Title
       doc.setFontSize(16);
       doc.text(
         `Sales Report - ${period.charAt(0).toUpperCase() + period.slice(1)}`,
@@ -154,60 +147,52 @@ const AdminDashboard = () => {
         20
       );
 
-      // Summary Table
       doc.setFontSize(12);
       doc.text("Summary", 14, 30);
       autoTable(doc, {
         startY: 35,
         head: [["Metric", "Value"]],
         body: [
-          ["Total Orders", report.summary?.totalOrders || 0],
-          [
-            "Total Sales",
-            `$${report.summary?.totalSales?.toFixed(2) || "0.00"}`,
-          ],
-          ["Net Sales", `$${report.summary?.netSales?.toFixed(2) || "0.00"}`],
+          ["Total Orders", report?.summary?.totalOrders ?? 0],
+          ["Total Sales", `$${report?.summary?.totalSales?.toFixed(2) ?? "0.00"}`],
+          ["Net Sales", `$${report?.summary?.netSales?.toFixed(2) ?? "0.00"}`],
         ],
       });
 
-      // Daily Sales Table
       doc.text("Daily Sales", 14, doc.lastAutoTable.finalY + 10);
       autoTable(doc, {
         startY: doc.lastAutoTable.finalY + 15,
         head: [["Date", "Orders", "Revenue", "Items Sold"]],
-        body: (report.dailySales || []).map((item) => [
-          item.date || "N/A",
-          item.orders || 0,
-          `$${item.revenue?.toFixed(2) || "0.00"}`,
-          item.items || 0,
+        body: (report?.dailySales ?? []).map((item) => [
+          item?.date ?? "N/A",
+          item?.orders ?? 0,
+          `$${item?.revenue?.toFixed(2) ?? "0.00"}`,
+          item?.items ?? 0,
         ]),
       });
 
-      // Top Products Table
       doc.text("Top 5 Products", 14, doc.lastAutoTable.finalY + 10);
       autoTable(doc, {
         startY: doc.lastAutoTable.finalY + 15,
         head: [["Product", "Quantity", "Revenue"]],
         body: topProducts.map((item) => [
-          item.name || "N/A",
-          item.quantity || 0,
-          `$${item.revenue?.toFixed(2) || "0.00"}`,
+          item?.name ?? "N/A",
+          item?.quantity ?? 0,
+          `$${item?.revenue?.toFixed(2) ?? "0.00"}`,
         ]),
       });
 
-      // Top Categories Table
       doc.text("Top 5 Categories", 14, doc.lastAutoTable.finalY + 10);
       autoTable(doc, {
         startY: doc.lastAutoTable.finalY + 15,
         head: [["Category", "Quantity", "Revenue"]],
         body: topCategories.map((item) => [
-          item.category || "N/A",
-          item.quantity || 0,
-          `$${item.revenue?.toFixed(2) || "0.00"}`,
+          item?.category ?? "N/A",
+          item?.quantity ?? 0,
+          `$${item?.revenue?.toFixed(2) ?? "0.00"}`,
         ]),
       });
 
-      // Save PDF
       doc.save(
         `sales-report-${period}-${new Date().toISOString().split("T")[0]}.pdf`
       );
@@ -217,7 +202,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Download Excel report
   const downloadExcel = () => {
     try {
       if (!salesReport?.report) {
@@ -233,46 +217,41 @@ const AdminDashboard = () => {
           )}`
         : dateRange;
 
-      // Summary Sheet
       const summaryData = [
         ["Metric", "Value"],
-        ["Total Orders", report.summary?.totalOrders || 0],
-        ["Total Sales", report.summary?.totalSales?.toFixed(2) || "0.00"],
-        ["Net Sales", report.summary?.netSales?.toFixed(2) || "0.00"],
+        ["Total Orders", report?.summary?.totalOrders ?? 0],
+        ["Total Sales", report?.summary?.totalSales?.toFixed(2) ?? "0.00"],
+        ["Net Sales", report?.summary?.netSales?.toFixed(2) ?? "0.00"],
       ];
 
-      // Daily Sales Sheet
       const dailySalesData = [
         ["Date", "Orders", "Revenue", "Items Sold"],
-        ...(report.dailySales || []).map((item) => [
-          item.date || "N/A",
-          item.orders || 0,
-          item.revenue?.toFixed(2) || "0.00",
-          item.items || 0,
+        ...(report?.dailySales ?? []).map((item) => [
+          item?.date ?? "N/A",
+          item?.orders ?? 0,
+          item?.revenue?.toFixed(2) ?? "0.00",
+          item?.items ?? 0,
         ]),
       ];
 
-      // Top Products Sheet
       const topProductsData = [
         ["Product", "Quantity", "Revenue"],
         ...topProducts.map((item) => [
-          item.name || "N/A",
-          item.quantity || 0,
-          item.revenue?.toFixed(2) || "0.00",
+          item?.name ?? "N/A",
+          item?.quantity ?? 0,
+          item?.revenue?.toFixed(2) ?? "0.00",
         ]),
       ];
 
-      // Top Categories Sheet
       const topCategoriesData = [
         ["Category", "Quantity", "Revenue"],
         ...topCategories.map((item) => [
-          item.category || "N/A",
-          item.quantity || 0,
-          item.revenue?.toFixed(2) || "0.00",
+          item?.category ?? "N/A",
+          item?.quantity ?? 0,
+          item?.revenue?.toFixed(2) ?? "0.00",
         ]),
       ];
 
-      // Create Workbook
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(
         wb,
@@ -295,15 +274,12 @@ const AdminDashboard = () => {
         "Top Categories"
       );
 
-      // Generate binary data and download
       const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
       const blob = new Blob([wbout], { type: "application/octet-stream" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `sales-report-${period}-${
-        new Date().toISOString().split("T")[0]
-      }.xlsx`;
+      a.download = `sales-report-${period}-${new Date().toISOString().split("T")[0]}.xlsx`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -321,9 +297,9 @@ const AdminDashboard = () => {
         Showing {(currentPage - 1) * ordersPerPage + 1}-
         {Math.min(
           currentPage * ordersPerPage,
-          salesData?.statistics?.pagination?.totalOrders || 0
+          salesData?.statistics?.pagination?.totalOrders ?? 0
         )}{" "}
-        of {salesData?.statistics?.pagination?.totalOrders || 0}
+        of {salesData?.statistics?.pagination?.totalOrders ?? 0}
       </p>
       <div className="flex items-center space-x-2">
         <Button
@@ -341,7 +317,7 @@ const AdminDashboard = () => {
           disabled={
             currentPage >=
             Math.ceil(
-              (salesData?.statistics?.pagination?.totalOrders || 0) /
+              (salesData?.statistics?.pagination?.totalOrders ?? 0) /
                 ordersPerPage
             )
           }
@@ -361,20 +337,20 @@ const AdminDashboard = () => {
     );
   }
 
-  if(salesError||reportError){
-    return(
-      <CommonError Route={'/admin-dashboard'} m1={'error to load dashboard data'} m2={'Error load Dashboard'}/>
-    )
+  if (salesError || reportError) {
+    return (
+      <CommonError
+        Route={"/admin-dashboard"}
+        m1={"error to load dashboard data"}
+        m2={"Error load Dashboard"}
+      />
+    );
   }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
       <AdminSidebar activeRoute="/admin-dashboard" />
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <header className="bg-white border-b p-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
@@ -397,8 +373,8 @@ const AdminDashboard = () => {
             </button>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 ">
-            <NotificationsAdmin />
+            <div className="flex items-center space-x-2">
+              <NotificationsAdmin />
             </div>
             <div className="flex items-center space-x-2">
               <Avatar>
@@ -409,14 +385,10 @@ const AdminDashboard = () => {
             </div>
           </div>
         </header>
-
-        {/* Dashboard Content */}
         <main className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Dashboard</h2>
           </div>
-
-          {/* Sales Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
               <h3 className="text-gray-600 text-sm font-medium">
@@ -435,7 +407,7 @@ const AdminDashboard = () => {
               <p className="text-2xl font-bold text-gray-800 mt-2">
                 {salesLoading
                   ? "Loading..."
-                  : `$${(salesData?.statistics.today.sales || 0).toFixed(2)}`}
+                  : `$${salesData?.statistics?.today?.sales?.toFixed(2) ?? "0.00"}`}
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
@@ -445,7 +417,7 @@ const AdminDashboard = () => {
               <p className="text-2xl font-bold text-gray-800 mt-2">
                 {salesLoading
                   ? "Loading..."
-                  : `$${(salesData?.statistics.weekly.sales || 0).toFixed(2)}`}
+                  : `$${salesData?.statistics?.weekly?.sales?.toFixed(2) ?? "0.00"}`}
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
@@ -455,12 +427,10 @@ const AdminDashboard = () => {
               <p className="text-2xl font-bold text-gray-800 mt-2">
                 {salesLoading
                   ? "Loading..."
-                  : `$${(salesData?.statistics.monthly.sales || 0).toFixed(2)}`}
+                  : `$${salesData?.statistics?.monthly?.sales?.toFixed(2) ?? "0.00"}`}
               </p>
             </div>
           </div>
-
-          {/* Sales Report Section */}
           <div className="bg-white rounded-lg shadow p-6 mb-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-800">
@@ -539,8 +509,6 @@ const AdminDashboard = () => {
                 </DropdownMenu>
               </div>
             </div>
-
-            {/* Custom Date Range Picker */}
             {showCustomRange && (
               <div className="mb-4 flex space-x-4">
                 <div>
@@ -572,8 +540,6 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
-
-            {/* Sales Report Summary */}
             {reportLoading ? (
               <div className="flex items-center justify-center h-40">
                 <p className="text-gray-600">Loading sales report...</p>
@@ -591,30 +557,24 @@ const AdminDashboard = () => {
                       Total Orders delivered
                     </p>
                     <p className="text-xl font-bold text-gray-800">
-                      {salesReport?.report?.summary.totalOrders || 0}
+                      {salesReport?.report?.summary?.totalOrders ?? 0}
                     </p>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-600">Total Sales</p>
                     <p className="text-xl font-bold text-gray-800">
-                      $
-                      {salesReport?.report?.summary.totalSales.toFixed(2) ||
-                        "0.00"}
+                      ${salesReport?.report?.summary?.totalSales?.toFixed(2) ?? "0.00"}
                     </p>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-600">Net Sales</p>
                     <p className="text-xl font-bold text-gray-800">
-                      $
-                      {salesReport?.report?.summary.netSales.toFixed(2) ||
-                        "0.00"}
+                      ${salesReport?.report?.summary?.netSales?.toFixed(2) ?? "0.00"}
                     </p>
                   </div>
                 </div>
               </div>
             )}
-
-            {/* Sales Chart */}
             {!reportLoading && !reportError && (
               <div className="h-80">
                 <h4 className="text-md font-semibold text-gray-800 mb-2">
@@ -622,7 +582,7 @@ const AdminDashboard = () => {
                 </h4>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={salesReport?.report?.dailySales || []}
+                    data={salesReport?.report?.dailySales ?? []}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -636,8 +596,6 @@ const AdminDashboard = () => {
               </div>
             )}
           </div>
-
-          {/* Top Products and Categories Section */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
               Top Products and Categories
@@ -650,7 +608,6 @@ const AdminDashboard = () => {
               <p className="text-red-600">Error: {reportError.message}</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Top Products */}
                 <div>
                   <h4 className="text-md font-semibold text-gray-800 mb-2">
                     Top 5 Products
@@ -674,13 +631,13 @@ const AdminDashboard = () => {
                         {topProducts.map((product, index) => (
                           <tr key={index} className="border-b">
                             <td className="py-2 text-sm text-gray-700">
-                              {product.name}
+                              {product?.name ?? "N/A"}
                             </td>
                             <td className="py-2 text-sm text-gray-700">
-                              {product.quantity}
+                              {product?.quantity ?? 0}
                             </td>
                             <td className="py-2 text-sm text-gray-700">
-                              ${product.revenue.toFixed(2)}
+                              ${product?.revenue?.toFixed(2) ?? "0.00"}
                             </td>
                           </tr>
                         ))}
@@ -692,8 +649,6 @@ const AdminDashboard = () => {
                     </p>
                   )}
                 </div>
-
-                {/* Top Categories */}
                 <div>
                   <h4 className="text-md font-semibold text-gray-800 mb-2">
                     Top 5 Categories
@@ -717,13 +672,13 @@ const AdminDashboard = () => {
                         {topCategories.map((category, index) => (
                           <tr key={index} className="border-b">
                             <td className="py-2 text-sm text-gray-700">
-                              {category.category}
+                              {category?.category ?? "N/A"}
                             </td>
                             <td className="py-2 text-sm text-gray-700">
-                              {category.quantity}
+                              {category?.quantity ?? 0}
                             </td>
                             <td className="py-2 text-sm text-gray-700">
-                              ${category.revenue.toFixed(2)}
+                              ${category?.revenue?.toFixed(2) ?? "0.00"}
                             </td>
                           </tr>
                         ))}
@@ -738,20 +693,17 @@ const AdminDashboard = () => {
               </div>
             )}
           </div>
-
-          {/* Order List Content */}
           <div className="bg-white rounded-lg shadow p-6 mt-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
               Recent Orders
             </h3>
-
             <div className="flex justify-between items-center mb-4">
               <div className="flex space-x-2">
                 <Select
                   value={statusFilter}
                   onValueChange={(value) => {
                     setStatusFilter(value);
-                    setCurrentPage(1); // Reset to first page when filter changes
+                    setCurrentPage(1);
                   }}
                 >
                   <SelectTrigger className="w-[180px]">
@@ -767,7 +719,6 @@ const AdminDashboard = () => {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="relative">
                 <Input
                   type="text"
@@ -775,7 +726,7 @@ const AdminDashboard = () => {
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
-                    setCurrentPage(1); // Reset to first page when search changes
+                    setCurrentPage(1);
                   }}
                   className="w-64 rounded-full border-gray-300 bg-gray-100 placeholder-gray-500 pr-8"
                 />
@@ -790,7 +741,6 @@ const AdminDashboard = () => {
                 )}
               </div>
             </div>
-
             {salesLoading ? (
               <div className="flex items-center justify-center h-40">
                 <p className="text-gray-600">Loading orders...</p>
@@ -812,48 +762,50 @@ const AdminDashboard = () => {
                     <tbody>
                       {salesData?.statistics?.recentOrders?.map((order) => (
                         <tr
-                          key={order._id}
+                          key={order?._id}
                           className="border-b hover:bg-gray-50"
                         >
                           <td className="py-3 text-sm text-gray-700 font-medium">
-                            #{order.orderNumber}
+                            #{order?.orderNumber ?? "N/A"}
                           </td>
                           <td className="py-3 text-sm text-gray-700">
-                            {order.userId?.email || "Guest"}
+                            {order?.userId?.email ?? "Guest"}
                           </td>
                           <td className="py-3 text-sm text-gray-700">
-                            {new Date(order.createdAt).toLocaleDateString()}
+                            {order?.createdAt
+                              ? new Date(order.createdAt).toLocaleDateString()
+                              : "N/A"}
                           </td>
                           <td className="py-3">
                             <Badge
                               variant={
-                                order.status === "delivered"
+                                order?.status === "delivered"
                                   ? "success"
-                                  : order.status === "cancelled"
+                                  : order?.status === "cancelled"
                                   ? "destructive"
-                                  : order.status === "shipped"
+                                  : order?.status === "shipped"
                                   ? "warning"
                                   : "default"
                               }
                             >
-                              {order.status}
+                              {order?.status ?? "N/A"}
                             </Badge>
                           </td>
                           <td className="py-3 text-sm text-gray-700">
-                            {order.products.reduce(
-                              (sum, item) => sum + item.quantity,
+                            {order?.products?.reduce(
+                              (sum, item) => sum + (item?.quantity ?? 0),
                               0
-                            )}
+                            ) ?? 0}
                           </td>
                           <td className="py-3 text-sm text-gray-700 font-medium">
-                            ₹{order.finalAmount.toFixed(2)}
+                            ₹{order?.finalAmount?.toFixed(2) ?? "0.00"}
                           </td>
                         </tr>
-                      ))}
+                      )) ?? []}
                     </tbody>
                   </table>
                 </div>
-                {salesData?.statistics?.pagination?.totalOrders >
+                {(salesData?.statistics?.pagination?.totalOrders ?? 0) >
                   ordersPerPage && <PaginationControls />}
               </>
             )}
