@@ -11,7 +11,9 @@ import { OffersProvider } from "./context/offerprice";
 import { OffersCartProvider } from "./context/cartOffer";
 import { WishlistCountProvider } from "./context/wishlistCount";
 import { WishlistProvider } from "./context/wishlistContext";
-import App from "./App.jsx";
+import App from "./App.jsx";  
+
+
 
 const queryclient = new QueryClient();
 
