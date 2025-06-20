@@ -88,7 +88,6 @@ require("dotenv").config();
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
-const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const passport = require("passport");
@@ -143,7 +142,6 @@ app.use(
     credentials: true,
   })
 );
-app.use(helmet());
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(passport.initialize());
