@@ -62,7 +62,7 @@ export const WishlistProvider = ({ children }) => {
   };
 
   // Count of items in wishlist
-  const count = wishlist?.products?.length || 0;
+  const count = wishlist?.products?.length ?? 0;
 
   const value = useMemo(
     () => ({
