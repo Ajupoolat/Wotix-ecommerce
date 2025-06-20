@@ -3,11 +3,11 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./DB/connect");
-const adminroutes = require("../Backend/routes/adminRoutes");
+const adminroutes = require("./routes/adminRoutes");
 const bodyparser = require("body-parser");
 const userroutes = require('./routes/userRoutes')
 const halmet = require('helmet')
-require('../Backend/config/passport')
+require('./config/passport')
 const passport = require('passport')
 const http = require('http'); 
 const { Server } = require('socket.io'); 
