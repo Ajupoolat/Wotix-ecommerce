@@ -15,6 +15,8 @@ import App from "./App.jsx";
 
 const queryclient = new QueryClient();
 
+
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Router>
