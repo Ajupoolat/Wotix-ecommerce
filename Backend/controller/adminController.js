@@ -153,7 +153,7 @@ const blockuser = async (req, res) => {
       res.clearCookie("token", {
         httpOnly: true,
         secure: true,
-        sameSite: "none",
+        sameSite: "None",
         domain:'wotix.myftp.org',
         path: "/",
       });
