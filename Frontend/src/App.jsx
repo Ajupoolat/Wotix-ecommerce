@@ -57,6 +57,7 @@ const App = () => {
           path="/profile/:id/edit-profile/:id"
           element={<EditProfilePage />}
         />
+        
         <Route
           path="/profile/:id/edit-profile/:id/otpverify"
           element={<OtpEdit />}
