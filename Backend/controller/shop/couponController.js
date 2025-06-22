@@ -201,7 +201,6 @@ const applyCoupon = async (req, res) => {
       return res.status(CouponResponses.INVALID_COUPON_CODE.statusCode).json({
         success: false,
         message: CouponResponses.INVALID_COUPON_CODE.message,
-        error: CouponResponses.INVALID_COUPON_CODE.errorCode
       });
     }
 
@@ -211,7 +210,6 @@ const applyCoupon = async (req, res) => {
       return res.status(CouponResponses.COUPON_EXPIRED.statusCode).json({
         success: false,
         message: CouponResponses.COUPON_EXPIRED.message,
-        error: CouponResponses.COUPON_EXPIRED.errorCode
       });
     }
 
@@ -219,7 +217,6 @@ const applyCoupon = async (req, res) => {
       return res.status(CouponResponses.MIN_PURCHASE_NOT_MET.statusCode).json({
         success: false,
         message: CouponResponses.MIN_PURCHASE_NOT_MET.message.replace("{amount}", coupon.minPurchaseAmount),
-        error: CouponResponses.MIN_PURCHASE_NOT_MET.errorCode
       });
     }
 
@@ -237,7 +234,7 @@ const applyCoupon = async (req, res) => {
     res.status(CouponResponses.SERVER_ERROR.statusCode).json({
       success: false,
       message: CouponResponses.SERVER_ERROR.message,
-      error: CouponResponses.SERVER_ERROR.errorCode
+     
     });
   }
 };

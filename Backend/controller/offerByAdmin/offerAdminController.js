@@ -148,7 +148,6 @@ const addOffer = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to create offer",
-            error: error.message
         });
     } finally {
         session.endSession();
@@ -254,7 +253,6 @@ const editOffer = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to update offer",
-            error: error.message
         });
     } finally {
         session.endSession();
@@ -290,7 +288,6 @@ const deleteOffer = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to delete offer",
-            error: error.message
         });
     } finally {
         session.endSession();

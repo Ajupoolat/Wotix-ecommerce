@@ -171,7 +171,6 @@ const generateSalesReport = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to generate sales report",
-      error: error.message,
     });
   }
 };
@@ -337,7 +336,6 @@ const getSalesStatistics = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to get sales statistics",
-      error: error.message,
     });
   }
 };
@@ -373,7 +371,6 @@ const updatestatus = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to update order status",
-      error: error.message,
     });
   }
 };

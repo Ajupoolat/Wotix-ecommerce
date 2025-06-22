@@ -9,8 +9,10 @@ const userSchema = require("../../models/userSchema");
 const productSchema = require("../../models/productSchema");
 const offerSchema = require("../../models/offerSchema");
 const { OrderResponses } = require("../../enums/order/user/orderuserEnum");
-const ADMIN_ID_ = process.env.ADMIN_ID
-const {createNotification} = require('../../controller/notifications/notificationControllers')
+const ADMIN_ID_ = process.env.ADMIN_ID;
+const {
+  createNotification,
+} = require("../../controller/notifications/notificationControllers");
 require("dotenv").config();
 
 const razorpay = new Razorpay({
@@ -108,16 +110,6 @@ const placeOrder = async (req, res) => {
             "{productName}",
             item.name || item.productId
           ),
-        });
-      }
-      if (product.stock < item.quantity) {
-        return res.status(OrderResponses.INSUFFICIENT_STOCK.statusCode).json({
-          success: false,
-          ...OrderResponses.INSUFFICIENT_STOCK,
-          message: OrderResponses.INSUFFICIENT_STOCK.message
-            .replace("{productName}", product.name)
-            .replace("{stock}", product.stock)
-            .replace("{quantity}", item.quantity),
         });
       }
     }
@@ -285,13 +277,26 @@ const placeOrder = async (req, res) => {
     try {
       await newOrder.save({ session });
 
-      // Reduce stock
+      // // Validate and update stock atomically
       for (const item of products) {
-        await Product.findByIdAndUpdate(
-          item.productId,
-          { $inc: { stock: -item.quantity } },
-          { session }
+        const product = await Product.findOneAndUpdate(
+          { _id: item.productId, stock: { $gte: item.quantity } }, // Check if stock is sufficient
+          { $inc: { stock: -item.quantity } }, // Decrement stock
+          { new: true, session } // Return updated document, use transaction session
         );
+
+        if (!product) {
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(OrderResponses.INSUFFICIENT_STOCK.statusCode).json({
+            success: false,
+            ...OrderResponses.INSUFFICIENT_STOCK,
+            message: OrderResponses.INSUFFICIENT_STOCK.message
+              .replace("{productName}", item.name || item.productId)
+              .replace("{stock}", "0")
+              .replace("{quantity}", item.quantity),
+          });
+        }
       }
 
       // Increment coupon usage count
@@ -475,7 +480,7 @@ const getOrderDetails = async (req, res) => {
         ...OrderResponses.UNAUTHORIZED_ACCESS,
       });
     }
-     
+
     res.status(200).json(order);
   } catch (error) {
     res.status(OrderResponses.SERVER_ERROR.statusCode).json({
@@ -903,21 +908,13 @@ const submitReturnRequest = async (req, res) => {
     await order.save({ session });
     await session.commitTransaction();
 
-
-    //creating notification for the admin 
-   const io = req.app.get('io')
-   const adminId = ADMIN_ID_
-   const type = 'return_request'
-   const role = 'admin'
-   const message = `a user has requested for return. The Order ID:${order.orderNumber}`
-    await createNotification(
-       io,
-       adminId,
-       role,
-       type,
-       message,
-       orderId
-    )
+    //creating notification for the admin
+    const io = req.app.get("io");
+    const adminId = ADMIN_ID_;
+    const type = "return_request";
+    const role = "admin";
+    const message = `a user has requested for return. The Order ID:${order.orderNumber}`;
+    await createNotification(io, adminId, role, type, message, orderId);
 
     res.status(OrderResponses.RETURN_REQUEST_SUCCESS.statusCode).json({
       success: true,

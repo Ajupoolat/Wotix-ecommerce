@@ -175,7 +175,7 @@ const addproduct = async (req, res) => {
     }
     res.status(500).json({
       message: "Server error while adding product",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+     
     });
   }
 };
@@ -354,7 +354,6 @@ const editproduct = async (req, res) => {
     }
     res.status(500).json({
       message: "Server error while updating product",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };

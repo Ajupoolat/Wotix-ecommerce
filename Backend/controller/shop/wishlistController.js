@@ -45,7 +45,6 @@ const removeFromWishlist = async (req, res) => {
     res.status(ResponseStatus.SERVER_ERROR).json({ 
       success: false, 
       message: ErrorMessages.SERVER_ERROR, 
-      error: error.message 
     });
   }
 };
@@ -93,7 +92,6 @@ const addToWishlist = async (req, res) => {
     res.status(ResponseStatus.SERVER_ERROR).json({ 
       success: false, 
       message: ErrorMessages.SERVER_ERROR, 
-      error: error.message 
     });
   }
 };
@@ -159,7 +157,6 @@ const getWishlist = async (req, res) => {
     res.status(ResponseStatus.SERVER_ERROR).json({ 
       success: false, 
       message: ErrorMessages.SERVER_ERROR, 
-      error: error.message 
     });
   }
 };

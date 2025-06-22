@@ -218,7 +218,7 @@ const updateOrderStatus = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error while updating order status",
-      error: error.message,
+     
     });
   }
 };
@@ -235,7 +235,7 @@ const processReturnRequest = async (req, res) => {
       await session.abortTransaction();
       return res
         .status(400)
-        .json({ error: "Invalid status. Use 'approved' or 'rejected'" });
+        .json({ message: "Invalid status. Use 'approved' or 'rejected'" });
     }
 
     // Find and validate order
@@ -246,7 +246,7 @@ const processReturnRequest = async (req, res) => {
 
     if (!order) {
       await session.abortTransaction();
-      return res.status(404).json({ error: "Order not found" });
+      return res.status(404).json({ message: "Order not found" });
     }
 
     // Find all pending return requests
@@ -256,7 +256,7 @@ const processReturnRequest = async (req, res) => {
 
     if (pendingRequests.length === 0) {
       await session.abortTransaction();
-      return res.status(400).json({ error: "No pending return requests" });
+      return res.status(400).json({ message: "No pending return requests" });
     }
 
     let refundAmount = 0;
@@ -278,7 +278,7 @@ const processReturnRequest = async (req, res) => {
           if (!product) {
             await session.abortTransaction();
             return res.status(404).json({
-              error: `Product ${returnProduct.productId} not found in order`,
+              message: `Product ${returnProduct.productId} not found in order`,
             });
           }
           // Only modify products that are part of THIS return request
@@ -303,7 +303,7 @@ const processReturnRequest = async (req, res) => {
         .session(session);
       if (!wallet) {
         await session.abortTransaction();
-        return res.status(404).json({ error: "User wallet not found" });
+        return res.status(404).json({message: "User wallet not found" });
       }
 
       // Create transaction entries for each approved return
@@ -381,7 +381,7 @@ const processReturnRequest = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     res.status(500).json({
-      error: "Failed to process return request",
+      message: "Failed to process return request",
       details:
         process.env.NODE_ENV === "development" ? error.message : undefined,
     });
@@ -403,7 +403,7 @@ const getPendingReturnRequests = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      error: "Failed to fetch return requests",
+      message: "Failed to fetch return requests",
       details:
         process.env.NODE_ENV === "development" ? error.message : undefined,
     });

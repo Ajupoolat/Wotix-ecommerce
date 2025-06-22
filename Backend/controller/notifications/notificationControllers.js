@@ -185,7 +185,7 @@ const deletionNotificationUser = async (req, res) => {
     const result = await Notifications.deleteOne({ _id: id });
 
     if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "Notification not found." });
+      return res.status(userNotiResponse.NOT_FOUND.statusCode).json({ message: userNotiResponse.NOT_FOUND.messages });
     }
 
     res
@@ -212,7 +212,7 @@ const deletionNotificationAdmin = async (req, res) => {
     const result = await Notifications.deleteOne({ _id: id });
 
     if (result.deletedCount === 0) {
-      return res.status(adminNotiResponse.NOT_FOUND.statusCode).json({ message: adminNotiResponse.SUCCESS.messages });
+      return res.status(adminNotiResponse.NOT_FOUND.statusCode).json({ message: adminNotiResponse.NOT_FOUND.messages });
     }
 
     res

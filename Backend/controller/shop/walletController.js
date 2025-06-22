@@ -103,8 +103,7 @@ const getWallet = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      error: "Internal server error",
-      details: error.message,
+      message:'internal error in wallet data'
     });
   }
 };

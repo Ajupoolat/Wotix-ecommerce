@@ -132,7 +132,6 @@ const generateInvoice = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error generating invoice",
-      error: error.message,
     });
   }
 };

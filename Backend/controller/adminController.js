@@ -175,7 +175,6 @@ const blockuser = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error while blocking/unblocking user",
-      error: error.message,
     });
   }
 };
