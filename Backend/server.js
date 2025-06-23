@@ -12,11 +12,17 @@ const passport = require('passport')
 const http = require('http'); 
 const { Server } = require('socket.io'); 
 
+
 const app = express();
 
 //  HTTP server for WebSocket
 const server = http.createServer(app);
 
+const corOptions = {
+
+  origin: [process.env.FRONTEND_URL],
+  credentials:true
+}
 
 //  WebSocket server
 const io = new Server(server, {
@@ -52,11 +58,11 @@ io.on('connection', (socket) => {
 });
 
 // Middleware
+
+app.options('*',cors(corOptions))
+
 app.use(
-  cors({
-    origin: [process.env.FRONTEND_URL],
-    credentials: true
-  })
+  cors(corOptions)
 );
 app.use(cookieParser());
 app.use(bodyparser.json());
