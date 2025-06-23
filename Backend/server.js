@@ -21,7 +21,7 @@ const server = http.createServer(app);
 //  WebSocket server
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", process.env.FRONTEND_URL],
+    origin: [process.env.FRONTEND_URL],
     credentials: true
   }
 });
@@ -54,7 +54,7 @@ io.on('connection', (socket) => {
 // Middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173",process.env.FRONTEND_URL],
+    origin: [process.env.FRONTEND_URL],
     credentials: true
   })
 );
