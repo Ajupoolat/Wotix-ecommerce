@@ -20,14 +20,14 @@ const server = http.createServer(app);
 
 const corOptions = {
 
-  origin: [process.env.FRONTEND_URL],
+  origin: ["http://localhost:5173"],
   credentials:true
 }
 
 //  WebSocket server
 const io = new Server(server, {
   cors: {
-    origin: [process.env.FRONTEND_URL],
+    origin: ["http://localhost:5173"],
     credentials: true
   }
 });
