@@ -62,6 +62,8 @@ const offerSchema = z
         "Description can only contain letters, numbers, and spaces"
       )
       .trim()
+      .regex(/^\S.*\S$/, "Title cannot have leading or trailing spaces")
+
       .optional(),
     discountType: z.enum(["percentage"], {
       required_error: "Discount type is required",
@@ -185,7 +187,7 @@ const OfferForm = ({
     resolver: zodResolver(offerSchema),
     mode: "onChange",
     defaultValues: {
-      title: "", 
+      title: "",
       offerType: "product",
       description: "",
       discountType: "percentage",

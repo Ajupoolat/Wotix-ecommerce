@@ -25,10 +25,24 @@ const profileSchema = z.object({
   firstName: z
     .string()
     .min(2, "First name must be at least 2 characters")
-    .nonempty("First name is required"),
+    .max(500, "first must be less than 500 characters")
+    .regex(
+      /^[a-zA-Z0-9\s]*$/,
+      "First name can only contain letters, numbers, and spaces"
+    )
+    .trim()
+    .regex(/^\S.*\S$/, "First name cannot have leading or trailing spaces")
+    .nonempty("first name is required"),
   lastName: z
     .string()
     .min(2, "Last name must be at least 2 characters")
+    .max(500, "Last name must be less than 500 characters")
+    .regex(
+      /^[a-zA-Z0-9\s]*$/,
+      "Last name can only contain letters, numbers, and spaces"
+    )
+    .trim()
+    .regex(/^\S.*\S$/, "Last name cannot have leading or trailing spaces")
     .nonempty("Last name is required"),
   email: z
     .string()
@@ -39,9 +53,8 @@ const profileSchema = z.object({
 const EditProfilePage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const userId = localStorage.getItem('userId')
-  const email = localStorage.getItem('email')
-
+  const userId = localStorage.getItem("userId");
+  const email = localStorage.getItem("email");
 
   const {
     register,
@@ -61,18 +74,20 @@ const EditProfilePage = () => {
       toast.success("OTP sent successfully!");
       // Store form data in localStorage before navigating
       const formData = getValues();
-      localStorage.setItem("editProfileData", JSON.stringify({
-       ...formData,
-       userId:userId
-      }));
+      localStorage.setItem(
+        "editProfileData",
+        JSON.stringify({
+          ...formData,
+          userId: userId,
+        })
+      );
       navigate("/profile/:id/edit-profile/:id/otpverify", {
         state: {
           email: formData.email,
           mode: "edit",
         },
-        
       });
-      localStorage.setItem('email',formData.email)
+      localStorage.setItem("email", formData.email);
     },
     onError: (err) => {
       toast.error(err.message || "Failed to send OTP");
@@ -86,8 +101,8 @@ const EditProfilePage = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["profile", id,email],
-    queryFn: () => viewprofile(id,email),
+    queryKey: ["profile", id, email],
+    queryFn: () => viewprofile(id, email),
   });
 
   // Reset form with fetched data when profileData is available

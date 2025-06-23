@@ -16,9 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { adminLogout } from "@/api/admin/Login/loginAuth";
 import AdminSidebar from "../sidebar/sidebar";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;

@@ -25,7 +25,10 @@ const categorySchema = z.object({
     .regex(
       /^[a-zA-Z0-9 ]*$/,
       "Category name can only contain letters, numbers, and spaces"
-    ),
+    )
+    .trim()
+    .regex(/^\S.*\S$/, "category name cannot have leading or trailing spaces")
+    ,
   description: z
     .string()
     .min(1, "This field is required")
@@ -34,7 +37,10 @@ const categorySchema = z.object({
     .regex(
       /^[a-zA-Z0-9 ]*$/,
       "Description can only contain letters, numbers, and spaces"
-    ),
+    )
+    .trim()
+    .regex(/^\S.*\S$/, "category name cannot have leading or trailing spaces")
+    ,
 });
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];

@@ -18,12 +18,18 @@ const signupSchema = z
       .string()
       .min(2, 'First name must be at least 2 characters')
       .max(50, 'First name must be less than 50 characters')
-      .regex(/^[a-zA-Z\s]+$/, 'First name must contain only letters and spaces'),
+      .regex(/^[a-zA-Z\s]+$/, 'First name must contain only letters and spaces')
+      .trim()
+      .regex(/^\S.*\S$/, "first name cannot have leading or trailing spaces")
+      ,
     lastName: z
       .string()
       .min(2, 'Last name must be at least 2 characters')
       .max(50, 'Last name must be less than 50 characters')
-      .regex(/^[a-zA-Z\s]+$/, 'Last name must contain only letters and spaces'),
+      .regex(/^[a-zA-Z\s]+$/, 'Last name must contain only letters and spaces')
+       .trim()
+      .regex(/^\S.*\S$/, "last name cannot have leading or trailing spaces")
+      ,
     email: z.string().email('Invalid email format'),
     password: z
       .string()
