@@ -14,20 +14,20 @@ const { Server } = require('socket.io');
 
 
 const app = express();
-
+const FRONTEND_URL = process.env.FRONTEND_URL
 //  HTTP server for WebSocket
 const server = http.createServer(app);
 
 const corOptions = {
 
-  origin: ["http://localhost:5173"],
+  origin: [FRONTEND_URL],
   credentials:true
 }
 
 //  WebSocket server
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173"],
+    origin: [FRONTEND_URL],
     credentials: true
   }
 });
