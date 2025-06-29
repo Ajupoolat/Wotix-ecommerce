@@ -31,7 +31,7 @@ const validateProps = ({ products }) => {
 const SpecialOfferBanner = ({ products }) => {
   const navigate = useNavigate();
 
-  // Validate props
+  // Validate props 
   validateProps({ products });
 
   if (!products?.some((product) => product.offer)) {
