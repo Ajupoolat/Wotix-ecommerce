@@ -63,7 +63,6 @@ const adminlogin = async (req, res) => {
       sameSite: "None",
       maxAge: 24 * 60 * 60 * 1000,
     });
-    console.log('the token is completed',tokenadmin)
 
     res
       .status(200)

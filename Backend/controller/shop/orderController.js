@@ -8,6 +8,12 @@ const walletSchema = require("../../models/wallet");
 const userSchema = require("../../models/userSchema");
 const productSchema = require("../../models/productSchema");
 const offerSchema = require("../../models/offerSchema");
+const {
+  ReferenceType,
+  TransactionType,
+  TransactionStatus,
+  WalletStatus,
+} = require("../../enums/wallet/walletenums");
 const { OrderResponses } = require("../../enums/order/user/orderuserEnum");
 const ADMIN_ID_ = process.env.ADMIN_ID;
 const {
@@ -19,49 +25,6 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
-
-const migrateOrders = async () => {
-  try {
-    await orderSchema.updateMany(
-      { "products.discountedPrice": { $exists: false } },
-      [
-        {
-          $set: {
-            products: {
-              $map: {
-                input: "$products",
-                as: "product",
-                in: {
-                  $mergeObjects: [
-                    "$$product",
-                    { discountedPrice: "$$product.price" },
-                  ],
-                },
-              },
-            },
-            subtotal: {
-              $reduce: {
-                input: "$products",
-                initialValue: 0,
-                in: {
-                  $add: [
-                    "$$value",
-                    { $multiply: ["$$this.price", "$$this.quantity"] },
-                  ],
-                },
-              },
-            },
-            discountAmount: 0,
-            finalAmount: "$totalPrice",
-          },
-        },
-      ]
-    );
-    process.exit(0);
-  } catch (error) {
-    process.exit(1);
-  }
-};
 
 const placeOrder = async (req, res) => {
   const SHIPPING_FEE = 50;
@@ -78,6 +41,7 @@ const placeOrder = async (req, res) => {
       subtotal,
       finalAmount,
     } = req.body;
+
 
     // Validate required fields
     if (
@@ -96,7 +60,9 @@ const placeOrder = async (req, res) => {
 
     // Validate products
     const productIds = products.map((p) => p.productId);
-    const existingProducts = await Product.find({ _id: { $in: productIds } });
+    const existingProducts = await Product.find({
+      _id: { $in: productIds },
+    }).select("images name");
 
     for (const item of products) {
       const product = existingProducts.find(
@@ -194,8 +160,10 @@ const placeOrder = async (req, res) => {
       const discountPerItem = totalItems
         ? (totalDiscount * itemSubtotal) / subtotal / product.quantity
         : 0;
-      const originalPrice = product.originalPrice || product.price;
       const discountedPrice = product.discountedPrice || product.price;
+      const productData = existingProducts.find(
+        (p) => p._id.toString() === product.productId
+      );
 
       return {
         productId: product.productId,
@@ -203,15 +171,76 @@ const placeOrder = async (req, res) => {
         price: product.price,
         discountedPrice: discountedPrice > 0 ? discountedPrice : product.price,
         quantity: product.quantity,
-        image: product.images?.[0] || "",
-        originalPrice,
+        image: productData.images[0] || "",
+        originalPrice: product.originalPrice || product.price,
         offer: product.offer || null,
       };
     });
-
     // Create Razorpay order if needed
     let razorpayOrder = null;
-    if (paymentMethod !== "cod") {
+    // if (paymentMethod !== "cod") {
+    //   const razorpayAmount = Math.round(finalAmount * 100);
+    //   if (razorpayAmount <= 0 || isNaN(razorpayAmount)) {
+    //     return res
+    //       .status(OrderResponses.INVALID_PAYMENT_AMOUNT.statusCode)
+    //       .json({
+    //         success: false,
+    //         ...OrderResponses.INVALID_PAYMENT_AMOUNT,
+    //       });
+    //   }
+
+    //   try {
+    //     razorpayOrder = await razorpay.orders.create({
+    //       amount: razorpayAmount,
+    //       currency: "INR",
+    //       receipt: orderNumber,
+    //       payment_capture: 1,
+    //     });
+    //   } catch (razorpayError) {
+    //     return res
+    //       .status(OrderResponses.RAZORPAY_ORDER_FAILED.statusCode)
+    //       .json({
+    //         success: false,
+    //         ...OrderResponses.RAZORPAY_ORDER_FAILED,
+    //         error: razorpayError.message,
+    //       });
+    //   }
+    // }
+
+    if (paymentMethod === "wallet") {
+      const wallet = await walletSchema.findOne({ userID: userId });
+
+      if (!wallet) {
+        return res.status(404).json({
+          success: false,
+          message: "Wallet not found for this user",
+        });
+      }
+      if (wallet.balance < finalAmount) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient wallet balance. Required: ₹${finalAmount}, Available: ₹${wallet.balance}`,
+        });
+      }
+
+      await walletSchema.findOneAndUpdate(
+        { userID: userId },
+        {
+          $inc: { balance: -finalAmount },
+          $push: {
+            transactions: {
+              type: TransactionType.DEBIT,
+              amount: finalAmount,
+              description: `payment for order ${orderNumber} `,
+              date: new Date(),
+              status: TransactionStatus.COMPLETED,
+              referenceType: ReferenceType.WITHDRAWAL,
+              referenceId: userId,
+            },
+          },
+        }
+      );
+    } else if (paymentMethod !== "cod") {
       const razorpayAmount = Math.round(finalAmount * 100);
       if (razorpayAmount <= 0 || isNaN(razorpayAmount)) {
         return res
@@ -262,13 +291,20 @@ const placeOrder = async (req, res) => {
       discountAmount: totalDiscount,
       totalPrice,
       finalAmount,
-      coupons: validCoupons.map((c) => c._id),
-      couponDetails: validCoupons.map((c) => ({
+      coupons: validCoupons.map((c) => ({
+        couponId: c._id,
         code: c.code,
         discountType: c.discountType,
         discountValue: c.discountValue,
+        minPurchaseAmount: c.minPurchaseAmount,
       })),
-      paymentStatus: paymentMethod === "cod" ? false : false,
+      // paymentStatus: paymentMethod === "cod" ? false : false,
+      paymentStatus:
+        paymentMethod === "cod"
+          ? false
+          : paymentMethod === "wallet"
+          ? true
+          : false,
       status: "placed",
       statusTimeline,
       razorpayOrderId: razorpayOrder?.id || null,
@@ -277,12 +313,12 @@ const placeOrder = async (req, res) => {
     try {
       await newOrder.save({ session });
 
-      // // Validate and update stock atomically
+      // Validate and update stock atomically
       for (const item of products) {
         const product = await Product.findOneAndUpdate(
-          { _id: item.productId, stock: { $gte: item.quantity } }, // Check if stock is sufficient
-          { $inc: { stock: -item.quantity } }, // Decrement stock
-          { new: true, session } // Return updated document, use transaction session
+          { _id: item.productId, stock: { $gte: item.quantity } },
+          { $inc: { stock: -item.quantity } },
+          { new: true, session }
         );
 
         if (!product) {
@@ -480,6 +516,11 @@ const getOrderDetails = async (req, res) => {
         ...OrderResponses.UNAUTHORIZED_ACCESS,
       });
     }
+
+    const productIds = order.products.map((p) => p.productId);
+    const products = await Product.find({ _id: { $in: productIds } })
+      .select("images name")
+      .lean();
 
     res.status(200).json(order);
   } catch (error) {

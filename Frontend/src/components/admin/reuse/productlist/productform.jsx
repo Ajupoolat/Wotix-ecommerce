@@ -26,7 +26,7 @@ const productSchema = z.object({
     .min(1, "Product name is required")
     .max(100, "Product name must be less than 100 characters")
     .regex(
-      /^[a-zA-Z0-9\s]+$/,
+      /^[a-zA-Z0-9\s-]+$/,
       "Product name can only contain letters, numbers, and spaces"
     )
     .trim()

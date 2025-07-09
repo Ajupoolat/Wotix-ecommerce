@@ -25,6 +25,7 @@ import PleaseLogin from "@/components/common/pleaseLogin";
 import DefaultAddress from "./checkoutComponent/errors/defaultAddress";
 import AddressError from "./checkoutComponent/errors/addressError";
 import PaymentError from "./checkoutComponent/errors/paymentError";
+import WalletInfo from "./checkoutComponent/wallet/WalletInfo";
 
 // Schema for coupon validation
 const couponSchema = z.object({
@@ -46,6 +47,7 @@ export function CheckoutPage() {
   const [countapply, setCountapply] = useState(0);
   const [paymentError, setPaymentError] = useState(null);
   const [orderid, setorderid] = useState("");
+  const [showWalletInfo, setShowWalletInfo] = useState(false);
   const email = localStorage.getItem("email");
 
   const couponForm = useForm({
@@ -141,7 +143,7 @@ export function CheckoutPage() {
     mutationFn: (orderData) => placeOrder(userId, orderData),
     onSuccess: (data) => {
       setorderid(data.order._id);
-      if (paymentMethod === "cod") {
+      if (paymentMethod === "cod" || paymentMethod === "wallet") {
         toast.success("Order placed successfully!");
         clearCart();
         localStorage.removeItem("appliedCoupons");
@@ -201,8 +203,6 @@ export function CheckoutPage() {
               : item.discountedPrice,
           originalPrice: item.originalPrice,
           offer: item.offer?._id || null,
-          brand: item.product.brand,
-          images: item.product.images,
         };
       }),
       address: defaultAddress,
@@ -214,9 +214,54 @@ export function CheckoutPage() {
       coupons: appliedCoupons.map((c) => c._id),
     };
 
+   if (paymentMethod === "wallet") {
+    setShowWalletInfo(true); // Show WalletInfo modal
+  } else if (paymentMethod === "cod") {
     setProcessingPayment(true);
     createOrder(orderData);
+  } else {
+    // For upi, card, netbanking, create order and trigger Razorpay
+    setProcessingPayment(true);
+    createOrder(orderData);
+  }
   };
+
+
+  const handleWalletPaymentConfirm = () => {
+  const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  const orderData = {
+    products: cart.items.map((item) => {
+      const itemSubtotal = item.discountedPrice * item.quantity;
+      const discountPerItem = totalItems
+        ? (totalDiscount * itemSubtotal) / subtotal / item.quantity
+        : 0;
+      const finalDiscountedPrice = item.discountedPrice - discountPerItem;
+      return {
+        productId: item.product._id,
+        name: item.product.name,
+        quantity: item.quantity,
+        price: item.discountedPrice,
+        discountedPrice:
+          finalDiscountedPrice > 0
+            ? finalDiscountedPrice
+            : item.discountedPrice,
+        originalPrice: item.originalPrice,
+        offer: item.offer?._id || null,
+      };
+    }),
+    address: defaultAddress,
+    paymentMethod: paymentMethod,
+    subtotal: subtotal,
+    discountAmount: totalDiscount,
+    totalPrice: subtotal + shipping,
+    finalAmount: finalTotal,
+    coupons: appliedCoupons.map((c) => c._id),
+  };
+
+  setProcessingPayment(true);
+  createOrder(orderData);
+};
+
 
   const handleRazorpayPayment = (data) => {
     const { order, razorpayOrder } = data;
@@ -378,6 +423,10 @@ export function CheckoutPage() {
                   <Label htmlFor="card">Credit/Debit/ATM Card</Label>
                 </div>
                 <div className="flex items-center space-x-2">
+                  <RadioGroupItem id="wallet" value="wallet" />
+                  <Label htmlFor="card">Wallet</Label>
+                </div>
+                <div className="flex items-center space-x-2">
                   <RadioGroupItem id="netbanking" value="netbanking" />
                   <Label htmlFor="netbanking">Net Banking</Label>
                 </div>
@@ -427,6 +476,12 @@ export function CheckoutPage() {
           </div>
         </div>
       </div>
+      <WalletInfo
+        isOpen={showWalletInfo}
+        onClose={() => setShowWalletInfo(false)}
+        subtotal={finalTotal}
+        onPayNow={handleWalletPaymentConfirm}
+      />{" "}
       <Footer />
       <AddressFormModal
         open={showAddressForm}

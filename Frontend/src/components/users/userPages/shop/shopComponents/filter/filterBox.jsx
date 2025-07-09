@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 
-const FilterBox = ({ filterValues, handleFilterChange, applyFilters, categories, strapMaterials }) => {
+const FilterBox = ({ filterValues, handleFilterChange, applyFilters, clearFilters, categories, strapMaterials }) => {
   return (
     <div className="w-full lg:w-1/4 bg-gray-50 p-4 rounded-lg">
       <h3 className="text-lg font-semibold mb-4">FILTERS</h3>
@@ -74,12 +74,20 @@ const FilterBox = ({ filterValues, handleFilterChange, applyFilters, categories,
           <option value="zToA">Z to A</option>
         </select>
       </div>
-      <Button
-        onClick={applyFilters}
-        className="w-full bg-black text-white hover:bg-gray-800"
-      >
-        Apply Filters
-      </Button>
+      <div className="flex flex-col space-y-2">
+        <Button
+          onClick={applyFilters}
+          className="w-full bg-black text-white hover:bg-gray-800"
+        >
+          Apply Filters
+        </Button>
+        <Button
+          onClick={clearFilters}
+          className="w-full bg-gray-200 text-gray-800 hover:bg-gray-300"
+        >
+          Clear Filters
+        </Button>
+      </div>
     </div>
   );
 };

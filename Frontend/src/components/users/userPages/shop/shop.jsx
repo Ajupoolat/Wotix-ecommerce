@@ -48,6 +48,7 @@ const ShopPage = () => {
     strapMaterial: "",
     sortBy: "",
   });
+
   // Fetch strap materials
   useEffect(() => {
     const fetchStrapMaterials = async () => {
@@ -98,11 +99,18 @@ const ShopPage = () => {
     }));
   };
 
-  const applyfilters = () => {
-    setAppliedFilters(filterValues);
+  const clearFilters = () => {
+    const initialFilters = {
+      category: "",
+      minPrice: "",
+      maxPrice: "",
+      strapMaterial: "",
+      sortBy: "",
+    };
+    setFilterValues(initialFilters);
+    setAppliedFilters(initialFilters);
     setCurrentPage(1);
   };
-
   // Search mutation
   const {
     mutate: searchMutation,
@@ -131,7 +139,6 @@ const ShopPage = () => {
     searchQuery.trim() === "" ? data?.products : searchedProducts?.products;
   const pagination =
     searchQuery.trim() === "" ? data?.pagination : searchedProducts?.pagination;
-
 
   const handlesearchclear = () => {
     setSearchQuery("");
@@ -219,6 +226,7 @@ const ShopPage = () => {
               filterValues={filterValues}
               handleFilterChange={handleFilterChange}
               applyFilters={applyFilters}
+              clearFilters={clearFilters}
               categories={categories}
               strapMaterials={strapMaterials}
             />

@@ -8,7 +8,6 @@ const userAuthorization = (req, res, next) => {
   const TOKENUSER = process.env.JWT_USER_SECRET;
 
 
-  console.log('the tokes is here in the userAuth.js :',req.cookies)
   if (!token) {
     return res
       .status(userAuthResponse.TOKEN_MISSING.statusCode)

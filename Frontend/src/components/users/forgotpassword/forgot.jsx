@@ -34,8 +34,8 @@ const ForgotPasswordEmail = () => {
 
   // Form Submission Handler
   const onSubmit = (e) => {
-    setpending(!pending);
-
+    setpending(!pending)
+   setTimeout(()=>setpending(false),5000)
     e.preventDefault();
     setError("");
 

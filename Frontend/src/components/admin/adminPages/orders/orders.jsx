@@ -73,12 +73,25 @@ const OrderList = () => {
 
   // Fetch orders with server-side pagination
   const {
-    data: orderData = { orders: [], totalOrders: 0, totalPages: 0, currentPage: 1 },
+    data: orderData = {
+      orders: [],
+      totalOrders: 0,
+      totalPages: 0,
+      currentPage: 1,
+    },
     isLoading: ordersLoading,
     isError: ordersError,
     error: ordersErrorObj,
   } = useQuery({
-    queryKey: ["admin-orders", { searchQuery: debouncedSearchQuery, sortByDate, statusFilter, currentPage }],
+    queryKey: [
+      "admin-orders",
+      {
+        searchQuery: debouncedSearchQuery,
+        sortByDate,
+        statusFilter,
+        currentPage,
+      },
+    ],
     queryFn: () =>
       getorders({
         search: debouncedSearchQuery,
@@ -93,6 +106,7 @@ const OrderList = () => {
       toast.error(err.message || "Failed to fetch orders");
     },
   });
+
 
   // Fetch pending return requests
   const {
@@ -123,10 +137,11 @@ const OrderList = () => {
     },
   });
 
-
   // Handlers
-  const handlePreviousPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
-  const handleNextPage = () => currentPage < orderData.totalPages && setCurrentPage(currentPage + 1);
+  const handlePreviousPage = () =>
+    currentPage > 1 && setCurrentPage(currentPage - 1);
+  const handleNextPage = () =>
+    currentPage < orderData.totalPages && setCurrentPage(currentPage + 1);
   const handleClearSearch = () => {
     setSearchQuery("");
     setCurrentPage(1);
@@ -174,7 +189,10 @@ const OrderList = () => {
       { value: "returned", label: "Returned" },
       { value: "return_requested", label: "Return Requested" },
       { value: "partially_returned", label: "Partially Returned" },
-      { value: "partially_return_requested", label: "Partially Return Requested" },
+      {
+        value: "partially_return_requested",
+        label: "Partially Return Requested",
+      },
     ],
     []
   );
@@ -206,9 +224,9 @@ const OrderList = () => {
   // Loading state
   if (ordersLoading || pendingReturnsLoading) {
     return (
-     <div className="flex min-h-screen bg-gray-100">
+      <div className="flex min-h-screen bg-gray-100">
         <AdminSidebar activeRoute="/admin/orders" />
-        <LoadingSpinner/>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -216,13 +234,17 @@ const OrderList = () => {
   // Error state
   if (ordersError || pendingReturnsError) {
     return (
-     <CommonError Route={'/admin/orders'} m1={'error to load orders data'} m2={'Error loading orders data'}/>
+      <CommonError
+        Route={"/admin/orders"}
+        m1={"error to load orders data"}
+        m2={"Error loading orders data"}
+      />
     );
   }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
- <AdminSidebar activeRoute="/admin/orders"/>
+      <AdminSidebar activeRoute="/admin/orders" />
       <div className="flex-1 flex flex-col">
         <header className="bg-white border-b p-4 flex items-center justify-between">
           <div className="flex items-center space-x-4 relative">
@@ -248,7 +270,7 @@ const OrderList = () => {
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <NotificationsAdmin/>
+              <NotificationsAdmin />
             </div>
             <div className="flex items-center space-x-2">
               <Avatar>
@@ -310,6 +332,11 @@ const OrderList = () => {
                           (req) => req.status === "requested"
                         )
                     );
+                    const returnRequests = pendingRequest?.returnRequests;
+                    const match = returnRequests?.find(
+                      (item) => item?.status === "requested"
+                    );
+                    const refund = match ? match?.estimatedRefund : null;
                     const requestId = pendingRequest
                       ? pendingRequest.returnRequests.find(
                           (req) => req.status === "requested"
@@ -365,11 +392,10 @@ const OrderList = () => {
                                       Approve Return Request
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Are you sure you want to approve the return
-                                      request for order #{order.orderNumber}? This
-                                      will update the stock and refund ₹
-                                      {pendingRequest?.estimatedRefund?.toLocaleString() ||
-                                        "0"}.
+                                      Are you sure you want to approve the
+                                      return request for order #
+                                      {order.orderNumber}? This will update the
+                                      stock and refund ₹{refund || "0"}
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
@@ -473,8 +499,8 @@ const OrderList = () => {
             <div className="flex items-center justify-between mt-4">
               <p className="text-sm text-gray-600">
                 Showing {(currentPage - 1) * ordersPerPage + 1}-
-                {Math.min(currentPage * ordersPerPage, orderData.totalOrders)} of{" "}
-                {orderData.totalOrders}
+                {Math.min(currentPage * ordersPerPage, orderData.totalOrders)}{" "}
+                of {orderData.totalOrders}
               </p>
               <div className="flex items-center space-x-2">
                 <Button

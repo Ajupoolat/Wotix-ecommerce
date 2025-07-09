@@ -41,7 +41,6 @@ const sendOtp = async (req, res) => {
     subject: "Your OTP Code",
     text: `Your OTP is: ${otp}. It is valid for 5 minutes.`,
   };
-
   try {
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: "OTP sent successfully" });
@@ -77,7 +76,6 @@ const sendOtpeditprofile = async (req, res) => {
     subject: "Your OTP Code",
     text: `Your OTP is: ${otp}. It is valid for 30 seconds.`,
   };
-
   try {
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: "OTP sent successfully" });
@@ -90,7 +88,6 @@ const sendOtpeditprofile = async (req, res) => {
 
 const sendotpchangepassword = async (req, res) => {
   const { emailId, userId } = req.body;
-
   if (!emailId || !userId) {
     return res.status(400).json({ message: "Email and userId are required" });
   }
@@ -115,7 +112,6 @@ const sendotpchangepassword = async (req, res) => {
     subject: "Your OTP Code",
     text: `Your OTP is: ${otp}. It is valid for 30 seconds.`,
   };
-
   try {
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: "OTP sent successfully" });
@@ -127,9 +123,12 @@ const sendotpchangepassword = async (req, res) => {
 const sendOtpforgot = async (req, res) => {
   const { email } = req.body;
 
+
   if (!email) return res.status(400).json({ message: "Email is required" });
 
   const userfind = await userSchema.findOne({ email });
+
+  if(!userfind)return res.status(404).json({message:'the user not found'})
 
   // Generate OTP
   const otp = crypto.randomInt(100000, 999999).toString();
@@ -141,7 +140,6 @@ const sendOtpforgot = async (req, res) => {
     subject: "Your OTP Code",
     text: `Your OTP is: ${otp}. It is valid for 5 minutes.`,
   };
-
   try {
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: "OTP sent successfully" });
@@ -385,6 +383,13 @@ const googleauth = async (req, res) => {
         lastName: lastName,
       });
       await userfind.save();
+     
+      const newWallet = new wallet({
+        userID:userfind._id,
+        balance:0,
+        transactions:[]
+      })
+       await newWallet.save();
     } else {
       if (!userfind.googleId) {
         userfind.googleId = req.user.userId;
@@ -465,7 +470,6 @@ const login = async (req, res) => {
 const verifyToken = async (req, res) => {
   const token = req.cookies.token;
 
-  console.log("token is there ",req.cookies)
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized: No token provided" });

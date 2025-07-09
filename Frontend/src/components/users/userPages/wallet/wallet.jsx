@@ -166,7 +166,7 @@ const WalletPage = () => {
           </div>
 
           <Tabs defaultValue="balance" className="w-full">
-            <TabsList className="grid grid-cols-2 rounded-none border-b bg-gray-50 h-15">
+            <TabsList className="grid grid-cols-2 rounded-none border-b bg-gray-50 h-15 w-full">
               <TabsTrigger
                 value="balance"
                 className="flex items-center gap-2 py-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"

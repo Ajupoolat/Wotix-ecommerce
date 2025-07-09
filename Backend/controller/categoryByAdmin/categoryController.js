@@ -12,8 +12,8 @@ const addcategory = async (req, res) => {
     }
 
     const { categoryName, description } = req.body;
-
-    if (!categoryName || !description) {
+    const categoryNameIntoString = categoryName.toLowerCase().trim()
+    if (!categoryNameIntoString || !description) {
       return res.status(CategoryMessages.ADD_ERROR.status).json({ message: CategoryMessages.ADD_ERROR.message});
     }
 
@@ -23,7 +23,7 @@ const addcategory = async (req, res) => {
 
     // Rest of your checks (existing category, etc.)
     const existingCategory = await categorySchema.findOne({
-      categoryName: categoryName.trim(),
+      categoryName: categoryNameIntoString,
     });
 
     if (existingCategory) {
@@ -31,7 +31,7 @@ const addcategory = async (req, res) => {
     }
 
     const newCategory = new categorySchema({
-      categoryName: categoryName.toLowerCase().trim(),
+      categoryName: categoryNameIntoString,
       description: description.trim(),
       image: req.file.path,
     });

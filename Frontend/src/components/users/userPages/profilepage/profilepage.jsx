@@ -84,8 +84,8 @@ const ProfilePage = () => {
           </div>
 
           {/* Profile Management Tabs */}
-          <Tabs defaultValue="personal-info" className="w-full">
-            <TabsList className="grid grid-cols-4 rounded-none border-b bg-gray-50 h-15">
+          <Tabs defaultValue="personal-info" className='w-full'>
+            <TabsList className="grid grid-cols-4 rounded-none border-b bg-gray-50 w-full h-15">
               <TabsTrigger
                 value="personal-info"
                 className="flex items-center gap-2 py-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"

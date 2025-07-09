@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   HeartIcon,
@@ -10,11 +10,11 @@ import {
   StarIcon as StarSolid,
 } from "@heroicons/react/24/solid";
 import watchImage from "../../../../assets/tissot image 1.png";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { details } from "@/api/users/shop/shopmgt";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import WebSocketListener from "@/Sockets/webSocketListner";
+import ImageMagnifier from "@/components/common/zoom";
 import { useAuth } from "@/context/authuser";
 import { useCart } from "@/context/cartcon";
 import toast from "react-hot-toast";
@@ -28,7 +28,6 @@ import { useWishlist } from "@/context/wishlistContext";
 import Breadcrumbs from "@/components/common/breadCrums";
 
 const ProductViewPage = () => {
-  const navigate = useNavigate();
   const { id } = useParams();
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
@@ -130,30 +129,12 @@ const ProductViewPage = () => {
                   </div>
                 )}
 
-                <TransformWrapper
-                  initialScale={1}
-                  minScale={1}
-                  maxScale={3}
-                  wheel={{ step: 0.1 }} 
-                  pinch={{ step: 0.1 }} 
-                >
-                  <TransformComponent
-                    wrapperStyle={{
-                      width: "400px",
-                      height: "400px",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      overflow:'hidden'
-                    }}
-                  >
-                    <img
-                      src={product.images?.[currentImageIndex] || watchImage}
-                      alt={product.name}
-                      className="object-contain w-full h-full"
-                    />
-                  </TransformComponent>
-                </TransformWrapper>
+                <ImageMagnifier
+                  src={product.images?.[currentImageIndex] || watchImage}
+                  zoom={2}
+                  size={200}
+                />
+
                 <button
                   onClick={() => toggleWishlist(product._id)}
                   className="absolute top-2 right-2 p-2 rounded-full bg-white shadow-md z-10"

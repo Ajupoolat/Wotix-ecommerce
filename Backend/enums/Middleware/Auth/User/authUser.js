@@ -1,7 +1,7 @@
 const userAuthResponse = {
   TOKEN_MISSING: {
     statusCode: 401,
-    message: "Token is missing",
+    message: "please login/signup",
   },
   INVALID_TOKEN: {
     statusCode: 401,

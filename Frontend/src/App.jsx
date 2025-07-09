@@ -39,6 +39,7 @@ import AddOfferForm from "./components/admin/adminPages/offer/forms/addoffer";
 import EditOfferForm from "./components/admin/adminPages/offer/forms/editoffer";
 import CouponList from "./components/admin/adminPages/coupon/couponlist";
 import ChangePasswordInput from "./components/users/userforms/profile/changepassword";
+import WalletInfo from "./components/users/userPages/checkout/checkoutComponent/wallet/WalletInfo";
 const App = () => {
   return (
     <Routes>
@@ -57,7 +58,7 @@ const App = () => {
           path="/profile/:id/edit-profile/:id"
           element={<EditProfilePage />}
         />
-        
+
         <Route
           path="/profile/:id/edit-profile/:id/otpverify"
           element={<OtpEdit />}

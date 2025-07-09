@@ -42,6 +42,7 @@ import * as XLSX from "xlsx";
 import AdminSidebar from "../../reuse/sidebar/sidebar";
 import LoadingSpinner from "../../adminCommon/loadingSpinner";
 import CommonError from "../../adminCommon/error";
+import { z } from "zod";
 import NotificationsAdmin from "../../adminCommon/notificationAdmin";
 
 const AdminDashboard = () => {
@@ -64,8 +65,17 @@ const AdminDashboard = () => {
     return () => clearTimeout(handle);
   }, [searchQuery]);
 
-  const { data: salesData, isLoading: salesLoading, error: salesError } = useQuery({
-    queryKey: ["salesStatistics", statusFilter, debouncedSearchQuery, currentPage],
+  const {
+    data: salesData,
+    isLoading: salesLoading,
+    error: salesError,
+  } = useQuery({
+    queryKey: [
+      "salesStatistics",
+      statusFilter,
+      debouncedSearchQuery,
+      currentPage,
+    ],
     queryFn: () =>
       getSalesStatistics({
         status: statusFilter,
@@ -74,8 +84,7 @@ const AdminDashboard = () => {
         limit: ordersPerPage,
       }),
   });
-  
-  console.log(salesData)
+
 
   const {
     data: salesReport,
@@ -156,8 +165,11 @@ const AdminDashboard = () => {
         head: [["Metric", "Value"]],
         body: [
           ["Total Orders", report?.summary?.totalOrders ?? 0],
-          ["Total Sales", `$${report?.summary?.totalSales?.toFixed(2) ?? "0.00"}`],
-          ["Net Sales", `$${report?.summary?.netSales?.toFixed(2) ?? "0.00"}`],
+          [
+            "Total Sales",
+            `₹${report?.summary?.totalSales?.toFixed(2) ?? "0.00"}`,
+          ],
+          ["Net Sales", `₹${report?.summary?.netSales?.toFixed(2) ?? "0.00"}`],
         ],
       });
 
@@ -168,7 +180,7 @@ const AdminDashboard = () => {
         body: (report?.dailySales ?? []).map((item) => [
           item?.date ?? "N/A",
           item?.orders ?? 0,
-          `$${item?.revenue?.toFixed(2) ?? "0.00"}`,
+          `₹${item?.revenue?.toFixed(2) ?? "0.00"}`,
           item?.items ?? 0,
         ]),
       });
@@ -180,7 +192,7 @@ const AdminDashboard = () => {
         body: topProducts.map((item) => [
           item?.name ?? "N/A",
           item?.quantity ?? 0,
-          `$${item?.revenue?.toFixed(2) ?? "0.00"}`,
+          `₹${item?.revenue?.toFixed(2) ?? "0.00"}`,
         ]),
       });
 
@@ -191,7 +203,7 @@ const AdminDashboard = () => {
         body: topCategories.map((item) => [
           item?.category ?? "N/A",
           item?.quantity ?? 0,
-          `$${item?.revenue?.toFixed(2) ?? "0.00"}`,
+          `₹${item?.revenue?.toFixed(2) ?? "0.00"}`,
         ]),
       });
 
@@ -222,8 +234,43 @@ const AdminDashboard = () => {
       const summaryData = [
         ["Metric", "Value"],
         ["Total Orders", report?.summary?.totalOrders ?? 0],
-        ["Total Sales", report?.summary?.totalSales?.toFixed(2) ?? "0.00"],
-        ["Net Sales", report?.summary?.netSales?.toFixed(2) ?? "0.00"],
+        [
+          "Total Sales",
+          `₹${report?.summary?.totalSales?.toFixed(2) ?? "0.00"}`,
+        ],
+        ["Net Sales", `₹${report?.summary?.netSales?.toFixed(2) ?? "0.00"}`],
+        [
+          "Average Order Value",
+          report?.summary?.totalOrders > 0
+            ? `₹${(
+                (report?.summary?.totalSales ?? 0) /
+                (report?.summary?.totalOrders ?? 1)
+              ).toFixed(2)}`
+            : "₹0.00",
+        ],
+        [
+          "Total Items Sold",
+          report?.dailySales?.reduce(
+            (sum, item) => sum + (item?.items ?? 0),
+            0
+          ) ?? 0,
+        ],
+        [
+          "Top Product",
+          topProducts[0]?.name
+            ? `${topProducts[0].name} (₹${
+                topProducts[0].revenue?.toFixed(2) ?? "0.00"
+              })`
+            : "N/A",
+        ],
+        [
+          "Top Category",
+          topCategories[0]?.category
+            ? `${topCategories[0].category} (₹${
+                topCategories[0].revenue?.toFixed(2) ?? "0.00"
+              })`
+            : "N/A",
+        ],
       ];
 
       const dailySalesData = [
@@ -231,7 +278,7 @@ const AdminDashboard = () => {
         ...(report?.dailySales ?? []).map((item) => [
           item?.date ?? "N/A",
           item?.orders ?? 0,
-          item?.revenue?.toFixed(2) ?? "0.00",
+          `₹${item?.revenue?.toFixed(2) ?? "0.00"}`,
           item?.items ?? 0,
         ]),
       ];
@@ -241,7 +288,7 @@ const AdminDashboard = () => {
         ...topProducts.map((item) => [
           item?.name ?? "N/A",
           item?.quantity ?? 0,
-          item?.revenue?.toFixed(2) ?? "0.00",
+          `₹${item?.revenue?.toFixed(2) ?? "0.00"}`,
         ]),
       ];
 
@@ -250,7 +297,7 @@ const AdminDashboard = () => {
         ...topCategories.map((item) => [
           item?.category ?? "N/A",
           item?.quantity ?? 0,
-          item?.revenue?.toFixed(2) ?? "0.00",
+          `₹${item?.revenue?.toFixed(2) ?? "0.00"}`,
         ]),
       ];
 
@@ -281,7 +328,9 @@ const AdminDashboard = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `sales-report-${period}-${new Date().toISOString().split("T")[0]}.xlsx`;
+      a.download = `sales-report-${period}-${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -292,7 +341,6 @@ const AdminDashboard = () => {
       toast.error("Failed to download Excel");
     }
   };
-
   const PaginationControls = () => (
     <div className="flex justify-between items-center mt-4">
       <p className="text-sm text-gray-600">
@@ -409,7 +457,9 @@ const AdminDashboard = () => {
               <p className="text-2xl font-bold text-gray-800 mt-2">
                 {salesLoading
                   ? "Loading..."
-                  : `$${salesData?.statistics?.today?.sales?.toFixed(2) ?? "0.00"}`}
+                  : `₹${
+                      salesData?.statistics?.today?.sales?.toFixed(2) ?? "0.00"
+                    }`}
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
@@ -419,7 +469,9 @@ const AdminDashboard = () => {
               <p className="text-2xl font-bold text-gray-800 mt-2">
                 {salesLoading
                   ? "Loading..."
-                  : `$${salesData?.statistics?.weekly?.sales?.toFixed(2) ?? "0.00"}`}
+                  : `₹${
+                      salesData?.statistics?.weekly?.sales?.toFixed(2) ?? "0.00"
+                    }`}
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
@@ -429,7 +481,10 @@ const AdminDashboard = () => {
               <p className="text-2xl font-bold text-gray-800 mt-2">
                 {salesLoading
                   ? "Loading..."
-                  : `$${salesData?.statistics?.monthly?.sales?.toFixed(2) ?? "0.00"}`}
+                  : `₹${
+                      salesData?.statistics?.monthly?.sales?.toFixed(2) ??
+                      "0.00"
+                    }`}
               </p>
             </div>
           </div>
@@ -511,7 +566,7 @@ const AdminDashboard = () => {
                 </DropdownMenu>
               </div>
             </div>
-            {showCustomRange && (
+            {/* {showCustomRange && (
               <div className="mb-4 flex space-x-4">
                 <div>
                   <label className="text-sm text-gray-600">Start Date</label>
@@ -531,6 +586,70 @@ const AdminDashboard = () => {
                   <DatePicker
                     selected={customEndDate}
                     onChange={(date) => setCustomEndDate(date)}
+                    selectsEnd
+                    startDate={customStartDate}
+                    endDate={customEndDate}
+                    minDate={customStartDate}
+                    dateFormat="yyyy-MM-dd"
+                    className="border rounded p-2 w-full"
+                    placeholderText="Select end date"
+                  />
+                </div>
+              </div>
+            )} */}
+
+            {showCustomRange && (
+              <div className="mb-4 flex space-x-4">
+                <div>
+                  <label className="text-sm text-gray-600">Start Date</label>
+                  <DatePicker
+                    selected={customStartDate}
+                    onChange={(date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0); // Normalize today for comparison
+                      const schema = z.date().max(today, {
+                        message: "Start date cannot be in the future",
+                      });
+                      try {
+                        schema.parse(date);
+                        setCustomStartDate(date);
+                      } catch (error) {
+                        toast.error(error.errors[0].message);
+                      }
+                    }}
+                    selectsStart
+                    startDate={customStartDate}
+                    endDate={customEndDate}
+                    dateFormat="yyyy-MM-dd"
+                    className="border rounded p-2 w-full"
+                    placeholderText="Select start date"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-600">End Date</label>
+                  <DatePicker
+                    selected={customEndDate}
+                    onChange={(date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0); // Normalize today for comparison
+                      const schema = z
+                        .date()
+                        .max(today, {
+                          message: "End date cannot be in the future",
+                        })
+                        .refine(
+                          (val) => !customStartDate || val >= customStartDate,
+                          {
+                            message: "End date cannot be before start date",
+                          }
+                        );
+                      try {
+                        schema.parse(date);
+                        setCustomEndDate(date);
+                      } catch (error) {
+                        toast.error(error.errors[0].message);
+                      }
+                    }}
                     selectsEnd
                     startDate={customStartDate}
                     endDate={customEndDate}
@@ -565,13 +684,17 @@ const AdminDashboard = () => {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-600">Total Sales</p>
                     <p className="text-xl font-bold text-gray-800">
-                      ${salesReport?.report?.summary?.totalSales?.toFixed(2) ?? "0.00"}
+                      ₹
+                      {salesReport?.report?.summary?.totalSales?.toFixed(2) ??
+                        "0.00"}
                     </p>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-600">Net Sales</p>
                     <p className="text-xl font-bold text-gray-800">
-                      ${salesReport?.report?.summary?.netSales?.toFixed(2) ?? "0.00"}
+                      ₹
+                      {salesReport?.report?.summary?.netSales?.toFixed(2) ??
+                        "0.00"}
                     </p>
                   </div>
                 </div>
@@ -592,7 +715,7 @@ const AdminDashboard = () => {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="revenue" fill="#8884d8" name="Revenue ($)" />
+                    <Bar dataKey="revenue" fill="#8884d8" name="Revenue (₹)" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -639,7 +762,7 @@ const AdminDashboard = () => {
                               {product?.quantity ?? 0}
                             </td>
                             <td className="py-2 text-sm text-gray-700">
-                              ${product?.revenue?.toFixed(2) ?? "0.00"}
+                              ₹{product?.revenue?.toFixed(2) ?? "0.00"}
                             </td>
                           </tr>
                         ))}
@@ -680,7 +803,7 @@ const AdminDashboard = () => {
                               {category?.quantity ?? 0}
                             </td>
                             <td className="py-2 text-sm text-gray-700">
-                              ${category?.revenue?.toFixed(2) ?? "0.00"}
+                              ₹{category?.revenue?.toFixed(2) ?? "0.00"}
                             </td>
                           </tr>
                         ))}

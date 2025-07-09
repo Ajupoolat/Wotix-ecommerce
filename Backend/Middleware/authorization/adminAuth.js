@@ -7,7 +7,6 @@ const adminAuthorization = (req, res, next) => {
   const TOKENADMIN = process.env.JWT_SECRET_ADMIN;
 
 
-  console.log('the tokes is here in the adminAuth.js :',req.cookies)
   if (!admintoken) {
     return res
       .status(adminAuthResponse.TOKEN_MISSING.statusCode)

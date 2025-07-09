@@ -7,6 +7,8 @@ function OrderConfirmationPage() {
   const { order, cartItems } = location.state || {};
   const shippingFee = 50;
 
+
+
   // Merge order products with cart items to get images
   const productsWithImages = order?.products?.map((orderProduct) => {
     const cartItem = cartItems?.find(
@@ -17,6 +19,7 @@ function OrderConfirmationPage() {
       images: cartItem?.product.images || [],
     };
   });
+
 
   // Calculate estimated delivery date (5-7 days from createdAt)
   const calculateEstimatedDelivery = (createdAt) => {
