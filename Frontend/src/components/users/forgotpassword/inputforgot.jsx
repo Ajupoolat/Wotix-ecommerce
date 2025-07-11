@@ -13,25 +13,27 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 // Zod schema for password validation
-const passwordSchema = z.object({
-  newPassword: z
-    .string()
-    .min(1, "New password is required")
-    .min(8, "New password must be at least 8 characters")
-    .max(50, "New password must be less than 50 characters")
-    .regex(
-/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#\-_.~`])[A-Za-z\d@$!%*?&#\-_.~`]{8,}$/,
-      "New password must include at least one uppercase letter, one lowercase letter, one number, and one special character"
-    )
-    .trim(),
-  confirmPassword: z
-    .string()
-    .min(1, "Please confirm your new password")
-    .trim(),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+const passwordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(1, "New password is required")
+      .min(8, "New password must be at least 8 characters")
+      .max(50, "New password must be less than 50 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#\-_.~`])[A-Za-z\d@$!%*?&#\-_.~`]{8,}$/,
+        "New password must include at least one uppercase letter, one lowercase letter, one number, and one special character"
+      )
+      .trim(),
+    confirmPassword: z
+      .string()
+      .min(1, "Please confirm your new password")
+      .trim(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 const ForgotPasswordInput = () => {
   const location = useLocation();
@@ -111,7 +113,9 @@ const ForgotPasswordInput = () => {
             <p className="text-sm text-gray-600 mb-2">
               Set a strong password to keep your account secure.
             </p>
-            <h1 className="text-xl sm:text-2xl font-bold mb-6">Reset Password</h1>
+            <h1 className="text-xl sm:text-2xl font-bold mb-6">
+              Reset Password
+            </h1>
 
             <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
               {/* New Password Field */}

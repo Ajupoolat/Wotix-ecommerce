@@ -30,7 +30,7 @@ export const getshopproduct = async ({
 export const Searching = async ({ query, page = 1, limit = 12 }) => {
   try {
     const response = await apiUser.get(
-      `/search?query=${query}&page=${page}&limit${limit}`,
+      `/search?query=${query}&page=${page}&limit=${limit}`,
       {}
     );
     return response.data;

@@ -42,7 +42,6 @@ const placeOrder = async (req, res) => {
       finalAmount,
     } = req.body;
 
-
     // Validate required fields
     if (
       !paymentMethod ||
@@ -178,34 +177,6 @@ const placeOrder = async (req, res) => {
     });
     // Create Razorpay order if needed
     let razorpayOrder = null;
-    // if (paymentMethod !== "cod") {
-    //   const razorpayAmount = Math.round(finalAmount * 100);
-    //   if (razorpayAmount <= 0 || isNaN(razorpayAmount)) {
-    //     return res
-    //       .status(OrderResponses.INVALID_PAYMENT_AMOUNT.statusCode)
-    //       .json({
-    //         success: false,
-    //         ...OrderResponses.INVALID_PAYMENT_AMOUNT,
-    //       });
-    //   }
-
-    //   try {
-    //     razorpayOrder = await razorpay.orders.create({
-    //       amount: razorpayAmount,
-    //       currency: "INR",
-    //       receipt: orderNumber,
-    //       payment_capture: 1,
-    //     });
-    //   } catch (razorpayError) {
-    //     return res
-    //       .status(OrderResponses.RAZORPAY_ORDER_FAILED.statusCode)
-    //       .json({
-    //         success: false,
-    //         ...OrderResponses.RAZORPAY_ORDER_FAILED,
-    //         error: razorpayError.message,
-    //       });
-    //   }
-    // }
 
     if (paymentMethod === "wallet") {
       const wallet = await walletSchema.findOne({ userID: userId });
@@ -994,4 +965,7 @@ module.exports = {
   orderSearching,
   verifyPayment,
   retrypayment,
+  restockCancelledProducts, // this hepler function is not usable in the routes
+  processRefundToWallet
+
 };

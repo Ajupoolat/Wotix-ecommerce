@@ -6,12 +6,14 @@ import watchImage from "../../../../assets/watch image.jpg";
 import logo from "../../../../assets/Wotix removed-BG.png";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/authuser";
+import { EyeOff, Eye } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [searchParams] = useSearchParams();
-  const API_URL_ = import.meta.env.VITE_API_URL_USER
+  const API_URL_ = import.meta.env.VITE_API_URL_USER;
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const error = searchParams.get("error");
@@ -103,7 +105,7 @@ const Login = () => {
                 <div className="mt-1">
                   <input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     {...register("password", {
                       required: "Password is required",
                       minLength: {
@@ -113,7 +115,20 @@ const Login = () => {
                     })}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="••••••••"
+                   
                   />
+                  <button
+                    type="button"
+                    className="relative left-75 -top-4.5 -translate-y-1/2 cursor-pointer"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={isPending}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5 text-gray-500" />
+                    ) : (
+                      <Eye className="h-5 w-5 text-gray-500" />
+                    )}
+                  </button>
                   {errors.password && (
                     <p className="mt-2 text-sm text-red-600">
                       {errors.password.message}

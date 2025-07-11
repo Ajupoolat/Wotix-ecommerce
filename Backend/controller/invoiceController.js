@@ -92,11 +92,11 @@ const generateInvoice = async (req, res) => {
       doc
         .text(item.name, 50, doc.y)
         .text(item.quantity.toString(), 250, doc.y)
-        .text(`₹${item.price.toLocaleString()}`, 300, doc.y, {
+        .text(`${item.price.toLocaleString()}/-`, 300, doc.y, {
           width: 100,
           align: "right",
         })
-        .text(`₹${itemTotal.toLocaleString()}`, 400, doc.y, {
+        .text(`${itemTotal.toLocaleString()}/-`, 400, doc.y, {
           width: 100,
           align: "right",
         })
@@ -107,9 +107,9 @@ const generateInvoice = async (req, res) => {
     doc
       .moveDown()
       .font("Helvetica-Bold")
-      .text(`Subtotal: ₹${total.toLocaleString()}`, { align: "right" })
-      .text(`Shipping: ₹50`, { align: "right" })
-      .text(`Total: ₹${order.finalAmount.toLocaleString()}`, { align: "right" })
+      .text(`Subtotal: ${total.toLocaleString()}/-`, { align: "right" })
+      .text(`Shipping: 50/-`, { align: "right" })
+      .text(`Total: ${order.finalAmount.toLocaleString()}/-`, { align: "right" })
       .moveDown();
 
     // Payment method

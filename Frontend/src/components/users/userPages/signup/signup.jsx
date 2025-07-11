@@ -1,64 +1,64 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import watchImage from '../../../../assets/watch image.jpg';
-import logo from '../../../../assets/Wotix removed-BG.png';
-import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { useMutation } from '@tanstack/react-query';
-import { sendOtp } from '@/api/users/signup/signupcall';
-import toast from 'react-hot-toast';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import watchImage from "../../../../assets/watch image.jpg";
+import logo from "../../../../assets/Wotix removed-BG.png";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import { sendOtp } from "@/api/users/signup/signupcall";
+import toast from "react-hot-toast";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
 // Define Zod schema
 const signupSchema = z
   .object({
     firstName: z
       .string()
-      .min(2, 'First name must be at least 2 characters')
-      .max(50, 'First name must be less than 50 characters')
-      .regex(/^[a-zA-Z\s]+$/, 'First name must contain only letters and spaces')
+      .min(2, "First name must be at least 2 characters")
+      .max(50, "First name must be less than 50 characters")
+      .regex(/^[a-zA-Z\s]+$/, "First name must contain only letters and spaces")
       .trim()
-      .regex(/^\S.*\S$/, "first name cannot have leading or trailing spaces")
-      ,
+      .regex(/^\S.*\S$/, "first name cannot have leading or trailing spaces"),
     lastName: z
       .string()
-      .min(2, 'Last name must be at least 2 characters')
-      .max(50, 'Last name must be less than 50 characters')
-      .regex(/^[a-zA-Z\s]+$/, 'Last name must contain only letters and spaces')
-       .trim()
-      .regex(/^\S.*\S$/, "last name cannot have leading or trailing spaces")
-      ,
-    email: z.string().email('Invalid email format'),
+      .min(2, "Last name must be at least 2 characters")
+      .max(50, "Last name must be less than 50 characters")
+      .regex(/^[a-zA-Z\s]+$/, "Last name must contain only letters and spaces")
+      .trim()
+      .regex(/^\S.*\S$/, "last name cannot have leading or trailing spaces"),
+    email: z.string().email("Invalid email format"),
     password: z
       .string()
-      .min(8, 'Password must be at least 8 characters')
+      .min(8, "Password must be at least 8 characters")
       .regex(
-/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#\-_.~`])[A-Za-z\d@$!%*?&#\-_.~`]{8,}$/,
-        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#\-_.~`])[A-Za-z\d@$!%*?&#\-_.~`]{8,}$/,
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
       ),
-    confirmPassword: z.string().min(8, 'Confirm password is required'),
+    confirmPassword: z.string().min(8, "Confirm password is required"),
     refferalId: z
       .string()
       .optional()
       .refine(
         (val) => !val || (val.length >= 6 && /^[a-zA-Z0-9]+$/.test(val)),
         {
-          message: 'Referrer ID must be at least 6 characters and alphanumeric',
+          message: "Referrer ID must be at least 6 characters and alphanumeric",
         }
       ),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
   });
 
 const Signup = () => {
   const navigate = useNavigate();
   const [showReferrerID, setShowReferrerID] = useState(false);
-  const [email, setEmail] = useState('');
-  const API_URL_ = import.meta.env.VITE_API_URL_USER
+  const [email, setEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const API_URL_ = import.meta.env.VITE_API_URL_USER;
 
   const {
     register,
@@ -67,23 +67,23 @@ const Signup = () => {
   } = useForm({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      refferalId: '',
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      refferalId: "",
     },
   });
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: sendOtp,
     onSuccess: () => {
-      toast.success('OTP sent successfully!');
-      navigate('/otp', { state: { email, mode: 'signup' } });
+      toast.success("OTP sent successfully!");
+      navigate("/otp", { state: { email, mode: "signup" } });
     },
     onError: (err) => {
-      toast.error(err.message || 'Something went wrong');
+      toast.error(err.message || "Something went wrong");
     },
   });
 
@@ -98,15 +98,15 @@ const Signup = () => {
       lastName: data.lastName,
       email: data.email,
       password: data.password,
-      refferalId: showReferrerID ? data.refferalId : '',
+      refferalId: showReferrerID ? data.refferalId : "",
     };
-    localStorage.setItem('signupData', JSON.stringify(formData));
+    localStorage.setItem("signupData", JSON.stringify(formData));
     mutate(data.email);
   };
 
   const handleGoogleSignup = (e) => {
     e.preventDefault();
-    window.open(`${API_URL_}/google`, '_self');
+    window.open(`${API_URL_}/google`, "_self");
   };
 
   return (
@@ -119,26 +119,32 @@ const Signup = () => {
               alt="Logo"
               className="h-24 w-24 sm:h-40 sm:w-40 object-contain"
             />
-            <h1 className="text-xl sm:text-2xl font-bold ml-0 sm:ml-7">SignUp</h1>
+            <h1 className="text-xl sm:text-2xl font-bold ml-0 sm:ml-7">
+              SignUp
+            </h1>
           </div>
 
           {error && (
             <div className="text-red-500 text-sm text-center mb-4">
-              {error.response?.data?.message || 'An error occurred'}
+              {error.response?.data?.message || "An error occurred"}
             </div>
           )}
 
           <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
             <div>
-              <label className="block text-sm font-medium text-gray-700">First Name</label>
+              <label className="block text-sm font-medium text-gray-700">
+                First Name
+              </label>
               <Input
                 type="text"
                 placeholder="Enter your first name"
                 className="mt-1 w-full rounded-md border-gray-300"
-                {...register('firstName')}
+                {...register("firstName")}
               />
               {errors.firstName && (
-                <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.firstName.message}
+                </p>
               )}
             </div>
 
@@ -160,68 +166,112 @@ const Signup = () => {
 
             {showReferrerID && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">Referrer ID</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Referrer ID
+                </label>
                 <Input
                   type="text"
                   placeholder="Enter your referrer ID"
                   className="mt-1 w-full rounded-md border-gray-300"
-                  {...register('refferalId')}
+                  {...register("refferalId")}
                 />
                 {errors.refferalId && (
-                  <p className="mt-1 text-sm text-red-600">{errors.refferalId.message}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.refferalId.message}
+                  </p>
                 )}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Last Name</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Last Name
+              </label>
               <Input
                 type="text"
                 placeholder="Enter your last name"
                 className="mt-1 w-full rounded-md border-gray-300"
-                {...register('lastName')}
+                {...register("lastName")}
               />
               {errors.lastName && (
-                <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.lastName.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
               <Input
                 type="email"
                 placeholder="Enter your email"
                 className="mt-1 w-full rounded-md border-gray-300"
-                {...register('email')}
+                {...register("email")}
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
               <Input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Create your password"
                 className="mt-1 w-full rounded-md border-gray-300"
-                {...register('password')}
+                {...register("password")}
               />
+              <button
+                type="button"
+                className="relative left-85 -top-4.5 -translate-y-1/2 cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isPending}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-500" />
+                )}
+              </button>
               {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Confirm Password
+              </label>
               <Input
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm your password"
                 className="mt-1 w-full rounded-md border-gray-300"
-                {...register('confirmPassword')}
+                {...register("confirmPassword")}
               />
+              <button
+                type="button"
+                className="relative left-85 -top-4.5 -translate-y-1/2 cursor-pointer"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                disabled={isPending}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-500" />
+                )}
+              </button>
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.confirmPassword.message}
+                </p>
               )}
             </div>
 
@@ -229,10 +279,10 @@ const Signup = () => {
               type="submit"
               disabled={isPending}
               className={`w-full bg-black text-white hover:bg-gray-800 ${
-                isPending ? 'opacity-75 cursor-not-allowed' : ''
+                isPending ? "opacity-75 cursor-not-allowed" : ""
               }`}
             >
-              {isPending ? 'Sending OTP...' : 'Send OTP'}
+              {isPending ? "Sending OTP..." : "Send OTP"}
             </Button>
           </form>
 
@@ -267,7 +317,7 @@ const Signup = () => {
               <span className="ml-2">Sign up with Google</span>
             </button>
             <p className="text-sm text-gray-600">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <Link to="/login">
                 <a className="text-blue-500 hover:underline">Log in</a>
               </Link>

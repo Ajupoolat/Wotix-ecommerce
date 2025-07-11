@@ -32,6 +32,7 @@ const ShopPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(true);
   const { isProductInWishlists, toggleWishlist } = useWishlist();
+  const limit = 12;
 
   const [strapMaterials, setStrapMaterials] = useState([]);
   const [filterValues, setFilterValues] = useState({
@@ -117,7 +118,7 @@ const ShopPage = () => {
     data: searchedProducts,
     isPending: isSearching,
   } = useMutation({
-    mutationFn: (query) => Searching({ query, page: currentPage, limit: 12 }),
+    mutationFn: (query) => Searching({ query, page: currentPage, limit: limit }),
     onSuccess: () => {},
     onError: (err) => {
       toast.error(err.message);

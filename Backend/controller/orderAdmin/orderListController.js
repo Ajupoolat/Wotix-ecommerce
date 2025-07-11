@@ -4,6 +4,10 @@ const walletModel = require("../../models/wallet");
 const productModel = require("../../models/productSchema");
 const mongoose = require("mongoose");
 const {
+  restockCancelledProducts,
+  processRefundToWallet,
+} = require("../../controller/shop/orderController");
+const {
   createNotification,
 } = require("../../controller/notifications/notificationControllers");
 
@@ -88,13 +92,13 @@ const updateOrderStatus = async (req, res) => {
   const orderId = req.params.id;
   const { status } = req.body;
 
+
   const validStatuses = [
     "placed",
     "processing",
     "shipped",
     "delivered",
     "cancelled",
-
   ];
 
   const restrictedStatusesForDelivered = [
@@ -102,6 +106,17 @@ const updateOrderStatus = async (req, res) => {
     "processing",
     "shipped",
     "cancelled",
+    "returned",
+    "return_requested",
+    "partially_returned",
+    "partially_return_requested",
+  ];
+
+  const restrictedStatusesForCancelled = [
+    "placed",
+    "processing",
+    "shipped",
+    "delivered",
     "returned",
     "return_requested",
     "partially_returned",
@@ -117,10 +132,7 @@ const updateOrderStatus = async (req, res) => {
     "return_requested",
   ];
 
-  const thisIsForReturnOrder =[
-    "returned",
-    "return_requested",
-  ]
+  const thisIsForReturnOrder = ["returned", "return_requested"];
 
   const resforpartreturned = [
     "placed",
@@ -134,8 +146,6 @@ const updateOrderStatus = async (req, res) => {
   ];
 
   try {
-
-   
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: "Invalid status value" });
     }
@@ -145,19 +155,29 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
+    // Prevent changing status from cancelled to other statuses
+    if (
+      order.status === "cancelled" &&
+      restrictedStatusesForCancelled.includes(status)
+    ) {
+      return res.status(400).json({
+        message: "Cannot change a cancelled order to another status",
+      });
+    }
 
+    // Prevent changing return requested or partially return requested to delivered
     if (
       (order.status === "return_requested" ||
         order.status === "partially_return_requested") &&
       status === "delivered"
     ) {
-
       return res.status(400).json({
         message:
-          "return requested and partially return requested order never changable into delivered",
+          "Return requested and partially return requested orders cannot be changed to delivered",
       });
     }
-   
+
+    // Prevent changing delivered order to restricted statuses
     if (
       order.status === "delivered" &&
       restrictedStatusesForDelivered.includes(status)
@@ -168,22 +188,90 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
+    // Prevent changing returned order to restricted statuses
     if (order.status === "returned" && resforreturned.includes(status)) {
       return res.status(400).json({
-        message: "returned order stutas is not allow to change",
+        message: "Returned order status cannot be changed",
       });
     }
 
+    // Prevent changing partially returned order to restricted statuses
     if (
       order.status === "partially_returned" &&
       resforpartreturned.includes(status)
     ) {
       return res.status(400).json({
-        message: "partially retuen order stutas is not allow to change",
+        message: "Partially returned order status cannot be changed",
       });
     }
 
-    // Update the order
+    // Handle cancellation: restock inventory and process refund
+    if (status === "cancelled") {
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      try {
+        let cancelledProducts = [];
+        let refundAmount = 0;
+        const shipcharge = 50;
+
+        // Mark all products as cancelled
+        order.products.forEach((product) => {
+          product.cancelled = true;
+          product.cancellationReason = "Cancelled by admin";
+          product.cancelledAt = new Date();
+          cancelledProducts.push({
+            productId: product.productId._id,
+            quantity: product.quantity,
+          });
+          refundAmount +=
+            (product.discountedPrice || product.price) * product.quantity;
+        });
+        refundAmount += shipcharge;
+
+        // Update order status and timeline
+        order.status = status;
+        order.statusTimeline.push({
+          status: status,
+          date: new Date(),
+          note: "Order cancelled by admin",
+        });
+
+        // Save order, restock products, and process refund
+        await order.save({ session });
+        await restockCancelledProducts(cancelledProducts, session);
+
+        if (order.paymentStatus && refundAmount > 0) {
+          await processRefundToWallet({
+            userId: order.userId,
+            amount: refundAmount,
+            orderId: order._id,
+            session,
+          });
+        }
+
+        await session.commitTransaction();
+        session.endSession();
+
+        const updatedOrder = await orderSchema.findById(orderId).populate({
+          path: "userId",
+          select: "firstName lastName email",
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: "Order cancelled successfully",
+          refundAmount: order.paymentStatus ? refundAmount : 0,
+          order: updatedOrder,
+        });
+      } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+      }
+    }
+
+    // Handle other status updates
     if (status === "delivered") {
       const updatedOrder = await orderSchema
         .findByIdAndUpdate(
@@ -218,7 +306,7 @@ const updateOrderStatus = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error while updating order status",
-     
+      error: error.message,
     });
   }
 };
@@ -303,7 +391,7 @@ const processReturnRequest = async (req, res) => {
         .session(session);
       if (!wallet) {
         await session.abortTransaction();
-        return res.status(404).json({message: "User wallet not found" });
+        return res.status(404).json({ message: "User wallet not found" });
       }
 
       // Create transaction entries for each approved return

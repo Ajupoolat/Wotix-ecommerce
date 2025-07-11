@@ -159,6 +159,7 @@ const AdminDashboard = () => {
       );
 
       doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
       doc.text("Summary", 14, 30);
       autoTable(doc, {
         startY: 35,
@@ -167,9 +168,9 @@ const AdminDashboard = () => {
           ["Total Orders", report?.summary?.totalOrders ?? 0],
           [
             "Total Sales",
-            `₹${report?.summary?.totalSales?.toFixed(2) ?? "0.00"}`,
+            `${report?.summary?.totalSales?.toFixed(2) ?? "0.00"}/-`,
           ],
-          ["Net Sales", `₹${report?.summary?.netSales?.toFixed(2) ?? "0.00"}`],
+          ["Net Sales", `${report?.summary?.netSales?.toFixed(2) ?? "0.00"}/-`],
         ],
       });
 
@@ -180,7 +181,7 @@ const AdminDashboard = () => {
         body: (report?.dailySales ?? []).map((item) => [
           item?.date ?? "N/A",
           item?.orders ?? 0,
-          `₹${item?.revenue?.toFixed(2) ?? "0.00"}`,
+          `${item?.revenue?.toFixed(2) ?? "0.00"}/-`,
           item?.items ?? 0,
         ]),
       });
@@ -192,7 +193,7 @@ const AdminDashboard = () => {
         body: topProducts.map((item) => [
           item?.name ?? "N/A",
           item?.quantity ?? 0,
-          `₹${item?.revenue?.toFixed(2) ?? "0.00"}`,
+          `${item?.revenue?.toFixed(2) ?? "0.00"}/-`,
         ]),
       });
 
@@ -203,7 +204,7 @@ const AdminDashboard = () => {
         body: topCategories.map((item) => [
           item?.category ?? "N/A",
           item?.quantity ?? 0,
-          `₹${item?.revenue?.toFixed(2) ?? "0.00"}`,
+          `${item?.revenue?.toFixed(2) ?? "0.00"}/-`,
         ]),
       });
 

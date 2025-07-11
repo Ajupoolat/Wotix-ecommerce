@@ -110,9 +110,11 @@ const product_shop = async (req, res) => {
 };
 // Search products with pagination
 const Searching = async (req, res) => {
-  const { query, page = 1, limit = 9 } = req.query; // Default to page 1, 9 items
-  const skip = (page - 1) * limit;
-
+  const { query, page, limit = 12 } = req.query;
+  if (!query || isNaN(parseInt(page)) || isNaN(parseInt(limit))) {
+    return res.status(400).json({ message: "Invalid query parameters" });
+  }
+ 
   try {
     const allcategories = await categorySchema.find(
       { isHiddenCat: false },
@@ -128,12 +130,13 @@ const Searching = async (req, res) => {
         categoryRef: { $in: neededcategories },
       })
 
-      .skip(skip)
       .limit(parseInt(limit));
 
     // Get total matching products for pagination
     const totalProducts = await productSchema.countDocuments({
       name: { $regex: query, $options: "i" },
+      isHidden: false,
+      categoryRef: { $in: neededcategories },
     });
 
     const productsWithDiscount = await Promise.all(
@@ -264,5 +267,3 @@ module.exports = {
   strapfetch,
   getfiltercategory,
 };
-
-

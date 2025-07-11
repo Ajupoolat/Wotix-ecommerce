@@ -157,7 +157,7 @@ const deletecategory = async (req,res)=>{
 
     try {
         await categorySchema.findByIdAndDelete({_id:categoryid})
-        res.status(CategoryMessages.DELETE_SUCCESS.status).json({message:CategoryMessages.DELETE_ERROR.status})
+        res.status(CategoryMessages.DELETE_SUCCESS.status).json({message:CategoryMessages.DELETE_SUCCESS.message})
 
     } catch (error) {
       res.status(CategoryMessages.DELETE_ERROR.status).json({message:CategoryMessages.DELETE_ERROR.message})
@@ -168,19 +168,25 @@ const deletecategory = async (req,res)=>{
 const editcategory = async (req, res) => {
   const categoryid = req.params.id;
   const { categoryName, description } = req.body;
-
   if (req.fileTypeError) return res.status(CategoryMessages.UPDATE_ERROR.status).json({ message: req.fileTypeError });
 
   try {
     const category = await categorySchema.findById(categoryid);
     if (!category) return res.status(CategoryMessages.NO_CATEGORIES_FOUND.status).json({ message: CategoryMessages.NO_CATEGORIES_FOUND.message });
-
+  
+      
     const oldCategoryName = category.categoryName;
     const lowName = categoryName.toLowerCase().trim();
-
+     const exist = await categorySchema.findOne({
+      categoryName: lowName,
+      _id: { $ne: categoryid },
+    });
+    if (exist){
+      return res.status(400).json({ message: "this category Name is already exist" });
+    }
     const updateFields = { categoryName: lowName, description: description.trim() };
     if (req.file) updateFields.image = req.file.path;
-
+        
       await categorySchema.findByIdAndUpdate(
       { _id: categoryid },
       { $set: updateFields },

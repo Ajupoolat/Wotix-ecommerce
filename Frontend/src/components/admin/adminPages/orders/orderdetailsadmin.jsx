@@ -45,6 +45,7 @@ const OrderDetailsAdmin = () => {
   const navigate = useNavigate();
   const { orderId } = useParams();
   const queryClient = useQueryClient();
+  const statusForCancel = "cancelled";
 
   // Fetch order details
   const {
@@ -61,7 +62,6 @@ const OrderDetailsAdmin = () => {
     },
   });
 
-
   // Mutation for updating order status
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useMutation({
     mutationFn: (newStatus) => updateOrderStatus(orderId, newStatus),
@@ -77,13 +77,15 @@ const OrderDetailsAdmin = () => {
 
   // Mutation for canceling order
   const { mutate: cancelOrder, isPending: isCanceling } = useMutation({
-    mutationFn: () =>
-      updateOrderStatus(orderId, {
-        status: "cancelled",
-        cancellationReason: "Cancelled by admin",
-        cancelledBy: "admin",
-        cancelledAt: new Date(),
-      }),
+    // mutationFn: () =>
+    //   updateOrderStatus(orderId, {
+    //     status: "cancelled",
+    //     cancellationReason: "Cancelled by admin",
+    //     cancelledBy: "admin",
+    //     cancelledAt: new Date(),
+    //   }),
+    mutationFn: () => updateOrderStatus(orderId, statusForCancel),
+
     onSuccess: () => {
       toast.success("Order cancelled successfully");
       queryClient.invalidateQueries(["order-details", orderId]);
@@ -178,7 +180,7 @@ const OrderDetailsAdmin = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-<AdminSidebar activeRoute="/admin/orders"/>
+      <AdminSidebar activeRoute="/admin/orders" />
       <div className="flex-1 flex flex-col">
         <header className="bg-white border-b p-4 flex items-center justify-between">
           <Button
@@ -191,7 +193,7 @@ const OrderDetailsAdmin = () => {
           </Button>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <NotificationsAdmin/>
+              <NotificationsAdmin />
             </div>
             <div className="flex items-center space-x-2">
               <Avatar>
@@ -354,6 +356,10 @@ const OrderDetailsAdmin = () => {
                   />
                   {orderDetails.status !== "cancelled" &&
                     orderDetails.status !== "returned" &&
+                    orderDetails.status !== "delivered" &&
+                    orderDetails.status !== "partially_return_requested" &&
+                    orderDetails.status !== "return_requested" &&
+                    orderDetails.status !== "partially_cancelled" &&
                     orderDetails.status !== "partially_returned" && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
