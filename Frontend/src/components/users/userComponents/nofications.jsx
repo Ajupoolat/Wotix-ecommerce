@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import toast from "react-hot-toast";
+import playNotificationSound from "@/utils/notificationSound";
 import { formatDistanceToNow } from "date-fns";
 
 const NotificationsUser = () => {
@@ -38,11 +39,13 @@ const NotificationsUser = () => {
   const queryClient = useQueryClient();
 
   const { data: notificationData } = useQuery({
-    queryKey: ["userNotifications", page],
-    queryFn: () => getNotificationsUser(page, limit),
-    enabled: isAuthenticated && !!userId,
-    keepPreviousData: true, // Smooth transitions between pages
-  });
+  queryKey: ["userNotifications", page],
+  queryFn: () => getNotificationsUser(page, limit),
+  enabled: isAuthenticated && !!userId,
+  keepPreviousData: true,
+  // Add this to prevent stale data:
+  staleTime: 1000 * 60 * 5, // 5 minutes
+});
 
   const markAsReadMutation = useMutation({
     mutationFn: (id) => updateNotificationsUser(id),
@@ -93,26 +96,43 @@ const NotificationsUser = () => {
     }
   }, [notificationData]);
 
-  useEffect(() => {
-    if (!isAuthenticated || !userId) return;
 
-    const socket = io(baseUrl, {
-      withCredentials: true,
-      autoConnect: true,
-      reconnectionAttempts: 3,
-      reconnectionDelay: 1000,
+useEffect(() => {
+  if (!isAuthenticated || !userId) return;
+
+  const socket = io(baseUrl, {
+    withCredentials: true,
+  });
+
+  // Register user with socket server
+  socket.emit("register_user", userId);
+
+  // Handle new notifications
+  socket.on("new_notification", (newNotification) => {
+    playNotificationSound()
+    // Update local state
+    setNotifications((prev) => [newNotification, ...prev]);
+    
+    // Update unread count if notification is unread
+    if (!newNotification.isRead) {
+      setUnreadCount((prev) => prev + 1);
+    }
+
+    // Update Tanstack Query cache
+    queryClient.setQueryData(["userNotifications", page], (old) => {
+      return old 
+        ? { ...old, notifications: [newNotification, ...old.notifications] }
+        : { notifications: [newNotification], totalPages: 1 };
     });
 
-    socket.on("notification", (notification) => {
-      // For new notifications, add to first page and refresh
-      setPage(1);
-      queryClient.invalidateQueries(["userNotifications"]);
-    });
+    toast.success(`New: ${newNotification.message}`);
+  });
 
-    return () => {
-      socket.disconnect();
-    };
-  }, [userId, isAuthenticated]);
+  return () => {
+    socket.off("new_notification");
+    socket.disconnect();
+  };
+}, [isAuthenticated, userId, page, queryClient]);
 
   const getNotificationIcon = (type) => {
     switch (type) {

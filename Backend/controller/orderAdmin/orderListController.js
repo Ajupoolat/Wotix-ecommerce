@@ -10,6 +10,7 @@ const {
 const {
   createNotification,
 } = require("../../controller/notifications/notificationControllers");
+const userSchema = require("../../models/userSchema");
 
 const getorders = async (req, res) => {
   try {
@@ -92,7 +93,6 @@ const updateOrderStatus = async (req, res) => {
   const orderId = req.params.id;
   const { status } = req.body;
 
-
   const validStatuses = [
     "placed",
     "processing",
@@ -132,7 +132,6 @@ const updateOrderStatus = async (req, res) => {
     "return_requested",
   ];
 
-  const thisIsForReturnOrder = ["returned", "return_requested"];
 
   const resforpartreturned = [
     "placed",
@@ -144,7 +143,6 @@ const updateOrderStatus = async (req, res) => {
     "return_requested",
     "partially_return_requested",
   ];
-
   try {
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: "Invalid status value" });
@@ -253,11 +251,21 @@ const updateOrderStatus = async (req, res) => {
         await session.commitTransaction();
         session.endSession();
 
+        const userdata = await userSchema.findById(order.userId);
+        const fullName = `${userdata.firstName} ${userdata.lastName}`
         const updatedOrder = await orderSchema.findById(orderId).populate({
           path: "userId",
           select: "firstName lastName email",
         });
+        const message = `Hey ${fullName}, your order no: ${order.orderNumber} has been cancelled`;
 
+       await createNotification(req.io,req.connectedUsers,{
+        userId:order.userId,
+        role:'user',
+        type:'cancalled',
+        message:message,
+        relatedId:orderId
+       })
         return res.status(200).json({
           success: true,
           message: "Order cancelled successfully",
@@ -443,7 +451,6 @@ const processReturnRequest = async (req, res) => {
 
     //creating the notifications for user
 
-    const io = req.app.get("io");
     const userID = order.userId;
     const role = "user";
     const user = await userschema.findById(userID).select("firstName lastName");
@@ -456,7 +463,13 @@ const processReturnRequest = async (req, res) => {
     const type = "return_approved";
     const message = `Hey ${fullUserName}, your return request for order ${order.orderNumber} has been approved.`;
 
-    await createNotification(io, userID, role, type, message, orderId);
+    await createNotification(req.io, req.connectedUsers, {
+      userId: userID,
+      role: role,
+      type: type,
+      message: message,
+      relatedId: orderId,
+    });
 
     res.status(200).json({
       success: true,

@@ -31,19 +31,22 @@ const io = new Server(server, {
     credentials: true
   }
 });
-
 // Store connected users
 const connectedUsers = new Map();
 
 app.set('io',io)
 app.set('connectedUsers',connectedUsers)
-
+ 
 // WebSocket connection handler
 io.on('connection', (socket) => {
 
   // When client sends their user ID after authentication
   socket.on('register_user', (userId) => {
     connectedUsers.set(userId, socket.id);
+
+    //creating the room based the role
+    socket.join(userId);
+    socket.join('admin');
   });
 
   socket.on('disconnect', () => {

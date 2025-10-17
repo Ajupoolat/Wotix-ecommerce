@@ -921,12 +921,17 @@ const submitReturnRequest = async (req, res) => {
     await session.commitTransaction();
 
     //creating notification for the admin
-    const io = req.app.get("io");
-    const adminId = ADMIN_ID_;
     const type = "return_request";
     const role = "admin";
     const message = `a user has requested for return. The Order ID:${order.orderNumber}`;
-    await createNotification(io, adminId, role, type, message, orderId);
+    await createNotification(req.io,req.connectedUsers,{
+    userId:ADMIN_ID_,
+    role:role,
+    type:type,
+    message:message,
+    relatedId:orderId
+
+    });
 
     res.status(OrderResponses.RETURN_REQUEST_SUCCESS.statusCode).json({
       success: true,
@@ -965,7 +970,7 @@ module.exports = {
   orderSearching,
   verifyPayment,
   retrypayment,
-  restockCancelledProducts, // this hepler function is not usable in the routes
+  restockCancelledProducts, 
   processRefundToWallet
 
 };

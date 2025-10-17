@@ -9,11 +9,8 @@ const {
 
 const createNotification = async (
   io,
-  userId,
-  role,
-  type,
-  message,
-  relatedId
+  connectedUsers,
+  { userId, role, type, message, relatedId }
 ) => {
   try {
     const notification = await Notifications.create({
@@ -24,14 +21,16 @@ const createNotification = async (
       relatedId,
       isRead: false,
     });
-    io.to(userId.toString()).emit("notification", {
-      _id: notification._id,
-      type: notification.type,
-      message: notification.message,
-      relatedId: notification.relatedId,
-      isRead: notification.isRead,
-      createdAt: notification.createdAt,
-    });
+
+
+    if (role === "admin") {
+      io.to("admin").emit("new_admin_notification", notification);
+    } else {
+      const userSocketId = connectedUsers.get(userId._id.toString());
+      if (userSocketId)
+        io.to(userSocketId).emit("new_notification", notification);
+    }
+
     return notification;
   } catch (error) {
     throw error;
@@ -52,7 +51,7 @@ const getnotificationsAdmin = async (req, res) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      Notifications.countDocuments({ role: role })
+      Notifications.countDocuments({ role: role }),
     ]);
 
     if (!notifications) {
@@ -65,7 +64,7 @@ const getnotificationsAdmin = async (req, res) => {
       notifications,
       totalCount,
       totalPages: Math.ceil(totalCount / limit),
-      currentPage: page
+      currentPage: page,
     });
   } catch (error) {
     res
@@ -74,14 +73,10 @@ const getnotificationsAdmin = async (req, res) => {
   }
 };
 
-
-
 const getnotificationsUsers = async (req, res) => {
-
   try {
     const { userId } = req.params;
-    const { page = 1, limit = 10 } = req.query; 
-
+    const { page = 1, limit = 10 } = req.query;
 
     const skip = (page - 1) * limit;
 
@@ -90,7 +85,7 @@ const getnotificationsUsers = async (req, res) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      Notifications.countDocuments({ userId: userId })
+      Notifications.countDocuments({ userId: userId }),
     ]);
 
     if (!notifications) {
@@ -103,7 +98,7 @@ const getnotificationsUsers = async (req, res) => {
       notifications,
       totalCount,
       totalPages: Math.ceil(totalCount / limit),
-      currentPage: page
+      currentPage: page,
     });
   } catch (error) {
     res
@@ -121,7 +116,7 @@ const updateNotificationUser = async (req, res) => {
     if (!id)
       return res
         .status(userNotiResponse.REQUIRED.statusCode)
-        .json({message:userNotiResponse.REQUIRED.messages});
+        .json({ message: userNotiResponse.REQUIRED.messages });
     const result = await Notifications.updateOne(
       { _id: id },
       { $set: { isRead: true } }
@@ -130,15 +125,15 @@ const updateNotificationUser = async (req, res) => {
     if (!result)
       return res
         .status(userNotiResponse.NOT_FOUND.statusCode)
-        .json({message:userNotiResponse.NOT_FOUND.messages});
+        .json({ message: userNotiResponse.NOT_FOUND.messages });
 
     res
       .status(userNotiResponse.SUCCESS.statusCode)
-      .json({message:userNotiResponse.SUCCESS.messages});
+      .json({ message: userNotiResponse.SUCCESS.messages });
   } catch (error) {
     res
       .status(userNotiResponse.SERVER_ERROR.statusCode)
-      .json({message:userNotiResponse.SERVER_ERROR.messages});
+      .json({ message: userNotiResponse.SERVER_ERROR.messages });
   }
 };
 
@@ -149,7 +144,7 @@ const updateNotificationAdmin = async (req, res) => {
     if (!id)
       return res
         .status(adminNotiResponse.REQUIRED.statusCode)
-        .json({message:adminNotiResponse.REQUIRED.messages});
+        .json({ message: adminNotiResponse.REQUIRED.messages });
     const result = await Notifications.updateOne(
       { _id: id },
       { $set: { isRead: true } }
@@ -158,15 +153,15 @@ const updateNotificationAdmin = async (req, res) => {
     if (!result)
       return res
         .status(adminNotiResponse.NOT_FOUND.statusCode)
-        .json({message:adminNotiResponse.NOT_FOUND.messages});
+        .json({ message: adminNotiResponse.NOT_FOUND.messages });
 
     res
       .status(adminNotiResponse.SUCCESS.statusCode)
-      .json({message:adminNotiResponse.SUCCESS.messages});
+      .json({ message: adminNotiResponse.SUCCESS.messages });
   } catch (error) {
     res
       .status(adminNotiResponse.SERVER_ERROR.statusCode)
-      .json({message:adminNotiResponse.SERVER_ERROR.messages});
+      .json({ message: adminNotiResponse.SERVER_ERROR.messages });
   }
 };
 
@@ -185,13 +180,14 @@ const deletionNotificationUser = async (req, res) => {
     const result = await Notifications.deleteOne({ _id: id });
 
     if (result.deletedCount === 0) {
-      return res.status(userNotiResponse.NOT_FOUND.statusCode).json({ message: userNotiResponse.NOT_FOUND.messages });
+      return res
+        .status(userNotiResponse.NOT_FOUND.statusCode)
+        .json({ message: userNotiResponse.NOT_FOUND.messages });
     }
 
     res
       .status(userNotiResponse.SUCCESS.statusCode)
       .json({ message: "The deletion of notification is successful." });
-
   } catch (error) {
     res
       .status(userNotiResponse.SERVER_ERROR.statusCode)
@@ -212,23 +208,20 @@ const deletionNotificationAdmin = async (req, res) => {
     const result = await Notifications.deleteOne({ _id: id });
 
     if (result.deletedCount === 0) {
-      return res.status(adminNotiResponse.NOT_FOUND.statusCode).json({ message: adminNotiResponse.NOT_FOUND.messages });
+      return res
+        .status(adminNotiResponse.NOT_FOUND.statusCode)
+        .json({ message: adminNotiResponse.NOT_FOUND.messages });
     }
 
     res
       .status(adminNotiResponse.SUCCESS_DELETE.statusCode)
       .json({ message: adminNotiResponse.SUCCESS_DELETE.messages });
-
   } catch (error) {
     res
       .status(adminNotiResponse.SERVER_ERROR.statusCode)
       .json({ message: adminNotiResponse.SERVER_ERROR.messages });
   }
 };
-
-
-
-
 
 module.exports = {
   createNotification,
@@ -237,5 +230,5 @@ module.exports = {
   updateNotificationUser,
   updateNotificationAdmin,
   deletionNotificationUser,
-  deletionNotificationAdmin
+  deletionNotificationAdmin,
 };

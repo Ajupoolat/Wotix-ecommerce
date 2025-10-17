@@ -14,7 +14,7 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['return_request', 'return_approved'],
+      enum: ['return_request', 'return_approved','cancalled','delivered'],
       required: true
     },
     message: {

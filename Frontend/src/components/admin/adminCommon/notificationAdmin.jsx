@@ -18,17 +18,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
-import { getNotificationsAdmin, updateNoificationsAdmin, deleteNotifactionsAdmin } from "@/api/admin/notifications/adminNotimgt";
+import {
+  getNotificationsAdmin,
+  updateNoificationsAdmin,
+  deleteNotifactionsAdmin,
+} from "@/api/admin/notifications/adminNotimgt";
 import toast from "react-hot-toast";
 
 const NotificationsAdmin = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [page, setPage] = useState(1);
-  const [limit] = useState(5); 
+  const [limit] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
   const baseUrl = import.meta.env.VITE_API_URL;
-  const isAdmin = localStorage.getItem('admin');
+  const isAdmin = localStorage.getItem("admin");
   const queryClient = useQueryClient();
 
   const { data: notificationData } = useQuery({
@@ -50,7 +54,7 @@ const NotificationsAdmin = () => {
       );
       setUnreadCount((prev) => prev - 1);
       toast.success("Notification marked as read");
-      queryClient.invalidateQueries(['adminNotifications']);
+      queryClient.invalidateQueries(["adminNotifications"]);
     },
     onError: () => {
       toast.error("Failed to mark notification as read");
@@ -60,14 +64,18 @@ const NotificationsAdmin = () => {
   const deleteNotificationMutation = useMutation({
     mutationFn: (id) => deleteNotifactionsAdmin(id),
     onSuccess: (_, id) => {
-      setNotifications((prev) => prev.filter(notification => notification._id !== id));
+      setNotifications((prev) =>
+        prev.filter((notification) => notification._id !== id)
+      );
       // Decrease unread count if the deleted notification was unread
-      setUnreadCount(prev => {
-        const deletedNotification = notifications.find(n => n._id === id);
-        return deletedNotification && !deletedNotification.isRead ? prev - 1 : prev;
+      setUnreadCount((prev) => {
+        const deletedNotification = notifications.find((n) => n._id === id);
+        return deletedNotification && !deletedNotification.isRead
+          ? prev - 1
+          : prev;
       });
       toast.success("Notification deleted successfully");
-      queryClient.invalidateQueries(['adminNotifications']);
+      queryClient.invalidateQueries(["adminNotifications"]);
     },
     onError: () => {
       toast.error("Failed to delete notification");
@@ -84,23 +92,33 @@ const NotificationsAdmin = () => {
     }
   }, [notificationData]);
 
+  //socket connection to backend
   useEffect(() => {
     if (!isAdmin) return;
 
     const socket = io(baseUrl, {
       withCredentials: true,
-      autoConnect: true,
-      reconnectionAttempts: 3,
-      reconnectionDelay: 1000,
     });
 
-    socket.on("notification", (notification) => {
-      // For new notifications, add to first page and refresh
-      setPage(1);
-      queryClient.invalidateQueries(["adminNotifications"]);
+    socket.emit("register_user", "admin");
+
+    socket.on("new_admin_notification", (newNotification) => {
+      setNotifications((prev) => [newNotification, ...prev]);
+      setUnreadCount((prev) => prev + 1);
+
+      queryClient.setQueryData(["adminNotifications", page], (old) => {
+        const updatedNotifications = old
+          ? { ...old, notifications: [newNotification, ...old.notifications] }
+          : { notifications: [newNotification], totalPages: 1 };
+        return updatedNotifications;
+      });
+
+      toast.success(`New Notification:${newNotification?.message}`);
     });
 
     return () => {
+      socket.off("new_admin_notification");
+      socket.off("new_notification");
       socket.disconnect();
     };
   }, [isAdmin]);
@@ -136,7 +154,11 @@ const NotificationsAdmin = () => {
     <div className="relative">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="relative rounded-full bg-gray-300">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative rounded-full bg-gray-300"
+          >
             <BellIcon className="h-5 w-5" />
             {unreadCount > 0 && (
               <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
@@ -186,7 +208,9 @@ const NotificationsAdmin = () => {
                       <div className="flex items-center gap-2">
                         {!notification.isRead ? (
                           <button
-                            onClick={(e) => handleMarkAsRead(notification._id, e)}
+                            onClick={(e) =>
+                              handleMarkAsRead(notification._id, e)
+                            }
                             className="flex-shrink-0 mt-1 text-gray-400 hover:text-gray-600"
                             title="Mark as read"
                           >
@@ -198,7 +222,9 @@ const NotificationsAdmin = () => {
                           </div>
                         )}
                         <button
-                          onClick={(e) => handleDeleteNotification(notification._id, e)}
+                          onClick={(e) =>
+                            handleDeleteNotification(notification._id, e)
+                          }
                           className="flex-shrink-0 mt-1 text-gray-400 hover:text-red-500"
                           title="Delete notification"
                         >
