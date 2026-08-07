@@ -12,35 +12,6 @@ A production-oriented full-stack e-commerce platform built using the MERN stack.
 
 ---
 
-# Live Demo
-
-### Frontend
-
-> https://your-frontend-url.com
-
-### Backend API
-
-> https://your-backend-url.com
-
----
-
-# Screenshots
-
-> Add screenshots of the application here.
-
-Suggested screenshots:
-
-- Home Page
-- Product Details
-- Cart
-- Checkout
-- Wallet
-- Order History
-- Admin Dashboard
-- Sales Report
-
----
-
 # Key Features
 
 ## Customer
@@ -124,7 +95,6 @@ Wotix
 │   └── 06-order-lifecycle.md
 │
 ├── README.md
-└── package.json
 ```
 
 ---
