@@ -190,7 +190,7 @@ const Login = () => {
               style={{ width: "350px" }}
             >
               <Link
-                to="/forgotpassword"
+                to="/forgot-password"
                 className="text-sm text-blue-600 hover:text-blue-500"
               >
                 Forgot your password?

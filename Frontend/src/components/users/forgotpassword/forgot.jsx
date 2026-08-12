@@ -25,7 +25,7 @@ const ForgotPasswordEmail = () => {
     mutationFn: sendOtpforgot,
     onSuccess: () => {
       toast.success("OTP sent successfully!");
-      navigate("/otp", { state: { emailid: email } });
+      navigate("/verify-otp", { state: { emailid: email } });
     },
     onError: (err) => {
       toast.error(err.message || "Error sending OTP. Try again.");

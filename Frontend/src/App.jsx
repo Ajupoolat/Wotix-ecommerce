@@ -40,15 +40,17 @@ import EditOfferForm from "./components/admin/adminPages/offer/forms/editoffer";
 import CouponList from "./components/admin/adminPages/coupon/couponlist";
 import ChangePasswordInput from "./components/users/userforms/profile/changepassword";
 import WalletInfo from "./components/users/userPages/checkout/checkoutComponent/wallet/WalletInfo";
+import NotFound from "./components/public/pages/notFound";
+
 const App = () => {
   return (
     <Routes>
       <Route element={<PublicUserRoute />}>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/otp" element={<Otp />} />
-        <Route path="/forgotpassword" element={<ForgotPasswordEmail />} />
-        <Route path="/forgotpasswordinput" element={<ForgotPasswordInput />} />
+        <Route path="/verify-otp" element={<Otp />} />
+        <Route path="/forgot-password" element={<ForgotPasswordEmail />} />
+        <Route path="/reset-password" element={<ForgotPasswordInput />} />
       </Route>
 
       {/* Protected routes */}
@@ -110,6 +112,9 @@ const App = () => {
       </Route>
 
       <Route element={<ProtecteduserRoute />}></Route>
+
+      {/* Catch-all route for 404 Not Found */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

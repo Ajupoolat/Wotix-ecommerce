@@ -5,6 +5,7 @@ const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const userSchema = require("../models/userSchema");
 const wallet = require("../models/wallet");
+const { RedisClient } = require("../config/redisUpstash");
 
 const JWT_USER_SECRET = process.env.JWT_USER_SECRET;
 
@@ -29,11 +30,12 @@ const sendOtp = async (req, res) => {
 
   // Generate OTP
   const otp = crypto.randomInt(100000, 999999).toString();
-  otpStore[email] = otp;
+  console.log('the otp of users:', otp)
 
   const expiry = Date.now() + 300 * 1000; // 30 seconds
   otpStore[email] = { otp, expiry };
 
+  console.log('the otpStore is: ',otpStore)
   // Send OTP through Email
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -132,7 +134,10 @@ const sendOtpforgot = async (req, res) => {
 
   // Generate OTP
   const otp = crypto.randomInt(100000, 999999).toString();
-  otpStore[email] = otp;
+  console.log('otp of forgot passowod:',otp);
+  
+  // Store OTP in Redis with 5 minutes TTL
+  await RedisClient.set(`otp:forgot:${email}`, otp, { ex: 300 });
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -152,17 +157,26 @@ const sendOtpforgot = async (req, res) => {
 
 const resetPassword = async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
+    const { newPassword } = req.body;
+    const resetToken = req.cookies.resetToken;
 
-    if (!otpStore[email] || otpStore[email] !== otp) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
+    if (!resetToken) {
+      return res.status(401).json({ message: "Unauthorized: No reset token provided" });
     }
 
-    delete otpStore[email];
+    const email = await RedisClient.get(`password-reset:${resetToken}`);
+    if (!email) {
+      return res.status(400).json({ message: "Invalid or expired reset token" });
+    }
 
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({ message: "New password must be different from your current password" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -170,6 +184,15 @@ const resetPassword = async (req, res) => {
 
     user.password = hashedPassword;
     await user.save();
+
+    // Consume the reset token
+    await RedisClient.del(`password-reset:${resetToken}`);
+    res.clearCookie("resetToken", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      path: "/",
+    });
 
     res.status(200).json({
       message:
@@ -267,9 +290,30 @@ const verifyOtpAndUpdateProfile = async (req, res) => {
 const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
 
-  if (!otpStore[email] || otpStore[email] !== otp) {
+  console.log('otp and email came into verifyopt controller: ', email, otp);
+
+  const storedOtp = await RedisClient.get(`otp:forgot:${email}`);
+console.log('the stored otp :',storedOtp)
+  if (!storedOtp || String(storedOtp) !== String(otp)) {
     return res.status(400).json({ message: "Invalid or expired OTP" });
   }
+
+  // Consume OTP
+  await RedisClient.del(`otp:forgot:${email}`);
+
+  // Generate password reset token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  
+  // Store reset token in Redis with 10 minutes TTL
+  await RedisClient.set(`password-reset:${resetToken}`, email, { ex: 600 });
+
+  // Set the token as an httpOnly cookie
+  res.cookie('resetToken', resetToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'None',
+    maxAge: 10 * 60 * 1000 // 10 minutes
+  });
 
   res.status(200).json({ message: "OTP verified successfully" });
 };

@@ -56,8 +56,7 @@ const ForgotPasswordInput = () => {
 
   // Mutation for resetting password
   const { mutate, isPending } = useMutation({
-    mutationFn: ({ email, otp, newPassword }) =>
-      resetpassword(email, otp, newPassword),
+    mutationFn: ({ newPassword }) => resetpassword(newPassword),
     onSuccess: () => {
       toast.success("Password reset successfully!");
       reset();
@@ -75,14 +74,7 @@ const ForgotPasswordInput = () => {
 
   // Form submission handler
   const onSubmit = (data) => {
-    if (!email || !otp) {
-      toast.error(
-        "Missing email or OTP. Please restart the password reset process."
-      );
-      navigate("/forgot-password");
-      return;
-    }
-    mutate({ email, otp, newPassword: data.newPassword });
+    mutate({ newPassword: data.newPassword });
   };
 
   return (

@@ -70,11 +70,9 @@ export const checkotp = async ({ email, otp }) => {
 
 //reset password
 
-export const resetpassword = async (email, otp, newPassword) => {
+export const resetpassword = async (newPassword) => {
   try {
     const response = await apiUser.patch(`/resetpassword`, {
-      email,
-      otp,
       newPassword,
     });
 

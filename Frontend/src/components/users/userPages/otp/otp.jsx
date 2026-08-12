@@ -32,7 +32,7 @@ const Otp = () => {
       toast.success(
         mode === "signup" ? "sigup is successfull" : "the otp is verified"
       );
-      navigate(mode === "signup" ? "/login" : "/forgotpasswordinput", {
+      navigate(mode === "signup" ? "/login" : "/reset-password", {
         state: { email, otp },
       });
     },

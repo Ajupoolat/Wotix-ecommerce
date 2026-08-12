@@ -12,7 +12,7 @@ const intialization = async () => {
     const existadmin = await adminSchema.findOne({ email: "admin@gmail.com" });
 
     if (!existadmin) {
-      const hasspassword = await bycrpt.hash("admin@8848", 10);
+      const hasspassword = await bycrpt.hash(process.env.ADMIN_PASSWORD, 10);
       await new adminSchema({
         email: "admin@gmail.com",
         password: hasspassword,
