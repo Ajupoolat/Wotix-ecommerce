@@ -6,9 +6,8 @@ import { Footer } from "@/components/common/footer";
 import IconsArea from "@/components/common/IconsArea";
 import ErrorCommon from "@/components/common/CommonError";
 import Navbar from "@/components/common/navbar";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/Wotix removed-BG.png";
+import watchPlaceholder from "@/assets/watch image.jpg";
 import { toast } from "react-hot-toast";
 import {
   AlertDialog,
@@ -27,16 +26,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { retry_payment } from "@/api/users/shop/ordermgt";
-import { order_details } from "@/api/users/shop/ordermgt";
-import {
-  cancelOrderApi,
-  returnOrderApi,
-  downloadInvoiceApi,
-} from "../../../../api/users/shop/ordermgt";
+import { retry_payment, order_details, cancelOrderApi, returnOrderApi, downloadInvoiceApi } from "@/api/users/shop/ordermgt";
 import { verifyPayment } from "@/api/users/shop/checkoutmgt";
 import NotAvailable from "@/components/common/notAvailable";
 import Breadcrumbs from "@/components/common/breadCrums";
+import {
+  Package,
+  Calendar,
+  CreditCard,
+  Download,
+  ArrowLeft,
+  Truck,
+  CheckCircle2,
+  Clock,
+  RotateCcw,
+  AlertTriangle,
+  XCircle,
+  ShieldCheck,
+} from "lucide-react";
 
 function ConfirmationDialog({
   isOpen,
@@ -50,20 +57,22 @@ function ConfirmationDialog({
 }) {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent>
+      <AlertDialogContent className="bg-white dark:bg-[#0B0F17] border border-slate-200 dark:border-amber-500/30 text-slate-800 dark:text-slate-100 transition-colors">
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{message}</AlertDialogDescription>
+          <AlertDialogTitle className="font-cinzel text-slate-900 dark:text-white text-lg">{title}</AlertDialogTitle>
+          <AlertDialogDescription className="text-slate-600 dark:text-slate-400 text-xs">{message}</AlertDialogDescription>
         </AlertDialogHeader>
         {children}
-        <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+        <AlertDialogFooter className="mt-4">
+          <AlertDialogCancel className="bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10 text-xs font-cinzel">
+            {cancelText}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
               onConfirm();
             }}
-            className="bg-red-600 hover:bg-red-700"
+            className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-cinzel uppercase tracking-wider"
           >
             {confirmText}
           </AlertDialogAction>
@@ -84,7 +93,7 @@ export function OrderDetailsPage() {
   const [showProductCancelDialog, setShowProductCancelDialog] = useState(false);
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [showProductReturnDialog, setShowProductReturnDialog] = useState(false);
-  const [subtotal, setSubtotal] = useState(0); // New state for subtotal
+  const [subtotal, setSubtotal] = useState(0);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
   // State for cancellation
@@ -108,7 +117,11 @@ export function OrderDetailsPage() {
       setRazorpayLoaded(false);
     };
     document.body.appendChild(script);
-    return () => document.body.removeChild(script);
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
   }, []);
 
   // Fetch order details
@@ -121,9 +134,6 @@ export function OrderDetailsPage() {
     queryFn: () => order_details(userId, orderId),
     enabled: !!orderId,
   });
-
-
-
 
   useEffect(() => {
     if (order?.products) {
@@ -147,7 +157,7 @@ export function OrderDetailsPage() {
   }, [order]);
 
   // Cancel order mutation
-  const { mutate: cancelOrder, isLoading: isCancelling } = useMutation({
+  const { mutate: cancelOrder, isPending: isCancelling } = useMutation({
     mutationFn: (cancelData) => cancelOrderApi(cancelData, orderId),
     onSuccess: (data) => {
       toast.success(data.message || "Cancellation processed successfully");
@@ -155,7 +165,7 @@ export function OrderDetailsPage() {
       setShowProductCancelDialog(false);
       setSelectedProductsToCancel([]);
       setCancellationReason("");
-      queryClient.invalidateQueries(["order", orderId]);
+      queryClient.invalidateQueries({ queryKey: ["order", orderId] });
     },
     onError: (error) => {
       toast.error(
@@ -189,49 +199,37 @@ export function OrderDetailsPage() {
       setSelectedProductsToReturn([]);
       setReturnReason("");
       setReturnAdditionalInfo("");
-      queryClient.invalidateQueries(["order", orderId]);
-      toast.success(
-        <div>
-          <p>Return request submitted!</p>
-          <p className="text-sm">
-            We'll review your request within 24-48 hours.
-          </p>
-          {data.estimatedRefund && (
-            <p className="text-sm">Estimated refund: ₹{data.estimatedRefund}</p>
-          )}
-        </div>,
-        { duration: 5000 }
-      );
-    },
-    onError: (error) => {
-      const errorMessage =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
-        "Failed to process return";
-      toast.error(errorMessage);
-    },
-  });
-
-  const { mutate: downloadInvoice, isPending: isDownloading } = useMutation({
-    mutationFn: () => downloadInvoiceApi(orderId, userId),
-    onSuccess: (data) => {
-      const blob = new Blob([data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `invoice_${order.orderNumber}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      toast.success("Invoice downloaded successfully!");
+      queryClient.invalidateQueries({ queryKey: ["order", orderId] });
     },
     onError: (error) => {
       toast.error(
-        error.response?.data?.message || "Failed to download invoice"
+        error.response?.data?.message || "Failed to submit return request"
       );
     },
   });
+
+  // Download Invoice mutation
+  const { mutate: downloadInvoice, isPending: isDownloadingInvoice } =
+    useMutation({
+      mutationFn: (orderId) => downloadInvoiceApi(orderId),
+      onSuccess: (response) => {
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `WOTIX_Invoice_${order.orderNumber}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.success("Official horological invoice downloaded!");
+      },
+      onError: (error) => {
+        toast.error(
+          error.response?.data?.message || "Failed to download invoice"
+        );
+      },
+    });
 
   const handleReturnRequest = (productId = null) => {
     if (productId) {
@@ -269,10 +267,10 @@ export function OrderDetailsPage() {
       return;
     }
     const options = {
-      key: "rzp_test_deQSgNwu3LlW4n",
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_deQSgNwu3LlW4n",
       amount: razorpayOrder.amount,
       currency: "INR",
-      name: "Wotix Watches",
+      name: "WOTIX Haute Horlogerie",
       description: "Payment retry for order #" + order.orderNumber,
       image: logo,
       order_id: razorpayOrder.id,
@@ -286,7 +284,7 @@ export function OrderDetailsPage() {
           });
           if (verifyResponse.data.success) {
             toast.success("Payment successful! Order updated.");
-            queryClient.invalidateQueries(["order", orderId]);
+            queryClient.invalidateQueries({ queryKey: ["order", orderId] });
           } else {
             toast.error("Payment verification failed. Please try again.");
           }
@@ -301,7 +299,7 @@ export function OrderDetailsPage() {
         email: localStorage.getItem("email") || "",
         contact: order.shippingAddress.phone || "",
       },
-      theme: { color: "#F97316" },
+      theme: { color: "#D4AF37" },
     };
     try {
       const rzp = new window.Razorpay(options);
@@ -325,7 +323,7 @@ export function OrderDetailsPage() {
   }
 
   if (!order) {
-    return <NotAvailable message={"Order not found"} />;
+    return <NotAvailable message={"Order not found in vault registry"} />;
   }
 
   const isProductEligibleForReturn = (product) => {
@@ -338,10 +336,10 @@ export function OrderDetailsPage() {
     const noExistingReturnStatus =
       !product.returnStatus || product.returnStatus === "none";
 
-    const noPendingReturnRequest = !order.returnRequests.some(
+    const noPendingReturnRequest = !order.returnRequests?.some(
       (req) =>
-        req.products.some(
-          (p) => p.productId.toString() === product.productId.toString()
+        req.products?.some(
+          (p) => p.productId?.toString() === product.productId?.toString()
         ) && req.status === "requested"
     );
     return (
@@ -352,358 +350,354 @@ export function OrderDetailsPage() {
     );
   };
 
-  const hasReturnableProducts = order.products.some(isProductEligibleForReturn);
+  const hasReturnableProducts = order.products?.some(isProductEligibleForReturn);
 
+  // 5-Stage Delivery Timeline Calculation
+  const timelineStages = [
+    { label: "Order Placed", key: "placed" },
+    { label: "Atelier Assembly", key: "processing" },
+    { label: "Armored Transit", key: "shipped" },
+    { label: "Horology Courier", key: "out_for_delivery" },
+    { label: "Vault Delivered", key: "delivered" },
+  ];
+
+  const getStageIndex = (status) => {
+    switch (status) {
+      case "placed":
+        return 0;
+      case "processing":
+        return 1;
+      case "shipped":
+        return 2;
+      case "out_for_delivery":
+        return 3;
+      case "delivered":
+        return 4;
+      default:
+        return 0;
+    }
+  };
+
+  const currentStageIndex = getStageIndex(order.status);
+  const isCancelled = order.status === "cancelled" || order.status === "partially_cancelled";
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* user-control */}
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070A0F] text-slate-800 dark:text-slate-100 selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-200 transition-colors">
       <IconsArea />
-
-      {/* Navigation Links */}
       <Navbar />
-      {/* breadCrumps */}
+
       <Breadcrumbs
         items={[
           { label: "Home", link: "/" },
-          { label: "My Profile", link: `/profile/${userId}` },
-          { label: "My Orders", link: "/orderslist" },
-          { label: `Order NO:${order?.orderNumber}` },
+          { label: "Collector Vault", link: `/profile/${userId}` },
+          { label: "Vault Orders", link: "/orderslist" },
+          { label: `Order #${order.orderNumber}` },
         ]}
       />
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold">Order Details</h1>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => downloadInvoice(orderId)}
-                className="border-blue-500 text-blue-500 hover:bg-blue-50"
-              >
-                Download Invoice
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/orderslist")}>
-                Back to Orders
-              </Button>
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Header Actions Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-200 dark:border-white/5 gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400 text-xs font-cinzel font-semibold tracking-[0.2em] uppercase mb-1">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Certified Provenance Dossier</span>
+            </div>
+            <h1 className="text-3xl font-cinzel font-bold text-slate-900 dark:text-white tracking-wide">
+              Order #{order.orderNumber}
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
+              Registered on {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => downloadInvoice(orderId)}
+              disabled={isDownloadingInvoice}
+              className="px-4 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-600/30 dark:border-amber-500/30 text-xs font-cinzel font-semibold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <Download className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span>{isDownloadingInvoice ? "Generating..." : "Download Invoice"}</span>
+            </button>
+            <button
+              onClick={() => navigate("/orderslist")}
+              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.03] dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10 text-xs font-cinzel uppercase tracking-wider transition-all cursor-pointer"
+            >
+              Back to Orders
+            </button>
+          </div>
+        </div>
+
+        {/* 5-Step Delivery Tracking Timeline */}
+        <div className="rounded-3xl bg-white dark:bg-[#0B0F17] border border-slate-200 dark:border-amber-500/20 p-6 sm:p-8 shadow-sm transition-colors">
+          <h3 className="font-cinzel text-xs font-bold uppercase tracking-[0.2em] text-amber-800 dark:text-amber-300 mb-6">
+            Transit & Delivery Progression
+          </h3>
+
+          {isCancelled ? (
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs">
+              <XCircle className="w-5 h-5 shrink-0" />
+              <span>
+                This order has been cancelled. If any payment was captured, refunds are credited directly to your store wallet within 24 hours.
+              </span>
+            </div>
+          ) : (
+            <div className="relative">
+              {/* Progress Bar Line */}
+              <div className="hidden sm:block absolute top-4 left-6 right-6 h-0.5 bg-slate-200 dark:bg-white/10 -z-0">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-500"
+                  style={{
+                    width: `${(currentStageIndex / (timelineStages.length - 1)) * 100}%`,
+                  }}
+                />
+              </div>
+
+              {/* Steps Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 relative z-10">
+                {timelineStages.map((stage, idx) => {
+                  const isCompleted = idx <= currentStageIndex;
+                  const isCurrent = idx === currentStageIndex;
+                  return (
+                    <div
+                      key={stage.key}
+                      className="flex flex-col items-center text-center space-y-2"
+                    >
+                      <div
+                        className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-mono font-bold transition-all ${
+                          isCompleted
+                            ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/30"
+                            : "bg-slate-100 dark:bg-[#111622] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-white/10"
+                        } ${isCurrent ? "ring-4 ring-amber-400/20 scale-110" : ""}`}
+                      >
+                        {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
+                      </div>
+                      <span
+                        className={`text-xs font-cinzel tracking-wider uppercase ${
+                          isCurrent
+                            ? "text-amber-800 dark:text-amber-300 font-bold"
+                            : isCompleted
+                            ? "text-slate-800 dark:text-slate-200"
+                            : "text-slate-400 dark:text-slate-500"
+                        }`}
+                      >
+                        {stage.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Order Details Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Delivery Address & Payment Method (5 cols) */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Delivery Destination */}
+            <div className="rounded-2xl bg-white dark:bg-[#0B0F17] border border-slate-200 dark:border-white/5 p-6 space-y-2 text-xs shadow-sm transition-colors">
+              <h3 className="font-cinzel text-xs font-bold uppercase tracking-[0.2em] text-amber-800 dark:text-amber-300 pb-2 border-b border-slate-200 dark:border-white/5">
+                Delivery Destination
+              </h3>
+              <div className="text-slate-600 dark:text-slate-300 space-y-1 pt-1">
+                <p className="text-slate-900 dark:text-white font-semibold text-sm">
+                  {order.shippingAddress.fullName}
+                </p>
+                <p>{order.shippingAddress.street || order.shippingAddress.streetAddress}</p>
+                {order.shippingAddress.landmark && (
+                  <p className="text-slate-500 dark:text-slate-400">Near {order.shippingAddress.landmark}</p>
+                )}
+                <p>
+                  {order.shippingAddress.city}, {order.shippingAddress.state} -{" "}
+                  {order.shippingAddress.postalCode}
+                </p>
+                <p className="font-mono text-slate-500 dark:text-slate-400">{order.shippingAddress.country}</p>
+                <p className="font-mono text-slate-500 dark:text-slate-400 pt-1">
+                  Contact: {order.shippingAddress.phone}
+                </p>
+              </div>
+            </div>
+
+            {/* Payment Method & Retry */}
+            <div className="rounded-2xl bg-white dark:bg-[#0B0F17] border border-slate-200 dark:border-white/5 p-6 space-y-3 text-xs shadow-sm transition-colors">
+              <h3 className="font-cinzel text-xs font-bold uppercase tracking-[0.2em] text-amber-800 dark:text-amber-300 pb-2 border-b border-slate-200 dark:border-white/5">
+                Payment Channel & Status
+              </h3>
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
+                  Method
+                </span>
+                <span className="font-mono text-slate-900 dark:text-white font-medium uppercase">
+                  {order.paymentMethod}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
+                  Status
+                </span>
+                <span
+                  className={`font-semibold uppercase tracking-wider ${
+                    order.paymentStatus ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"
+                  }`}
+                >
+                  {order.paymentStatus ? "Verified / Paid" : "Payment Pending"}
+                </span>
+              </div>
+
+              {/* Payment Retry Action */}
+              {!order.paymentStatus &&
+                [
+                  "placed",
+                  "processing",
+                  "shipped",
+                  "partially_cancelled",
+                  "return_requested",
+                  "partially_returned",
+                ].includes(order.status) && (
+                  <div className="pt-2">
+                    <button
+                      onClick={() => handle_retry_payment(orderId)}
+                      disabled={isRetryingPayment}
+                      className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-cinzel font-bold text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer"
+                    >
+                      {isRetryingPayment ? "Contacting Gateway..." : "Complete Payment Now"}
+                    </button>
+                  </div>
+                )}
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            {/* Order Summary Section */}
-            <div className="bg-gray-50 px-6 py-4 border-b">
-              <div className="flex flex-col sm:flex-row justify-between">
-                <div className="mb-4 sm:mb-0">
-                  <h2 className="text-lg font-medium">
-                    Order #{order.orderNumber}
-                  </h2>
-                  <p className="text-sm text-gray-600">
-                    Placed on {new Date(order.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <Badge
-                  className={`status-badge ${order.status.replace("_", "-")}`}
-                >
-                  {order.status
-                    .split("_")
-                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(" ")}
-                </Badge>
-              </div>
-            </div>
+          {/* Right Column: Order Items & Pricing Breakdown (7 cols) */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="rounded-2xl bg-white dark:bg-[#0B0F17] border border-slate-200 dark:border-white/5 p-6 space-y-4 shadow-sm transition-colors">
+              <h3 className="font-cinzel text-xs font-bold uppercase tracking-[0.2em] text-amber-800 dark:text-amber-300 pb-2 border-b border-slate-200 dark:border-white/5">
+                Allocated Timepieces ({order.products?.length || 0})
+              </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
-              {/* Shipping Information */}
-              <div>
-                <h3 className="text-lg font-medium mb-4">
-                  Shipping Information
-                </h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="font-medium">
-                    {order.shippingAddress.fullName}
-                  </p>
-                  <p>{order.shippingAddress.street}</p>
-                  {order.shippingAddress.landmark && (
-                    <p>{order.shippingAddress.landmark}</p>
-                  )}
-                  <p>
-                    {order.shippingAddress.city}, {order.shippingAddress.state}{" "}
-                    {order.shippingAddress.postalCode}
-                  </p>
-                  <p>{order.shippingAddress.country}</p>
-                  <p className="mt-2">Phone: {order.shippingAddress.phone}</p>
-                </div>
-
-                <h3 className="text-lg font-medium mt-6 mb-4">
-                  Payment Method
-                </h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="capitalize">{order.paymentMethod}</p>
-                  <div className="flex justify-between">
-                    <p
-                      className={
-                        order.paymentStatus
-                          ? "text-green-500 mt-2"
-                          : "text-red-600 mt-2"
-                      }
-                    >
-                      Status: {order.paymentStatus ? "Paid" : "Pending"}
-                    </p>
-                    {order.paymentStatus === false &&
-                      (order.status === "placed" ||
-                        order.status === "processing" ||
-                        order.status === "shipped" ||
-                        order.status === "partially_cancelled" ||
-                        order.status === "return_requested" ||
-                        order.status === "partially_returned") && (
-                        <Button
-                          onClick={() => handle_retry_payment(orderId)}
-                          disabled={isRetryingPayment}
-                        >
-                          {isRetryingPayment ? "processing..." : "Pay Now"}
-                        </Button>
-                      )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Items */}
-              <div>
-                <h3 className="text-lg font-medium mb-4">Order Items</h3>
-                <div className="space-y-4">
-                  {order.products.map((item, index) => (
-                    <div key={index} className="flex border-b pb-4 relative">
-                      <div className="w-20 h-20 bg-gray-100 rounded flex-shrink-0">
-                        {item.image ? (
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-full h-full object-contain"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            No Image
-                          </div>
-                        )}
+              <div className="divide-y divide-slate-200 dark:divide-white/5">
+                {order.products?.map((item, idx) => (
+                  <div key={idx} className="py-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-16 rounded-xl bg-slate-50 dark:bg-[#080B11] p-1 border border-slate-200 dark:border-white/10 shrink-0">
+                        <img
+                          src={item.image || watchPlaceholder}
+                          alt={item.name}
+                          className="w-full h-full object-contain filter drop-shadow"
+                          onError={(e) => {
+                            e.target.src = watchPlaceholder;
+                          }}
+                        />
                       </div>
-                      <div className="ml-4 flex-grow">
-                        <h4 className="font-medium">{item.name}</h4>
-                        <div className="flex justify-between mt-2">
-                          <p>Qty: {item.quantity}</p>
-                          <p className="font-medium">
-                            ₹
-                            {(
-                              item.discountedPrice || item.price
-                            ).toLocaleString()}
-                          </p>
+                      <div className="space-y-0.5">
+                        <h4 className="font-cinzel text-sm font-semibold text-slate-900 dark:text-white">
+                          {item.name}
+                        </h4>
+                        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                          <span>Qty: {item.quantity}</span>
+                          <span className="font-cinzel text-amber-800 dark:text-amber-300 font-bold">
+                            ₹{(item.discountedPrice || item.price).toLocaleString("en-IN")}
+                          </span>
                         </div>
                         {item.cancelled && (
-                          <Badge variant="destructive" className="mt-2">
+                          <span className="inline-block text-[10px] font-mono text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded">
                             Cancelled
-                          </Badge>
+                          </span>
                         )}
                       </div>
+                    </div>
 
-                      {/* Cancel button for individual items */}
+                    {/* Actions per item */}
+                    <div>
                       {!item.cancelled &&
-                        [
-                          "placed",
-                          "processing",
-                          "partially_cancelled",
-                        ].includes(order.status) && (
+                        ["placed", "processing", "partially_cancelled"].includes(order.status) && (
                           <button
                             onClick={() => {
                               setSelectedProductsToCancel([item.productId]);
                               setShowProductCancelDialog(true);
                             }}
-                            className="absolute top-0 right-0 text-xs text-white hover:text-gray-400 bg-red-500 h-5 w-20 rounded font-bold"
+                            className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-[11px] font-cinzel uppercase tracking-wider transition-all cursor-pointer font-semibold"
                           >
                             Cancel Item
                           </button>
                         )}
 
-                      {/* Return button for individual items */}
                       {isProductEligibleForReturn(item) && (
                         <button
                           onClick={() => handleReturnRequest(item.productId)}
-                          className="absolute top-0 right-0 text-xs text-white hover:text-gray-400 bg-blue-500 h-5 w-20 rounded font-bold"
+                          className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-600/30 dark:border-amber-500/30 text-[11px] font-cinzel uppercase tracking-wider transition-all cursor-pointer font-semibold"
                         >
-                          Return Item
+                          Request Return
                         </button>
                       )}
-
-                      {/* Return status badge */}
-                      {item.returnStatus && item.returnStatus !== "none" && (
-                        <Badge
-                          variant={
-                            item.returnStatus === "return_requested"
-                              ? "secondary"
-                              : item.returnStatus === "return_approved"
-                              ? "default"
-                              : "destructive"
-                          }
-                          className="mt-3 ml-2"
-                          style={{ height: "60px" }}
-                        >
-                          {item.returnStatus
-                            .split("_")
-                            .map(
-                              (word) =>
-                                word.charAt(0).toUpperCase() + word.slice(1)
-                            )
-                            .join(" ")}
-                        </Badge>
-                      )}
                     </div>
-                  ))}
-                </div>
-                {/* Order Total */}
-                <div className="mt-6 border-t pt-4">
-                  <div className="flex justify-between mb-2">
-                    <span>Subtotal</span>
-                    <span>₹{subtotal.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between mb-2">
-                    <span>Shipping</span>
-                    <span>
-                      ₹
-                      {order.products.some(
-                        (p) => !p.cancelled && p.returnStatus === "none"
-                      )
-                        ? 50
-                        : 0}
+                ))}
+              </div>
+
+              {/* Financial summary breakdown */}
+              <div className="pt-4 border-t border-slate-200 dark:border-white/5 space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span className="font-mono text-slate-900 dark:text-white font-medium">
+                    ₹{Number(subtotal).toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Insured Armored Transit</span>
+                  <span className="font-mono text-slate-900 dark:text-white font-medium">
+                    ₹{order.products?.some((p) => !p.cancelled && p.returnStatus === "none") ? 50 : 0}
+                  </span>
+                </div>
+                {cancelledAmount > 0 && (
+                  <div className="flex justify-between text-rose-600 dark:text-rose-400">
+                    <span>Cancelled / Returned Amount</span>
+                    <span className="font-mono font-semibold">
+                      -₹{Number(cancelledAmount).toLocaleString("en-IN")}
                     </span>
                   </div>
-                  <div className="flex justify-between mb-2">
-                    <span>
-                      {order.products.some((p) => p.returnStatus !== "none")
-                        ? "Returned Amount"
-                        : "Cancelled Amount"}
-                    </span>
-                    <span>₹{cancelledAmount.toLocaleString()}</span>
-                  </div>
-
-                  {/* Only show pending amount if payment status is false */}
-                  {!order.paymentStatus && (
-                    <div className="flex justify-between mb-2 text-yellow-600">
-                      <span>Pending Amount</span>
-                      <span>₹{(subtotal + 50).toLocaleString()}</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between font-bold text-lg mt-4 pt-2 border-t">
-                    <span>Total</span>
-                    <span>₹{order.finalAmount}</span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-4 mt-6">
-                  {["placed", "processing", "partially_cancelled"].includes(
-                    order?.status
-                  ) &&
-                    order.products.some((p) => !p.cancelled) && (
-                      <Button
-                        variant="destructive"
-                        onClick={() => {
-                          setSelectedProductsToCancel(
-                            order.products
-                              .filter((p) => !p.cancelled)
-                              .map((p) => p.productId)
-                          );
-                          setShowProductCancelDialog(true);
-                        }}
-                        disabled={isCancelling}
-                      >
-                        {isCancelling
-                          ? "Processing..."
-                          : order.status === "partially_cancelled"
-                          ? "Cancel Remaining Items"
-                          : "Cancel Order"}
-                      </Button>
-                    )}
-                  {[
-                    "delivered",
-                    "partially_return_requested",
-                    "partially_returned",
-                  ].includes(order?.status) &&
-                    hasReturnableProducts && (
-                      <Button
-                        variant="outline"
-                        onClick={() => handleReturnRequest()}
-                        className="border-orange-500 text-orange-500 hover:bg-orange-50"
-                        disabled={isReturnPending}
-                      >
-                        {isReturnPending ? "Processing..." : "Request Return"}
-                      </Button>
-                    )}
+                )}
+                <div className="pt-3 border-t border-slate-200 dark:border-white/5 flex justify-between items-baseline">
+                  <span className="font-cinzel text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 font-semibold">
+                    Total Order Valuation
+                  </span>
+                  <span className="font-cinzel text-2xl font-bold text-amber-800 dark:text-amber-300">
+                    ₹{Number(order.finalAmount).toLocaleString("en-IN")}
+                  </span>
                 </div>
               </div>
+
+              {/* Order Level Cancel Action */}
+              {["placed", "processing", "partially_cancelled"].includes(order?.status) &&
+                order.products?.some((p) => !p.cancelled) && (
+                  <div className="pt-2">
+                    <button
+                      onClick={() => {
+                        setSelectedProductsToCancel(
+                          order.products
+                            .filter((p) => !p.cancelled)
+                            .map((p) => p.productId)
+                        );
+                        setShowProductCancelDialog(true);
+                      }}
+                      disabled={isCancelling}
+                      className="w-full py-3 rounded-xl bg-slate-100 hover:bg-rose-500/10 dark:bg-white/[0.03] text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-cinzel uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {isCancelling ? "Processing..." : "Cancel Remaining Order Items"}
+                    </button>
+                  </div>
+                )}
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Dialogs and Footer remain unchanged */}
-      <ConfirmationDialog
-        isOpen={showCancelDialog}
-        onClose={() => setShowCancelDialog(false)}
-        onConfirm={() => {
-          if (!cancellationReason) {
-            toast.error("Please select a cancellation reason");
-            return;
-          }
-          cancelOrder({
-            productsToCancel: order.products
-              .filter((p) => !p.cancelled)
-              .map((p) => p.productId),
-            cancellationReason,
-            cancelEntireOrder: true,
-          });
-        }}
-        title="Cancel Order"
-        message="Are you sure you want to cancel this order? This action cannot be undone."
-        confirmText={isCancelling ? "Processing..." : "Yes, Cancel Order"}
-        confirmDisabled={isCancelling}
-      >
-        <div className="mt-4">
-          <label className="block text-sm font-medium mb-1">
-            Reason for Cancellation
-          </label>
-          <Select
-            value={cancellationReason}
-            onValueChange={setCancellationReason}
-            disabled={isCancelling}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a reason" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="changed-mind">Changed my mind</SelectItem>
-              <SelectItem value="found-better-price">
-                Found better price
-              </SelectItem>
-              <SelectItem value="shipping-too-long">
-                Shipping takes too long
-              </SelectItem>
-              <SelectItem value="other">Other reason</SelectItem>
-            </SelectContent>
-          </Select>
-          {cancellationReason === "other" && (
-            <textarea
-              className="mt-2 w-full p-2 border rounded"
-              placeholder="Please specify..."
-              rows={3}
-              value={cancellationReason}
-              onChange={(e) => setCancellationReason(e.target.value)}
-              disabled={isCancelling}
-            />
-          )}
-        </div>
-      </ConfirmationDialog>
-
+      {/* Cancellation Dialog */}
       <ConfirmationDialog
         isOpen={showProductCancelDialog}
         onClose={() => {
@@ -722,42 +716,33 @@ export function OrderDetailsPage() {
             cancelEntireOrder: false,
           });
         }}
-        title="Cancel Selected Products"
-        message={
-          selectedProductsToCancel.length === 1
-            ? "Are you sure you want to cancel this item?"
-            : `Cancel ${selectedProductsToCancel.length} selected items?`
-        }
+        title="Confirm Item Cancellation"
+        message="Are you certain you wish to cancel the selected timepieces from this order?"
         confirmText={isCancelling ? "Processing..." : "Confirm Cancellation"}
-        confirmDisabled={isCancelling || selectedProductsToCancel.length === 0}
       >
-        <div className="mt-4">
-          <label className="block text-sm font-medium mb-1">
-            Reason for Cancellation
+        <div className="mt-4 space-y-2">
+          <label className="block text-xs font-cinzel uppercase tracking-wider text-slate-700 dark:text-slate-300 font-medium">
+            Cancellation Reason
           </label>
           <Select
             value={cancellationReason}
             onValueChange={setCancellationReason}
             disabled={isCancelling}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full bg-slate-50 dark:bg-[#111622] text-slate-900 dark:text-slate-200 border-slate-200 dark:border-white/10 text-xs">
               <SelectValue placeholder="Select a reason" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white dark:bg-[#0B0F17] text-slate-900 dark:text-slate-200 border-slate-200 dark:border-amber-500/20">
               <SelectItem value="changed-mind">Changed my mind</SelectItem>
-              <SelectItem value="found-better-price">
-                Found better price
-              </SelectItem>
-              <SelectItem value="shipping-too-long">
-                Shipping takes too long
-              </SelectItem>
+              <SelectItem value="found-better-price">Found better price</SelectItem>
+              <SelectItem value="shipping-too-long">Shipping takes too long</SelectItem>
               <SelectItem value="other">Other reason</SelectItem>
             </SelectContent>
           </Select>
           {cancellationReason === "other" && (
             <textarea
-              className="mt-2 w-full p-2 border rounded"
-              placeholder="Please specify..."
+              className="mt-2 w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#111622] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              placeholder="Please specify your reason..."
               rows={3}
               value={cancellationReason}
               onChange={(e) => setCancellationReason(e.target.value)}
@@ -767,140 +752,45 @@ export function OrderDetailsPage() {
         </div>
       </ConfirmationDialog>
 
-      <ConfirmationDialog
-        isOpen={showReturnDialog}
-        onClose={() => {
-          setShowReturnDialog(false);
-          setReturnReason("");
-          setReturnAdditionalInfo("");
-        }}
-        onConfirm={submitReturnRequest}
-        title="Request Return"
-        message="Please provide details for your return request."
-        confirmText={
-          isReturnPending ? "Processing..." : "Submit Return Request"
-        }
-        confirmDisabled={isReturnPending || !returnReason}
-      >
-        <div className="mt-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Reason for Return
-            </label>
-            <Select
-              value={returnReason}
-              onValueChange={setReturnReason}
-              disabled={isReturnPending}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a reason" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="defective">Product is defective</SelectItem>
-                <SelectItem value="wrong-item">Wrong item received</SelectItem>
-                <SelectItem value="not-as-described">
-                  Not as described
-                </SelectItem>
-                <SelectItem value="changed-mind">Changed my mind</SelectItem>
-                <SelectItem value="other">Other reason</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Additional Information
-            </label>
-            <textarea
-              className="w-full p-2 border rounded"
-              placeholder="Please provide any additional details..."
-              rows={3}
-              value={returnAdditionalInfo}
-              onChange={(e) => setReturnAdditionalInfo(e.target.value)}
-              disabled={isReturnPending}
-            />
-          </div>
-          <div className="text-sm text-gray-600">
-            <p>Items to be returned:</p>
-            <ul className="list-disc pl-5 mt-1">
-              {order.products
-                .filter((p) => selectedProductsToReturn.includes(p.productId))
-                .map((p) => (
-                  <li key={p.productId}>
-                    {p.name} (Qty: {p.quantity})
-                  </li>
-                ))}
-            </ul>
-          </div>
-        </div>
-      </ConfirmationDialog>
-
+      {/* Return Dialog */}
       <ConfirmationDialog
         isOpen={showProductReturnDialog}
         onClose={() => {
           setShowProductReturnDialog(false);
+          setSelectedProductsToReturn([]);
           setReturnReason("");
-          setReturnAdditionalInfo("");
         }}
         onConfirm={submitReturnRequest}
-        title="Request Product Return"
-        message="Please provide details for your return request."
-        confirmText={
-          isReturnPending ? "Processing..." : "Submit Return Request"
-        }
-        confirmDisabled={isReturnPending || !returnReason}
+        title="Request Return Authorization"
+        message="Request an atelier inspection and return for this timepiece."
+        confirmText={isReturnPending ? "Submitting..." : "Submit Return"}
       >
-        <div className="mt-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Reason for Return
-            </label>
-            <Select
-              value={returnReason}
-              onValueChange={setReturnReason}
-              disabled={isReturnPending}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a reason" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="defective">Product is defective</SelectItem>
-                <SelectItem value="wrong-item">Wrong item received</SelectItem>
-                <SelectItem value="not-as-described">
-                  Not as described
-                </SelectItem>
-                <SelectItem value="changed-mind">Changed my mind</SelectItem>
-                <SelectItem value="other">Other reason</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Additional Information
-            </label>
-            <textarea
-              className="w-full p-2 border rounded"
-              placeholder="Please provide any additional details..."
-              rows={3}
-              value={returnAdditionalInfo}
-              onChange={(e) => setReturnAdditionalInfo(e.target.value)}
-              disabled={isReturnPending}
-            />
-          </div>
-          <div className="text-sm text-gray-600">
-            <p>Item to be returned:</p>
-            {order.products
-              .filter((p) => selectedProductsToReturn.includes(p.productId))
-              .map((p) => (
-                <div key={p.productId} className="mt-1">
-                  {p.name} (Qty: {p.quantity})
-                </div>
-              ))}
-          </div>
+        <div className="mt-4 space-y-2">
+          <label className="block text-xs font-cinzel uppercase tracking-wider text-slate-700 dark:text-slate-300 font-medium">
+            Reason for Return
+          </label>
+          <Select
+            value={returnReason}
+            onValueChange={setReturnReason}
+            disabled={isReturnPending}
+          >
+            <SelectTrigger className="w-full bg-slate-50 dark:bg-[#111622] text-slate-900 dark:text-slate-200 border-slate-200 dark:border-white/10 text-xs">
+              <SelectValue placeholder="Select a reason" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-[#0B0F17] text-slate-900 dark:text-slate-200 border-slate-200 dark:border-amber-500/20">
+              <SelectItem value="defective">Defective or damaged</SelectItem>
+              <SelectItem value="wrong-item">Received incorrect reference</SelectItem>
+              <SelectItem value="not-as-described">Did not match horological specifications</SelectItem>
+              <SelectItem value="size-fit">Strap / case fit issue</SelectItem>
+              <SelectItem value="other">Other reason</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </ConfirmationDialog>
-      {/* Footer */}
+
       <Footer />
     </div>
   );
 }
+
 export default OrderDetailsPage;

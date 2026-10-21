@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getWishlist,
@@ -24,12 +24,12 @@ export const WishlistProvider = ({ children }) => {
   const { mutate: addMutation } = useMutation({
     mutationFn: (productId) => addToWishlist(productId, userId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["wishlist", userId]);
-      toast.success("Added to wishlist!");
+      queryClient.invalidateQueries({ queryKey: ["wishlist", userId] });
+      toast.success("Added to private vault wishlist.");
     },
     onError: (error) => {
-      if (error.message === `token is missing`) {
-        toast.error("please login/signup for add products to wishlist");
+      if (error.message === "token is missing") {
+        toast.error("Please login or register to save timepieces to your wishlist.");
       } else {
         toast.error(error.message || "Failed to add to wishlist");
       }
@@ -39,8 +39,8 @@ export const WishlistProvider = ({ children }) => {
   const { mutate: removeMutation } = useMutation({
     mutationFn: (productId) => removeFromWishlist(productId, userId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["wishlist", userId]);
-      toast.success("Removed from wishlist!");
+      queryClient.invalidateQueries({ queryKey: ["wishlist", userId] });
+      toast.success("Removed from wishlist.");
     },
     onError: (error) => {
       toast.error(error.message || "Failed to remove from wishlist");

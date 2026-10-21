@@ -1,12 +1,4 @@
-import { ShoppingCartIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { useCart } from "@/context/cartcon";
@@ -18,8 +10,16 @@ import ErrorCommon from "@/components/common/CommonError";
 import LoaderSpinner from "@/components/common/spinner";
 import IconsArea from "@/components/common/IconsArea";
 import Navbar from "@/components/common/navbar";
-import BrowseProduct from "@/components/common/browseProduct";
-import PleaseLogin from "@/components/common/pleaseLogin";
+import Breadcrumbs from "@/components/common/breadCrums";
+import watchPlaceholder from "@/assets/watch image.jpg";
+import {
+  Heart,
+  ShoppingBag,
+  Trash2,
+  ShieldCheck,
+  Sparkles,
+  ArrowRight,
+} from "lucide-react";
 
 export function WishlistPage() {
   const navigate = useNavigate();
@@ -44,32 +44,30 @@ export function WishlistPage() {
   const { mutate: removeFromWishlistMutation } = useMutation({
     mutationFn: (productId) => removeFromWishlist(productId, userId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["wishlist", userId]);
-      toast.success("Removed from wishlist!");
+      queryClient.invalidateQueries({ queryKey: ["wishlist", userId] });
+      toast.success("Timepiece removed from vault wishlist.");
     },
     onError: (error) => {
       toast.error(error.message || "Failed to remove from wishlist");
     },
   });
 
-  // Add to cart function
   const handleAddToCart = async (product) => {
     try {
       await addToCart({
         productId: product._id,
         quantity: 1,
-        originalPrice: product.originalPrice,
-        price: product.discountedPrice,
+        originalPrice: product.originalPrice ?? product.price,
+        price: product.discountedPrice ?? product.finalPrice ?? product.price,
         ...(product.offer && {
           offerId: product.offer._id,
           offerName: product.offer.title,
         }),
       });
 
-      await removeFromWishlistMutation(product._id);
-      toast.success("Added to cart and removed from wishlist!");
+      removeFromWishlistMutation(product._id);
     } catch (error) {
-      toast.error(error.message || "Failed to add to cart");
+      // Handled in cart context
     }
   };
 
@@ -81,125 +79,164 @@ export function WishlistPage() {
     return <ErrorCommon />;
   }
 
-  return (
-    <div className="min-h-screen bg-white">
-      <IconsArea />
+  const products = wishlist?.products || [];
 
+  return (
+    <div className="min-h-screen bg-[#F8F9FB] dark:bg-[#070A0F] text-slate-900 dark:text-slate-100 selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-200 transition-colors">
+      <IconsArea />
       <Navbar />
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Wishlist</h1>
+      <Breadcrumbs
+        items={[
+          { label: "Home", link: "/" },
+          { label: "Collector Vault", link: `/profile/${userId}` },
+          { label: "Private Wishlist" },
+        ]}
+      />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-200 dark:border-white/5 gap-4">
+          <div>
+            <span className="text-xs uppercase font-cinzel tracking-[0.2em] text-amber-600 dark:text-amber-400 block mb-1 font-semibold">
+              Curated Favorites
+            </span>
+            <h1 className="text-3xl font-cinzel font-bold text-slate-900 dark:text-white tracking-wide">
+              Private Vault Wishlist
+            </h1>
+          </div>
+          <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
+            {products.length} {products.length === 1 ? "Timepiece" : "Timepieces"} Saved
+          </span>
         </div>
 
         {!isAuthenticated ? (
-          <PleaseLogin message={"Please sign in to view your wishlist"} />
-        ) : wishlist.products.length === 0 ? (
-          <BrowseProduct message={"Your wishlist is empty"} />
+          <div className="py-20 text-center rounded-2xl bg-white dark:bg-[#0B0F17] border border-slate-200 dark:border-white/5 p-8 max-w-lg mx-auto space-y-4 shadow-sm">
+            <Heart className="w-12 h-12 text-amber-600 dark:text-amber-400/60 mx-auto" />
+            <h2 className="font-cinzel text-xl font-bold text-slate-900 dark:text-white">
+              Private Vault Wishlist
+            </h2>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              Please sign in to access your curated wishlist of saved timepieces.
+            </p>
+            <button
+              onClick={() => navigate("/login")}
+              className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-cinzel font-bold text-xs uppercase tracking-wider"
+            >
+              Sign In to Account
+            </button>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="py-20 text-center rounded-2xl bg-white dark:bg-[#0B0F17] border border-slate-200 dark:border-amber-500/20 p-8 max-w-lg mx-auto space-y-4 shadow-sm">
+            <Heart className="w-12 h-12 text-amber-600 dark:text-amber-400/60 mx-auto" />
+            <h3 className="font-cinzel text-xl font-bold text-slate-900 dark:text-white">
+              Your Wishlist is Empty
+            </h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              You haven't saved any mastercrafted timepieces to your private vault wishlist yet.
+            </p>
+            <button
+              onClick={() => navigate("/shop")}
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-cinzel font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 cursor-pointer"
+            >
+              Explore Timepieces
+            </button>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {wishlist.products.map((product) => (
-              <Card
-                key={product._id}
-                className="hover:shadow-lg transition-shadow"
-                onClick={() => navigate(`/shop/product-view/${product._id}`)}
-              >
-                <CardHeader className="relative">
-                  <div className="absolute top-4 right-4">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full hover:bg-red-50"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => {
+              const originalPrice = product.originalPrice ?? product.price ?? 0;
+              const discountedPrice = product.discountedPrice ?? product.finalPrice ?? originalPrice;
+              const showDiscount = discountedPrice < originalPrice;
+              const isOutOfStock = product.stock <= 0;
+              const img = product.images?.[0] || watchPlaceholder;
+
+              return (
+                <div
+                  key={product._id}
+                  onClick={() => navigate(`/shop/product-view/${product._id}`)}
+                  className="group rounded-2xl bg-white dark:bg-[#0B0F17] border border-slate-200/90 dark:border-white/5 hover:border-amber-500/40 p-5 transition-all duration-300 shadow-sm dark:shadow-none hover:shadow-xl dark:hover:shadow-2xl flex flex-col justify-between cursor-pointer relative overflow-hidden"
+                >
+                  {/* Image Stage */}
+                  <div className="relative aspect-square w-full bg-slate-50 dark:bg-[#080B11] rounded-xl p-4 flex items-center justify-center overflow-hidden mb-4">
+                    {/* Delete action */}
+                    <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         removeFromWishlistMutation(product._id);
                       }}
+                      className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition-colors cursor-pointer"
+                      title="Remove from Wishlist"
                     >
-                      <TrashIcon className="h-5 w-5 text-red-500 hover:text-red-700" />
-                    </Button>
-                  </div>
-                  <div className="h-48 bg-gray-100 rounded-t-lg flex items-center justify-center">
-                    {product.offer && (
-                      <span className="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
-                        {product.offer.title} {product.offer.discountValue}% OFF
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+
+                    {showDiscount && (
+                      <span className="absolute top-3 left-3 z-10 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-[10px] tracking-wider uppercase px-2 py-0.5 rounded shadow">
+                        Privilege
                       </span>
                     )}
-                    {product.images?.[0] ? (
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="h-full object-contain"
-                      />
-                    ) : (
-                      <span className="text-gray-400">Product Image</span>
-                    )}
+
+                    <img
+                      src={img}
+                      alt={product.name}
+                      className="w-full h-full object-contain filter drop-shadow-[0_6px_12px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_10px_20px_rgba(0,0,0,0.7)] transform group-hover:scale-106 transition-transform duration-500"
+                      onError={(e) => {
+                        e.target.src = watchPlaceholder;
+                      }}
+                    />
                   </div>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <h3 className="text-lg font-semibold">
-                    {product.name || "Unnamed Product"}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {product.brand || "No Brand"}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Added on: {new Date(product.addedAt).toLocaleDateString()}
-                  </p>
-                  <div className="mt-2">
-                    {product.stock > 0 ? (
-                      <Badge variant="success" className="text-xs bg-green-400">
-                        In stock
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="destructive"
-                        className="text-xs bg-red-500"
-                      >
-                        Out of stock
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center mt-2">
-                    {product.discountedPrice < product.originalPrice ? (
-                      <>
-                        <p className="text-xl font-bold text-green-600">
-                          ₹{product.discountedPrice.toLocaleString("en-IN")}/-
-                        </p>
-                        <p className="text-sm text-gray-500 line-through ml-2">
-                          ₹{product.originalPrice.toLocaleString("en-IN")}/-
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-xl font-bold">
-                        ₹{product.originalPrice.toLocaleString("en-IN")}/-
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  {product.stock > 0 ? (
-                    <Button
-                      className="w-full bg-black"
+
+                  {/* Details */}
+                  <div className="space-y-3 flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                        <span>{product.brand || "Timepiece"}</span>
+                        {isOutOfStock ? (
+                          <span className="text-rose-500 dark:text-rose-400 font-medium">Out of Stock</span>
+                        ) : (
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Available</span>
+                        )}
+                      </div>
+                      <h3 className="font-cinzel text-base font-semibold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors line-clamp-1">
+                        {product.name}
+                      </h3>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex items-baseline justify-between">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-cinzel text-lg font-bold text-amber-700 dark:text-amber-300">
+                          ₹{Number(discountedPrice).toLocaleString("en-IN")}
+                        </span>
+                        {showDiscount && (
+                          <span className="text-xs text-slate-400 line-through">
+                            ₹{Number(originalPrice).toLocaleString("en-IN")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Add to bag action */}
+                    <button
+                      type="button"
+                      disabled={isOutOfStock}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAddToCart(product);
                       }}
+                      className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-cinzel font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
                     >
-                      <ShoppingCartIcon className="mr-2 h-4 w-4" />
-                      Add To Cart
-                    </Button>
-                  ) : (
-                    <Button className="w-full" disabled>
-                      <ShoppingCartIcon className="mr-2 h-4 w-4" />
-                      Add To Cart
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            ))}
+                      <ShoppingBag className="w-3.5 h-3.5 text-slate-950" />
+                      <span>{isOutOfStock ? "Allocated (Sold Out)" : "Move to Shopping Bag"}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
-      </div>
+      </main>
+
       <Footer />
     </div>
   );

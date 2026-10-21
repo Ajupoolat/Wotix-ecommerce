@@ -1,32 +1,36 @@
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/common/navbar";
 import IconsArea from "@/components/common/IconsArea";
 import { Footer } from "@/components/common/footer";
 import LoaderSpinner from "@/components/common/spinner";
-import {
-  UserIcon,
-  PencilIcon,
-  MapPinIcon,
-  KeyIcon,
-  ShoppingBagIcon,
-  WalletIcon,
-  CreditCardIcon,
-  EnvelopeIcon,
-  UserPlusIcon,
-} from "@heroicons/react/24/outline";
 import ErrorCommon from "@/components/common/CommonError";
-import { useNavigate, useParams } from "react-router-dom";
-import { viewprofile } from "@/api/users/profile/profilemgt";
 import Restricter from "@/components/common/restricter";
 import Breadcrumbs from "@/components/common/breadCrums";
+import { useNavigate, useParams } from "react-router-dom";
+import { viewprofile } from "@/api/users/profile/profilemgt";
+import { toast } from "react-hot-toast";
+import {
+  User,
+  Mail,
+  MapPin,
+  ShoppingBag,
+  Wallet,
+  Key,
+  Edit3,
+  Copy,
+  Check,
+  ShieldCheck,
+  Sparkles,
+  Award,
+} from "lucide-react";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const username = localStorage.getItem("username");
   const { id } = useParams();
   const email = localStorage.getItem("email");
+  const [copied, setCopied] = useState(false);
 
   const {
     data: profileData,
@@ -34,190 +38,223 @@ const ProfilePage = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ["profile"],
+    queryKey: ["profile", id],
     queryFn: () => viewprofile(id, email),
   });
+
+  const handleCopyReferral = (code) => {
+    if (!code) return;
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    toast.success("Referral invitation code copied!");
+    setTimeout(() => setCopied(false), 2500);
+  };
 
   if (isLoading) {
     return <LoaderSpinner />;
   }
 
-  if (isError && error.message !== `Oops this page is not get !`) {
+  if (isError && error.message !== "Oops this page is not get !") {
     return <ErrorCommon />;
   }
 
-  if (error && error.message === `Oops this page is not get !`) {
+  if (error && error.message === "Oops this page is not get !") {
     return <Restricter />;
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+  const referralCode = profileData?.refferalId || "WOTIX-VIP";
 
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070A0F] text-slate-800 dark:text-slate-100 selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-200 transition-colors">
       <IconsArea />
-      {/* Navigation */}
       <Navbar />
-      {/* Breadcrumb */}
+
       <Breadcrumbs
-        items={[{ label: "Home", link: "/" }, { label: "My Profile" }]}
+        items={[
+          { label: "Home", link: "/" },
+          { label: "Collector Vault Profile" },
+        ]}
       />
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          {/* Profile Header */}
-          <div className="bg-gradient-to-r from-gray-700 to-black px-6 py-8 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">My Account</h1>
-                <p className="text-gray-200 mt-1">
-                  Manage your personal information and preferences
-                </p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="rounded-3xl bg-white dark:bg-[#0B0F17] border border-slate-200 dark:border-amber-500/20 overflow-hidden shadow-xl dark:shadow-2xl transition-colors">
+          {/* Profile Prestige Header Banner */}
+          <div className="relative bg-gradient-to-r from-amber-500/10 via-amber-600/5 to-amber-500/10 dark:from-[#0C121E] dark:via-[#161F32] dark:to-[#0C121E] p-8 sm:p-10 border-b border-slate-200 dark:border-amber-500/20 transition-colors">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+              <div className="flex items-center gap-5">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-cinzel font-bold text-2xl flex items-center justify-center shadow-lg shadow-amber-500/30 shrink-0">
+                  {(profileData?.firstName?.[0] || username?.[0] || "W").toUpperCase()}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-cinzel tracking-[0.25em] text-amber-800 dark:text-amber-400 font-semibold">
+                      WOTIX Certified Member
+                    </span>
+                    <Sparkles className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-cinzel font-bold text-slate-900 dark:text-white tracking-wide">
+                    {profileData?.firstName} {profileData?.lastName || ""}
+                  </h1>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                    Collector ID: {id?.slice(-8).toUpperCase()}
+                  </p>
+                </div>
               </div>
-              <div className="hidden md:flex items-center space-x-2">
-                <span className="text-gray-300">Welcome back,</span>
-                <span className="font-medium">
-                  {profileData.firstName || username}
-                </span>
-              </div>
+
+              {/* Edit Profile Button */}
+              <button
+                type="button"
+                onClick={() => navigate(`/profile/${id}/edit-profile/${id}`)}
+                className="self-start sm:self-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-cinzel font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-slate-950" />
+                <span>Edit Profile</span>
+              </button>
             </div>
           </div>
 
-          {/* Profile Management Tabs */}
-          <Tabs defaultValue="personal-info" className='w-full'>
-            <TabsList className="grid grid-cols-4 rounded-none border-b bg-gray-50 w-full h-15">
-              <TabsTrigger
-                value="personal-info"
-                className="flex items-center gap-2 py-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-              >
-                <UserIcon className="w-5 h-5" />
-                <span className="hidden sm:inline">Personal Info</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="address"
-                className="flex items-center gap-2 py-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                onClick={() => navigate(`/address/${id}`)}
-              >
-                <MapPinIcon className="w-5 h-5" />
-                <span className="hidden sm:inline">Address</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="orders"
-                className="flex items-center gap-2 py-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                onClick={() => navigate("/orderslist")}
-              >
-                <ShoppingBagIcon className="w-5 h-5" />
-                <span className="hidden sm:inline">Orders</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="wallet"
-                className="flex items-center gap-2 py-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                onClick={() => navigate(`wallet/${id}`)}
-              >
-                <WalletIcon
-                  className="w-5 h-5"
-                  onClick={() => navigate(`wallet/${id}`)}
-                />
-                <span
-                  className="hidden sm:inline"
-                  onClick={() => navigate(`wallet/${id}`)}
-                >
-                  Wallet
-                </span>
-              </TabsTrigger>
-            </TabsList>
+          {/* Sub Navigation Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-slate-200 dark:border-white/5 bg-slate-100/70 dark:bg-[#080B11] transition-colors">
+            <button
+              className="py-4 px-4 text-xs font-cinzel font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-300 border-b-2 border-amber-600 dark:border-amber-400 flex items-center justify-center gap-2 bg-amber-500/10 dark:bg-amber-500/5"
+            >
+              <User className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span>Personal Vault</span>
+            </button>
+            <button
+              onClick={() => navigate(`/address/${id}`)}
+              className="py-4 px-4 text-xs font-cinzel uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/[0.02] flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              <MapPin className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <span>Delivery Addresses</span>
+            </button>
+            <button
+              onClick={() => navigate("/orderslist")}
+              className="py-4 px-4 text-xs font-cinzel uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/[0.02] flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              <ShoppingBag className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <span>Vault Orders</span>
+            </button>
+            <button
+              onClick={() => navigate(`/profile/${id}/wallet/${id}`)}
+              className="py-4 px-4 text-xs font-cinzel uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/[0.02] flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              <Wallet className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <span>Store Wallet</span>
+            </button>
+          </div>
 
-            {/* Personal Info Tab */}
-            <TabsContent value="personal-info" className="mt-0">
-              <div className="p-6 sm:p-8">
-                <div className="flex justify-between items-center mb-8">
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    Personal Information
-                  </h2>
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2 border-black text-black hover:bg-gray-50"
-                    onClick={() => navigate(`/profile/:id/edit-profile/${id}`)}
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                    Edit Profile
-                  </Button>
+          {/* Profile Details Content */}
+          <div className="p-6 sm:p-10 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Name Card */}
+              <div className="rounded-2xl bg-slate-50 dark:bg-[#0D121D] border border-slate-200 dark:border-white/5 p-5 space-y-1 shadow-sm transition-colors">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs">
+                  <User className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <span className="uppercase tracking-wider font-cinzel text-[10px]">
+                    Full Name
+                  </span>
                 </div>
+                <p className="text-base font-semibold text-slate-900 dark:text-white pt-1">
+                  {profileData?.firstName} {profileData?.lastName}
+                </p>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Left Column */}
-                  <div className="space-y-6">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center gap-3 mb-2">
-                        <UserIcon className="w-5 h-5 text-black" />
-                        <h3 className="text-sm font-medium text-gray-500">
-                          Name
-                        </h3>
-                      </div>
-                      <p className="text-gray-800 font-medium">
-                        {profileData.firstName} {profileData.lastName}
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center gap-3 mb-2">
-                        <EnvelopeIcon className="w-5 h-5 text-black" />
-                        <h3 className="text-sm font-medium text-gray-500">
-                          Email
-                        </h3>
-                      </div>
-                      <p className="text-gray-800 font-medium">
-                        {profileData.email || "Not provided"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Right Column */}
-                  <div className="space-y-6">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center gap-3 mb-2">
-                        <UserPlusIcon className="w-5 h-5 text-black" />
-                        <h3 className="text-sm font-medium text-gray-500">
-                          Refferal Code
-                        </h3>
-                      </div>
-                      <p className="text-gray-600" style={{ fontSize: "12px" }}>
-                        Get 100/- rupees for Reffer a User. Share this refferal
-                        code to your freind
-                      </p>
-                      <p className="text-gray-800 font-medium">
-                        {profileData.refferalId || "Not provided"}
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center gap-3 mb-2">
-                        <CreditCardIcon className="w-5 h-5 text-black" />
-                        <h3 className="text-sm font-medium text-gray-500">
-                          Account Type
-                        </h3>
-                      </div>
-                      <p className="text-gray-800 font-medium">Standard User</p>
-                    </div>
-                  </div>
+              {/* Email Card */}
+              <div className="rounded-2xl bg-slate-50 dark:bg-[#0D121D] border border-slate-200 dark:border-white/5 p-5 space-y-1 shadow-sm transition-colors">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs">
+                  <Mail className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <span className="uppercase tracking-wider font-cinzel text-[10px]">
+                    Registered Email
+                  </span>
                 </div>
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2 border-black text-black hover:bg-gray-50"
-                    onClick={() => navigate(`/changePassword/${id}`)}
+                <p className="text-base font-semibold text-slate-900 dark:text-white pt-1">
+                  {profileData?.email || email}
+                </p>
+              </div>
+
+              {/* Referral Privilege Card */}
+              <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 via-white to-amber-500/5 dark:via-[#0D121D] dark:to-[#0D121D] border border-amber-500/30 dark:border-amber-500/25 p-5 space-y-3 shadow-sm transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-xs font-cinzel font-semibold uppercase tracking-wider">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    <span>Collector Referral Privilege</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded font-semibold">
+                    ₹100 Credit
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  Introduce a fellow connoisseur to WOTIX. Receive ₹100 direct wallet credit upon their first verified timepiece acquisition.
+                </p>
+                <div className="flex items-center gap-2 pt-1">
+                  <div className="flex-1 bg-white dark:bg-[#080B11] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 font-mono text-amber-800 dark:text-amber-300 text-xs tracking-wider">
+                    {referralCode}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyReferral(referralCode)}
+                    className="px-4 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border border-amber-600/30 dark:border-amber-500/40 text-xs font-cinzel uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer font-semibold"
                   >
-                    <KeyIcon className="h-4 w-4" />
-                    Change Password
-                  </Button>
+                    {copied ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-emerald-600 dark:text-emerald-400">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
-            </TabsContent>
-          </Tabs>
+
+              {/* Account Tier Card */}
+              <div className="rounded-2xl bg-slate-50 dark:bg-[#0D121D] border border-slate-200 dark:border-white/5 p-5 space-y-2 shadow-sm transition-colors">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs">
+                  <Award className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <span className="uppercase tracking-wider font-cinzel text-[10px]">
+                    Membership Tier
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-base font-cinzel font-bold text-amber-800 dark:text-amber-300">
+                    VIP Connoisseur
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-600 dark:text-slate-400 bg-slate-200/60 dark:bg-white/5 px-2 py-1 rounded">
+                    Complimentary White-Glove
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  Enjoy priority concierge access and early previews of limited-production horological editions.
+                </p>
+              </div>
+            </div>
+
+            {/* Bottom Security / Password Bar */}
+            <div className="pt-6 border-t border-slate-200 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span>Account protected by 256-Bit SSL Horology Vault Authentication</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate(`/changePassword/${id}`)}
+                className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#0D121D] dark:hover:bg-[#141C2E] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-white/10 text-xs font-cinzel uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+              >
+                <Key className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span>Change Password</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
+
       <Footer />
     </div>
   );
 };
+
 export default ProfilePage;

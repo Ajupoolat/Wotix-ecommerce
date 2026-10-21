@@ -7,16 +7,21 @@ import {
   deleteaddress,
   editaddress,
 } from "@/api/users/profile/profilemgt";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import LoaderSpinner from "@/components/common/spinner";
 import Restricter from "@/components/common/restricter";
 import Breadcrumbs from "@/components/common/breadCrums";
 import AlertBox from "@/components/common/alertBox";
-import AddressForm from "../address/addressComponent/forms/addressForms"; // Existing import
-import AddressList from "../address/addressComponent/List/addressList"; // Import the new component
+import AddressForm from "./addressComponent/forms/addressForms";
+import AddressList from "./addressComponent/List/addressList";
+import IconsArea from "@/components/common/IconsArea";
+import Navbar from "@/components/common/navbar";
+import { Footer } from "@/components/common/footer";
+import { Plus, X, MapPin } from "lucide-react";
 
 const AddressComponent = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [currentAddress, setCurrentAddress] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -39,12 +44,12 @@ const AddressComponent = () => {
     },
   });
 
-  // Mutations for CRUD operations
+  // Mutations with v5 object queryKey syntax
   const addMutation = useMutation({
     mutationFn: (addressData) => addaddress(addressData),
     onSuccess: () => {
-      toast.success("Address added successfully");
-      queryClient.invalidateQueries(["addresses", userId]);
+      toast.success("Delivery destination added to vault.");
+      queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
       resetForm();
       setShowForm(false);
     },
@@ -56,8 +61,8 @@ const AddressComponent = () => {
   const editMutation = useMutation({
     mutationFn: ({ idadd, data }) => editaddress(idadd, data),
     onSuccess: () => {
-      toast.success("Address updated successfully");
-      queryClient.invalidateQueries(["addresses", userId]);
+      toast.success("Destination updated successfully.");
+      queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
       resetForm();
       setShowForm(false);
     },
@@ -69,8 +74,8 @@ const AddressComponent = () => {
   const deleteMutation = useMutation({
     mutationFn: (idadd) => deleteaddress(idadd),
     onSuccess: () => {
-      toast.success("Address deleted successfully");
-      queryClient.invalidateQueries(["addresses", userId]);
+      toast.success("Destination removed from vault.");
+      queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
     },
     onError: (error) => {
       toast.error(error.message || "Failed to delete address");
@@ -81,8 +86,8 @@ const AddressComponent = () => {
     mutationFn: ({ idadd, data }) =>
       editaddress(idadd, { ...data, isDefault: true }),
     onSuccess: () => {
-      toast.success("Default address updated");
-      queryClient.invalidateQueries(["addresses", userId]);
+      toast.success("Primary vault destination configured.");
+      queryClient.invalidateQueries({ queryKey: ["addresses", userId] });
     },
     onError: (error) => {
       toast.error(error.message || "Failed to set default address");
@@ -96,13 +101,14 @@ const AddressComponent = () => {
 
   const handleEdit = (address) => {
     setCurrentAddress(address);
-    setIsEditing(!!address); // Set isEditing to true if address exists, false for new address
+    setIsEditing(!!address);
     setShowForm(true);
 
     setTimeout(() => {
-      document
-        .getElementById("addressForm")
-        .scrollIntoView({ behavior: "smooth" });
+      const formEl = document.getElementById("addressForm");
+      if (formEl) {
+        formEl.scrollIntoView({ behavior: "smooth" });
+      }
     }, 100);
   };
 
@@ -148,86 +154,101 @@ const AddressComponent = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="w-75 -ml-50 h-20">
-        <Breadcrumbs
-          items={[
-            { label: "Home", link: "/" },
-            { label: "My Profile", link: `/profile/${userId}` },
-            { label: "My Address" },
-          ]}
-        />
-      </div>
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-2xl font-bold">Manage Addresses</h2>
-        <button
-          onClick={toggleForm}
-          className="flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-500 transition-all"
-        >
-          {showForm ? (
-            <>Cancel</>
-          ) : (
-            <>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-1"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Add New Address
-            </>
-          )}
-        </button>
-      </div>
-      {/* Use the reusable AddressForm component */}
-      {showForm && (
-        <AddressForm
-          onSubmit={onSubmit}
-          defaultValues={
-            isEditing
-              ? {
-                  fullName: currentAddress.fullName,
-                  phone: currentAddress.phone,
-                  alternatePhone: currentAddress.alternatePhone || "",
-                  streetAddress: currentAddress.streetAddress,
-                  landmark: currentAddress.landmark || "",
-                  city: currentAddress.city,
-                  state: currentAddress.state,
-                  postalCode: currentAddress.postalCode,
-                  country: currentAddress.country,
-                  isDefault: currentAddress.isDefault,
-                }
-              : undefined
-          }
-          isEditing={isEditing}
-          isSubmitting={addMutation.isLoading || editMutation.isLoading}
-          onCancel={resetForm}
-        />
-      )}
-      {/* Use the reusable AddressList component */}
-      <AddressList
-        addresses={addresses}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onSetDefault={setDefaultAddress}
-        isDeleting={deleteMutation.isLoading}
-        isSettingDefault={setDefaultMutation.isLoading}
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070A0F] text-slate-800 dark:text-slate-100 selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-200 transition-colors">
+      <IconsArea />
+      <Navbar />
+
+      <Breadcrumbs
+        items={[
+          { label: "Home", link: "/" },
+          { label: "Collector Vault", link: `/profile/${userId}` },
+          { label: "Delivery Destinations" },
+        ]}
       />
-      {/* Alert for delete */}
+
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-200 dark:border-white/5 gap-4">
+          <div>
+            <span className="text-xs uppercase font-cinzel tracking-[0.2em] text-amber-800 dark:text-amber-400 font-semibold block mb-1">
+              White-Glove Shipping
+            </span>
+            <h1 className="text-3xl font-cinzel font-bold text-slate-900 dark:text-white tracking-wide">
+              Delivery Destinations
+            </h1>
+          </div>
+
+          <button
+            onClick={toggleForm}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-cinzel font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              showForm
+                ? "bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300"
+                : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-lg shadow-amber-500/20"
+            }`}
+          >
+            {showForm ? (
+              <>
+                <X className="w-4 h-4" />
+                <span>Cancel</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                <span>Add Destination</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Address Form */}
+        {showForm && (
+          <div id="addressForm" className="rounded-2xl bg-white dark:bg-[#0B0F17] border border-slate-200 dark:border-amber-500/30 p-6 sm:p-8 shadow-xl dark:shadow-2xl transition-colors">
+            <AddressForm
+              onSubmit={onSubmit}
+              defaultValues={
+                isEditing
+                  ? {
+                      fullName: currentAddress.fullName,
+                      phone: currentAddress.phone,
+                      alternatePhone: currentAddress.alternatePhone || "",
+                      streetAddress: currentAddress.streetAddress,
+                      landmark: currentAddress.landmark || "",
+                      city: currentAddress.city,
+                      state: currentAddress.state,
+                      postalCode: currentAddress.postalCode,
+                      country: currentAddress.country,
+                      isDefault: currentAddress.isDefault,
+                    }
+                  : undefined
+              }
+              isEditing={isEditing}
+              isSubmitting={addMutation.isPending || editMutation.isPending}
+              onCancel={resetForm}
+            />
+          </div>
+        )}
+
+        {/* Address List */}
+        <AddressList
+          addresses={addresses}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onSetDefault={setDefaultAddress}
+          isDeleting={deleteMutation.isPending}
+          isSettingDefault={setDefaultMutation.isPending}
+        />
+      </main>
+
+      {/* Confirmation alert */}
       <AlertBox
         open={showAlert}
         onOpenChange={setShowAlert}
-        title="Confirm Address Deletion"
-        description="Are you sure you want to delete this address?"
-        confirmLabel="Confirm delete"
+        title="Remove Delivery Destination"
+        description="Are you certain you wish to delete this saved address from your vault?"
+        confirmLabel="Confirm Delete"
         onConfirm={confirmDelete}
       />
+
+      <Footer />
     </div>
   );
 };

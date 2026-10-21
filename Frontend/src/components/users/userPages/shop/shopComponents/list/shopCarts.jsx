@@ -1,112 +1,164 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { HeartIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
+import { Heart, ShoppingBag, Eye, ShieldCheck } from "lucide-react";
+import watchPlaceholder from "@/assets/watch image.jpg";
+
 const ProductCard = ({
   product,
   isProductInWishlists,
   toggleWishlist,
   handleAddToCart,
   showFilters,
-  index,
+  index = 0,
 }) => {
   const navigate = useNavigate();
 
+  if (!product) return null;
+
+  const inWishlist = isProductInWishlists ? isProductInWishlists(product._id) : false;
+  const isOutOfStock = product.stock < 1 || product.isHidden;
+  const hasOffer = product.offer && (product.offer.discountValue > 0 || product.offer.discountPercentage > 0);
+  const discountVal = product.offer?.discountValue || product.offer?.discountPercentage;
+
+  // Resolve prices safely
+  const originalPrice = product.originalPrice ?? product.price ?? 0;
+  const discountedPrice = product.discountedPrice ?? product.finalPrice ?? originalPrice;
+  const showDiscount = hasOffer && discountedPrice < originalPrice;
+
+  const mainImage = product.images?.[0] || watchPlaceholder;
+
   return (
     <div
-      className="product-card bg-white rounded-lg overflow-hidden flex flex-col relative h-full border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-lg transition-all duration-300 animate-fadeInUp"
-      style={{ animationDelay: `${index * 0.05}s` }}
+      className="group relative rounded-2xl bg-white dark:bg-[#0B0F17] border border-slate-200/90 dark:border-white/5 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-1 shadow-sm dark:shadow-none hover:shadow-xl dark:hover:shadow-[0_16px_36px_rgba(0,0,0,0.7)] flex flex-col justify-between overflow-hidden"
+      style={{ animationDelay: `${index * 0.04}s` }}
     >
-      <div className="product-image-container relative pt-4 px-4 flex justify-center bg-gray-100">
-        {product.offer && (
-          <span className="absolute top-2 left-2 bg-black text-white text-xs font-semibold px-2 py-1 rounded z-10">
-            {product.offer.title} {product.offer.discountValue}% Off
-          </span>
+      {/* Product Image Stage */}
+      <div className="relative aspect-square w-full bg-slate-50 dark:bg-[#080B11] p-5 flex items-center justify-center overflow-hidden">
+        {/* Privilege / Discount Badge */}
+        {showDiscount && (
+          <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-[10px] tracking-wider uppercase px-2 py-0.5 rounded shadow-md">
+            {discountVal}% Privilege
+          </div>
         )}
-        <img
-          src={product.images[0]}
-          alt={product.name || "Product"}
-          className={`product-image w-full object-contain ${
-            showFilters ? "h-48 md:h-56" : "h-56 md:h-64 lg:h-72"
+
+        {/* Wishlist Quick Toggle */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWishlist(product._id);
+          }}
+          className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
+            inWishlist
+              ? "bg-rose-500/20 text-rose-500 border border-rose-500/40"
+              : "bg-white/90 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 shadow-sm"
           }`}
+          title={inWishlist ? "Remove from Vault Wishlist" : "Add to Vault Wishlist"}
+        >
+          <Heart
+            className={`w-4 h-4 transition-transform duration-200 ${
+              inWishlist ? "fill-rose-500 text-rose-500 scale-110" : ""
+            }`}
+          />
+        </button>
+
+        {/* Watch Image */}
+        <img
+          src={mainImage}
+          alt={product.name || "Luxury Watch"}
+          className="w-full h-full object-contain filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.12)] dark:drop-shadow-[0_10px_20px_rgba(0,0,0,0.7)] transform group-hover:scale-106 transition-transform duration-500 cursor-pointer"
           onClick={() => navigate(`/shop/product-view/${product._id}`)}
+          onError={(e) => {
+            e.target.src = watchPlaceholder;
+          }}
         />
-        <div className="product-actions absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center gap-4 opacity-0 transition-opacity">
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-white hover:bg-gray-100"
+
+        {/* Desktop Quick Hover Overlay */}
+        <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden sm:flex items-center gap-2">
+          <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
-              toggleWishlist(product._id);
+              navigate(`/shop/product-view/${product._id}`);
             }}
+            className="flex-1 py-2 rounded-lg bg-white/95 dark:bg-[#0F1626]/90 hover:bg-slate-100 dark:hover:bg-[#151F35] text-amber-700 dark:text-amber-300 text-xs font-sans font-semibold uppercase tracking-wider border border-slate-200 dark:border-amber-500/30 flex items-center justify-center gap-1.5 backdrop-blur-md transition-all cursor-pointer shadow-lg"
           >
-            <HeartIcon
-              className={`w-5 h-5 ${
-                isProductInWishlists(product._id)
-                  ? "text-red-500 fill-red-500"
-                  : "text-gray-700"
-              }`}
-            />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-white hover:bg-gray-100"
+            <Eye className="w-3.5 h-3.5" />
+            <span>Examine</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={isOutOfStock}
             onClick={(e) => {
               e.stopPropagation();
               handleAddToCart(product);
             }}
-            disabled={product.stock < 1 || product.isHidden}
+            className="flex-1 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <ShoppingCartIcon className="w-5 h-5 text-gray-700" />
-          </Button>
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>Acquire</span>
+          </button>
         </div>
       </div>
-      <div className="p-4 flex flex-col flex-grow">
-        <h3
-          className="text-lg font-medium text-gray-900 text-center hover:text-blue-600 transition-colors cursor-pointer"
-          onClick={() => navigate(`/shop/product-view/${product._id}`)}
-        >
-          {product.name || "Unnamed Product"}
-        </h3>
-        <div className="text-center mt-2 mb-3">
-          {product.discountedPrice < product.originalPrice ? (
-            <div className="flex justify-center gap-2 items-baseline">
-              <p className="text-gray-500 line-through font-medium text-sm">
-                ₹{product.originalPrice.toLocaleString("en-IN")}
-              </p>
-              <p className="text-green-600 font-bold text-lg">
-                ₹{product.discountedPrice.toLocaleString("en-IN")}
-              </p>
-            </div>
-          ) : (
-            <p className="text-gray-800 font-bold text-lg">
-              ₹{product.originalPrice.toLocaleString("en-IN")}
-            </p>
-          )}
-        </div>
-        {product.stock < 1 ? (
-          <p className="text-center text-red-500 text-sm font-medium">
-            Out of Stock
-          </p>
-        ) : product.stock < 10 ? (
-          <p className="text-center text-orange-500 text-sm font-medium">
-            Only {product.stock} left!
-          </p>
-        ) : (
-          <p className="text-center text-green-500 text-sm font-medium">
-            In Stock
-          </p>
-        )}
-        <div className="mt-3 sm:hidden">
-          <Button
-            className="w-full bg-black text-white hover:bg-gray-800 text-sm py-2"
-            onClick={() => handleAddToCart(product)}
-            disabled={product.stock < 1 || product.isHidden}
+
+      {/* Product Details Section */}
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+        <div>
+          <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono uppercase tracking-wider mb-1">
+            <span>{product.category || product.categoryRef?.categoryName || "Timepiece"}</span>
+            {isOutOfStock ? (
+              <span className="text-rose-500 dark:text-rose-400 font-medium">Allocated (Out)</span>
+            ) : product.stock < 5 ? (
+              <span className="text-amber-600 dark:text-amber-400 font-medium">{product.stock} Left</span>
+            ) : (
+              <span className="text-emerald-600 dark:text-emerald-400/90 font-medium">In Vault</span>
+            )}
+          </div>
+
+          <h3
+            onClick={() => navigate(`/shop/product-view/${product._id}`)}
+            className="font-heading text-sm sm:text-base font-semibold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors line-clamp-2 cursor-pointer leading-snug"
+            title={product.name}
           >
-            Add to Cart
-          </Button>
+            {product.name || "Master Timepiece"}
+          </h3>
+        </div>
+
+        {/* Pricing & Guarantee */}
+        <div className="pt-2 border-t border-slate-100 dark:border-white/5 space-y-2">
+          <div className="flex items-baseline justify-between">
+            <div className="flex items-baseline gap-2">
+              <span className="font-sans text-base sm:text-lg font-bold text-amber-700 dark:text-amber-300">
+                ₹{Number(discountedPrice).toLocaleString("en-IN")}
+              </span>
+              {showDiscount && (
+                <span className="text-xs text-slate-400 line-through font-sans">
+                  ₹{Number(originalPrice).toLocaleString("en-IN")}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] uppercase tracking-wider font-sans text-slate-500 dark:text-slate-400 flex items-center gap-1 font-medium">
+              <ShieldCheck className="w-3 h-3 text-amber-600 dark:text-amber-400/80" />
+              Swiss Calibre
+            </span>
+          </div>
+
+          {/* Mobile Direct Action Button */}
+          <div className="sm:hidden pt-1">
+            <button
+              type="button"
+              disabled={isOutOfStock}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToCart(product);
+              }}
+              className="w-full py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>{isOutOfStock ? "Out of Stock" : "Add to Cart"}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

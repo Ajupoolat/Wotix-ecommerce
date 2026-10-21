@@ -1,16 +1,13 @@
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { useAuth } from "@/context/authuser";
 import { toast } from "react-hot-toast";
 import logo from "@/assets/Wotix removed-BG.png";
 import { useCart } from "@/context/cartcon";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import AddressFormModal from "../../userPages/checkout/checkoutComponent/forms/addressForm";
-import DeliveryAddress from "../checkout/checkoutComponent/deliveryAddress/deliveryaddress";
-import OrderSummary from "../checkout/checkoutComponent/summary/orderSummary";
+import AddressFormModal from "./checkoutComponent/forms/addressForm";
+import DeliveryAddress from "./checkoutComponent/deliveryAddress/deliveryaddress";
+import OrderSummary from "./checkoutComponent/summary/orderSummary";
 import { Footer } from "@/components/common/footer";
 import Navbar from "@/components/common/navbar";
 import LoaderSpinner from "@/components/common/spinner";
@@ -26,6 +23,17 @@ import DefaultAddress from "./checkoutComponent/errors/defaultAddress";
 import AddressError from "./checkoutComponent/errors/addressError";
 import PaymentError from "./checkoutComponent/errors/paymentError";
 import WalletInfo from "./checkoutComponent/wallet/WalletInfo";
+import Breadcrumbs from "@/components/common/breadCrums";
+import {
+  CreditCard,
+  Smartphone,
+  Wallet,
+  Banknote,
+  Building2,
+  ShieldCheck,
+  Lock,
+  ArrowRight,
+} from "lucide-react";
 
 // Schema for coupon validation
 const couponSchema = z.object({
@@ -83,7 +91,6 @@ export function CheckoutPage() {
   const {
     data: availableCoupons,
     isLoading: isCouponsLoading,
-    refetch: refetchCoupons,
   } = useQuery({
     queryKey: ["availableCoupons", subtotal],
     queryFn: () => bestCoupon(subtotal),
@@ -102,7 +109,11 @@ export function CheckoutPage() {
       toast.error("Failed to load payment gateway. Please try again.");
     };
     document.body.appendChild(script);
-    return () => document.body.removeChild(script);
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
   }, []);
 
   // Fetch default address
@@ -129,12 +140,12 @@ export function CheckoutPage() {
         const updatedCoupons = [...appliedCoupons, data];
         setAppliedCoupons(updatedCoupons);
         couponForm.reset();
-        toast.success("Coupon applied successfully!");
+        toast.success("Privilege voucher successfully applied!");
         setCountapply((prev) => prev + 1);
       },
       onError: (error) => {
-        setCouponError(error.message || "Failed to apply coupon");
-        toast.error(error.message || "Failed to apply coupon");
+        setCouponError(error.message || "Failed to apply voucher");
+        toast.error(error.message || "Failed to apply voucher");
       },
     });
 
@@ -144,8 +155,8 @@ export function CheckoutPage() {
     onSuccess: (data) => {
       setorderid(data.order._id);
       if (paymentMethod === "cod" || paymentMethod === "wallet") {
-        toast.success("Order placed successfully!");
-        clearCart();
+        toast.success("Order confirmed and registered to the vault!");
+        clearCart(); // Safe to clear cart here upon confirmed order
         localStorage.removeItem("appliedCoupons");
         setAppliedCoupons([]);
         setCountapply(0);
@@ -171,16 +182,16 @@ export function CheckoutPage() {
     );
     setAppliedCoupons(updatedCoupons);
     setCountapply((prev) => Math.max(0, prev - 1));
-    toast.success("Coupon removed");
+    toast.success("Voucher removed");
   };
 
   const handlePayNow = () => {
     if (!defaultAddress) {
-      toast.error("Please select a delivery address");
+      toast.error("Please configure a vault delivery address");
       return;
     }
     if (!cart?.items?.length) {
-      toast.error("Your cart is empty");
+      toast.error("Your shopping bag is empty");
       return;
     }
 
@@ -214,54 +225,48 @@ export function CheckoutPage() {
       coupons: appliedCoupons.map((c) => c._id),
     };
 
-   if (paymentMethod === "wallet") {
-    setShowWalletInfo(true); // Show WalletInfo modal
-  } else if (paymentMethod === "cod") {
-    setProcessingPayment(true);
-    createOrder(orderData);
-  } else {
-    // For upi, card, netbanking, create order and trigger Razorpay
-    setProcessingPayment(true);
-    createOrder(orderData);
-  }
+    if (paymentMethod === "wallet") {
+      setShowWalletInfo(true);
+    } else {
+      setProcessingPayment(true);
+      createOrder(orderData);
+    }
   };
-
 
   const handleWalletPaymentConfirm = () => {
-  const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-  const orderData = {
-    products: cart.items.map((item) => {
-      const itemSubtotal = item.discountedPrice * item.quantity;
-      const discountPerItem = totalItems
-        ? (totalDiscount * itemSubtotal) / subtotal / item.quantity
-        : 0;
-      const finalDiscountedPrice = item.discountedPrice - discountPerItem;
-      return {
-        productId: item.product._id,
-        name: item.product.name,
-        quantity: item.quantity,
-        price: item.discountedPrice,
-        discountedPrice:
-          finalDiscountedPrice > 0
-            ? finalDiscountedPrice
-            : item.discountedPrice,
-        originalPrice: item.originalPrice,
-        offer: item.offer?._id || null,
-      };
-    }),
-    address: defaultAddress,
-    paymentMethod: paymentMethod,
-    subtotal: subtotal,
-    discountAmount: totalDiscount,
-    totalPrice: subtotal + shipping,
-    finalAmount: finalTotal,
-    coupons: appliedCoupons.map((c) => c._id),
+    const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    const orderData = {
+      products: cart.items.map((item) => {
+        const itemSubtotal = item.discountedPrice * item.quantity;
+        const discountPerItem = totalItems
+          ? (totalDiscount * itemSubtotal) / subtotal / item.quantity
+          : 0;
+        const finalDiscountedPrice = item.discountedPrice - discountPerItem;
+        return {
+          productId: item.product._id,
+          name: item.product.name,
+          quantity: item.quantity,
+          price: item.discountedPrice,
+          discountedPrice:
+            finalDiscountedPrice > 0
+              ? finalDiscountedPrice
+              : item.discountedPrice,
+          originalPrice: item.originalPrice,
+          offer: item.offer?._id || null,
+        };
+      }),
+      address: defaultAddress,
+      paymentMethod: "wallet",
+      subtotal: subtotal,
+      discountAmount: totalDiscount,
+      totalPrice: subtotal + shipping,
+      finalAmount: finalTotal,
+      coupons: appliedCoupons.map((c) => c._id),
+    };
+
+    setProcessingPayment(true);
+    createOrder(orderData);
   };
-
-  setProcessingPayment(true);
-  createOrder(orderData);
-};
-
 
   const handleRazorpayPayment = (data) => {
     const { order, razorpayOrder } = data;
@@ -269,17 +274,17 @@ export function CheckoutPage() {
     if (!razorpayOrder || !razorpayLoaded || !window.Razorpay) {
       setPaymentError("Payment gateway not ready. Please try again.");
       toast.error("Payment gateway not ready. Please try again.");
-      clearCart();
+      // NOTE: Cart is NOT cleared here on failure (Bug CRIT-02 resolved)
       setProcessingPayment(false);
       return;
     }
 
     const options = {
-      key: "rzp_test_deQSgNwu3LlW4n",
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_deQSgNwu3LlW4n",
       amount: razorpayOrder.amount,
       currency: "INR",
-      name: "Wotix Watches",
-      description: "Purchase of luxury watches",
+      name: "WOTIX Haute Horlogerie",
+      description: "Acquisition of Certified Timepieces",
       image: logo,
       order_id: razorpayOrder.id,
       handler: async function (response) {
@@ -293,11 +298,11 @@ export function CheckoutPage() {
           });
 
           if (verifyResponse.data.success) {
-            toast.success("Payment successful! Order placed.");
+            toast.success("Payment verified! Timepiece registered to your vault.");
             localStorage.removeItem("appliedCoupons");
             setAppliedCoupons([]);
             setCountapply(0);
-            clearCart();
+            clearCart(); // Safe to clear cart upon verified success
             navigate("/order-confirm", {
               state: {
                 order: verifyResponse.data.order,
@@ -306,13 +311,13 @@ export function CheckoutPage() {
             });
           } else {
             setPaymentError("Payment verification failed. Please try again.");
-            toast.error("Payment verification failed");
-            clearCart();
+            toast.error("Payment verification failed. Your bag remains intact.");
+            // NOTE: Cart preserved on failure
           }
         } catch (error) {
-          setPaymentError("Error verifying payment. Please try again.");
+          setPaymentError("Error verifying transaction. Please check order status.");
           toast.error("Error verifying payment");
-          clearCart();
+          // NOTE: Cart preserved on failure
         }
         setProcessingPayment(false);
       },
@@ -322,7 +327,14 @@ export function CheckoutPage() {
         contact: defaultAddress?.phone || "",
       },
       theme: {
-        color: "#F97316",
+        color: "#D4AF37", // Champagne luxury gold
+      },
+      modal: {
+        ondismiss: function () {
+          setProcessingPayment(false);
+          toast("Payment cancelled. Your bag items are saved.");
+          // NOTE: Cart preserved on modal dismiss
+        },
       },
     };
 
@@ -335,14 +347,14 @@ export function CheckoutPage() {
         toast.error(
           `Payment failed: ${response.error.description || "Please try again."}`
         );
-        clearCart();
+        // NOTE: Cart is NOT cleared here on failure (Bug CRIT-02 resolved)
         setProcessingPayment(false);
       });
       rzp.open();
     } catch (error) {
       setPaymentError("Failed to initiate payment. Please try again.");
       toast.error("Failed to initiate payment. Please try again.");
-      clearCart();
+      // NOTE: Cart preserved on failure
       setProcessingPayment(false);
     }
   };
@@ -358,11 +370,11 @@ export function CheckoutPage() {
   }
 
   if (!isAuthenticated) {
-    return <PleaseLogin message={"Please sign in to access checkout"} />;
+    return <PleaseLogin message={"Please sign in to access vault checkout"} />;
   }
 
   if (!cart?.items?.length || !cart?.success) {
-    return <BrowseProduct message={"Your cart is empty"} />;
+    return <BrowseProduct message={"Your shopping bag is empty"} />;
   }
 
   if (!defaultAddress) {
@@ -373,23 +385,147 @@ export function CheckoutPage() {
     return <AddressError />;
   }
 
+  const paymentOptions = [
+    {
+      id: "upi",
+      label: "Instant UPI & QR",
+      desc: "Google Pay, PhonePe, Paytm, or any UPI App",
+      icon: Smartphone,
+    },
+    {
+      id: "card",
+      label: "Credit / Debit Card",
+      desc: "Visa, MasterCard, RuPay, American Express",
+      icon: CreditCard,
+    },
+    {
+      id: "netbanking",
+      label: "Net Banking",
+      desc: "All major Indian & International banks supported",
+      icon: Building2,
+    },
+    {
+      id: "wallet",
+      label: "WOTIX Vault Wallet",
+      desc: "Pay seamlessly with your stored store balance",
+      icon: Wallet,
+    },
+    ...(subtotal <= 1000
+      ? [
+          {
+            id: "cod",
+            label: "Cash on Delivery",
+            desc: "Pay via cash/UPI upon courier arrival (Orders ≤ ₹1,000)",
+            icon: Banknote,
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#F8F9FB] dark:bg-[#070A0F] text-slate-900 dark:text-slate-100 selection:bg-amber-500/30 selection:text-amber-900 dark:selection:text-amber-200 transition-colors">
       <IconsArea />
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-8 text-center">Checkout</h1>
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* delivery address */}
-          <DeliveryAddress
-            defaultAddress={defaultAddress}
-            setEditingAddress={setEditingAddress}
-            setShowAddressForm={setShowAddressForm}
-            navigate={navigate}
-            userId={userId}
-          />
-          {/* ordersummary */}
-          <div className="w-full lg:w-1/2">
+
+      <Breadcrumbs
+        items={[
+          { label: "Shop", link: "/shop" },
+          { label: "Shopping Bag", link: "/cart" },
+          { label: "Vault Checkout" },
+        ]}
+      />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="pb-6 mb-8 border-b border-slate-200 dark:border-white/5">
+          <span className="text-xs uppercase font-cinzel tracking-[0.2em] text-amber-600 dark:text-amber-400 block mb-1 font-semibold">
+            Secure Acquisition
+          </span>
+          <h1 className="text-3xl font-cinzel font-bold text-slate-900 dark:text-white tracking-wide">
+            Vault Checkout
+          </h1>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Delivery Address & Payment Method */}
+          <div className="lg:col-span-7 space-y-8">
+            <DeliveryAddress
+              defaultAddress={defaultAddress}
+              setEditingAddress={setEditingAddress}
+              setShowAddressForm={setShowAddressForm}
+              navigate={navigate}
+              userId={userId}
+            />
+
+            {/* Payment Method Selector */}
+            <div className="rounded-2xl bg-white dark:bg-[#0B0F17] border border-slate-200 dark:border-amber-500/20 p-6 shadow-sm dark:shadow-xl space-y-5 transition-colors">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5">
+                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                  <CreditCard className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <h3 className="font-cinzel text-xs font-bold uppercase tracking-[0.18em]">
+                    Payment Gateway Selection
+                  </h3>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  <Lock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>256-Bit SSL Encrypted</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {paymentOptions.map((opt) => {
+                  const isSelected = paymentMethod === opt.id;
+                  const IconComp = opt.icon;
+                  return (
+                    <div
+                      key={opt.id}
+                      onClick={() => setPaymentMethod(opt.id)}
+                      className={`relative p-4 rounded-xl border transition-all cursor-pointer flex items-start gap-3.5 ${
+                        isSelected
+                          ? "bg-amber-500/10 border-amber-500 shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+                          : "bg-slate-50 dark:bg-[#0D121D] border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/15"
+                      }`}
+                    >
+                      <div
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                          isSelected
+                            ? "bg-amber-500 text-slate-950 font-bold"
+                            : "bg-slate-200 dark:bg-white/5 text-slate-600 dark:text-slate-400"
+                        }`}
+                      >
+                        <IconComp className="w-4 h-4" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <h4
+                          className={`text-xs font-cinzel font-semibold tracking-wider ${
+                            isSelected ? "text-amber-700 dark:text-amber-300" : "text-slate-900 dark:text-white"
+                          }`}
+                        >
+                          {opt.label}
+                        </h4>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-tight">
+                          {opt.desc}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Security reassurance banner */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+                <span className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <span>Curated & Certified by WOTIX Haute Horlogerie</span>
+                </span>
+                <span className="font-mono text-[10px] text-amber-700 dark:text-amber-300/80 font-medium">
+                  Zero Transaction Surcharge
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Order Summary & Pay Button */}
+          <div className="lg:col-span-5 space-y-6">
             <OrderSummary
               cart={cart}
               appliedCoupons={appliedCoupons}
@@ -406,83 +542,45 @@ export function CheckoutPage() {
               couponError={couponError}
             />
 
-            {/* payment-methods */}
-            <div className="mb-6">
-              <h3 className="text-md font-medium mb-4">Payment Method</h3>
-              <RadioGroup
-                value={paymentMethod}
-                onValueChange={setPaymentMethod}
-                className="space-y-3"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem id="upi" value="upi" />
-                  <Label htmlFor="upi">UPI</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem id="card" value="card" />
-                  <Label htmlFor="card">Credit/Debit/ATM Card</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem id="wallet" value="wallet" />
-                  <Label htmlFor="card">Wallet</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem id="netbanking" value="netbanking" />
-                  <Label htmlFor="netbanking">Net Banking</Label>
-                </div>
-                {subtotal <= 1000 && (
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem id="cod" value="cod" />
-                    <Label htmlFor="cod">Cash on Delivery</Label>
-                  </div>
-                )}
-              </RadioGroup>
-            </div>
-            <Button
-              className="w-full bg-black text-white hover:bg-gray-800 flex items-center justify-center gap-2"
+            {/* Main Action Button */}
+            <button
+              type="button"
               onClick={handlePayNow}
-              disabled={
-                isCreatingOrder || processingPayment || !cart?.items?.length
-              }
+              disabled={isCreatingOrder || processingPayment || !cart?.items?.length}
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 font-cinzel font-bold text-xs uppercase tracking-[0.2em] shadow-[0_4px_24px_rgba(212,175,55,0.35)] hover:shadow-[0_6px_32px_rgba(212,175,55,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
             >
               {isCreatingOrder || processingPayment ? (
                 <>
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Processing...
+                  <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                  <span>Authorizing Vault Transaction...</span>
                 </>
               ) : (
-                "Place Order"
+                <>
+                  <Lock className="w-4 h-4 text-slate-950" />
+                  <span>
+                    Authorize Payment (₹
+                    {Number(finalTotal).toLocaleString("en-IN", {
+                      maximumFractionDigits: 2,
+                    })}
+                    )
+                  </span>
+                  <ArrowRight className="w-4 h-4 text-slate-950" />
+                </>
               )}
-            </Button>
+            </button>
           </div>
         </div>
-      </div>
+      </main>
+
+      {/* Wallet Info Modal if user selects wallet */}
       <WalletInfo
         isOpen={showWalletInfo}
         onClose={() => setShowWalletInfo(false)}
         subtotal={finalTotal}
         onPayNow={handleWalletPaymentConfirm}
-      />{" "}
-      <Footer />
+      />
+
+      {/* Address Edit/Add Form Modal */}
       <AddressFormModal
         open={showAddressForm}
         setOpen={setShowAddressForm}
@@ -490,6 +588,8 @@ export function CheckoutPage() {
         editingAddress={editingAddress}
         onSuccess={refetchAddress}
       />
+
+      <Footer />
     </div>
   );
 }

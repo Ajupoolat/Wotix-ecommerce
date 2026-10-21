@@ -106,10 +106,10 @@ const AddressForm = ({
   return (
     <div
       id="addressForm"
-      className="bg-white rounded-lg shadow-lg p-6 mb-8 border border-gray-200"
+      className="bg-white dark:bg-[#0B0F17] rounded-2xl shadow-xl dark:shadow-2xl p-6 sm:p-8 mb-8 border border-slate-200 dark:border-amber-500/30 transition-colors"
     >
-      <h3 className="text-lg font-semibold mb-6 pb-2 border-b">
-        {isEditing ? "Edit Address" : "Add New Address"}
+      <h3 className="text-sm font-cinzel font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-6 pb-2 border-b border-slate-200 dark:border-white/5">
+        {isEditing ? "Modify Destination" : "Register New Destination"}
       </h3>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -117,7 +117,7 @@ const AddressForm = ({
           <div className="mb-4">
             <label
               htmlFor="fullName"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-cinzel font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5"
             >
               Full Name*
             </label>
@@ -125,12 +125,12 @@ const AddressForm = ({
               type="text"
               id="fullName"
               {...register("fullName")}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.fullName ? "border-red-500" : "border-gray-300"
-              } focus:ring-blue-500`}
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#111622] text-slate-900 dark:text-slate-100 border ${
+                errors.fullName ? "border-rose-500" : "border-slate-200 dark:border-white/10"
+              } focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500/30 transition-all`}
             />
             {errors.fullName && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="mt-1 text-xs text-rose-500 dark:text-rose-400 font-mono">
                 {errors.fullName.message}
               </p>
             )}
@@ -140,7 +140,7 @@ const AddressForm = ({
           <div className="mb-4">
             <label
               htmlFor="phone"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-cinzel font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5"
             >
               Phone Number*
             </label>
@@ -148,12 +148,12 @@ const AddressForm = ({
               type="tel"
               id="phone"
               {...register("phone")}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.phone ? "border-red-500" : "border-gray-300"
-              } focus:ring-blue-500`}
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#111622] text-slate-900 dark:text-slate-100 border ${
+                errors.phone ? "border-rose-500" : "border-slate-200 dark:border-white/10"
+              } focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500/30 transition-all`}
             />
             {errors.phone && (
-              <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+              <p className="mt-1 text-xs text-rose-500 dark:text-rose-400 font-mono">{errors.phone.message}</p>
             )}
           </div>
 
@@ -161,7 +161,7 @@ const AddressForm = ({
           <div className="mb-4">
             <label
               htmlFor="alternatePhone"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-cinzel font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5"
             >
               Alternate Phone
             </label>
@@ -169,12 +169,12 @@ const AddressForm = ({
               type="tel"
               id="alternatePhone"
               {...register("alternatePhone")}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.alternatePhone ? "border-red-500" : "border-gray-300"
-              } focus:ring-blue-500`}
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#111622] text-slate-900 dark:text-slate-100 border ${
+                errors.alternatePhone ? "border-rose-500" : "border-slate-200 dark:border-white/10"
+              } focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500/30 transition-all`}
             />
             {errors.alternatePhone && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="mt-1 text-xs text-rose-500 dark:text-rose-400 font-mono">
                 {errors.alternatePhone.message}
               </p>
             )}
@@ -184,7 +184,7 @@ const AddressForm = ({
           <div className="mb-4 md:col-span-2">
             <label
               htmlFor="streetAddress"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-cinzel font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5"
             >
               Street Address*
             </label>
@@ -192,12 +192,12 @@ const AddressForm = ({
               id="streetAddress"
               {...register("streetAddress")}
               rows="3"
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.streetAddress ? "border-red-500" : "border-gray-300"
-              } focus:ring-blue-500`}
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#111622] text-slate-900 dark:text-slate-100 border ${
+                errors.streetAddress ? "border-rose-500" : "border-slate-200 dark:border-white/10"
+              } focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500/30 transition-all`}
             />
             {errors.streetAddress && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="mt-1 text-xs text-rose-500 dark:text-rose-400 font-mono">
                 {errors.streetAddress.message}
               </p>
             )}
@@ -207,7 +207,7 @@ const AddressForm = ({
           <div className="mb-4">
             <label
               htmlFor="landmark"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-cinzel font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5"
             >
               Landmark
             </label>
@@ -215,12 +215,12 @@ const AddressForm = ({
               type="text"
               id="landmark"
               {...register("landmark")}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.landmark ? "border-red-500" : "border-gray-300"
-              } focus:ring-blue-500`}
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#111622] text-slate-900 dark:text-slate-100 border ${
+                errors.landmark ? "border-rose-500" : "border-slate-200 dark:border-white/10"
+              } focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500/30 transition-all`}
             />
             {errors.landmark && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="mt-1 text-xs text-rose-500 dark:text-rose-400 font-mono">
                 {errors.landmark.message}
               </p>
             )}
@@ -230,7 +230,7 @@ const AddressForm = ({
           <div className="mb-4">
             <label
               htmlFor="city"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-cinzel font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5"
             >
               City/Town*
             </label>
@@ -238,12 +238,12 @@ const AddressForm = ({
               type="text"
               id="city"
               {...register("city")}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.city ? "border-red-500" : "border-gray-300"
-              } focus:ring-blue-500`}
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#111622] text-slate-900 dark:text-slate-100 border ${
+                errors.city ? "border-rose-500" : "border-slate-200 dark:border-white/10"
+              } focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500/30 transition-all`}
             />
             {errors.city && (
-              <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
+              <p className="mt-1 text-xs text-rose-500 dark:text-rose-400 font-mono">{errors.city.message}</p>
             )}
           </div>
 
@@ -251,7 +251,7 @@ const AddressForm = ({
           <div className="mb-4">
             <label
               htmlFor="state"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-cinzel font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5"
             >
               State*
             </label>
@@ -259,12 +259,12 @@ const AddressForm = ({
               type="text"
               id="state"
               {...register("state")}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.state ? "border-red-500" : "border-gray-300"
-              } focus:ring-blue-500`}
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#111622] text-slate-900 dark:text-slate-100 border ${
+                errors.state ? "border-rose-500" : "border-slate-200 dark:border-white/10"
+              } focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500/30 transition-all`}
             />
             {errors.state && (
-              <p className="mt-1 text-sm text-red-600">{errors.state.message}</p>
+              <p className="mt-1 text-xs text-rose-500 dark:text-rose-400 font-mono">{errors.state.message}</p>
             )}
           </div>
 
@@ -272,7 +272,7 @@ const AddressForm = ({
           <div className="mb-4">
             <label
               htmlFor="postalCode"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-cinzel font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5"
             >
               Postal Code*
             </label>
@@ -280,12 +280,12 @@ const AddressForm = ({
               type="text"
               id="postalCode"
               {...register("postalCode")}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.postalCode ? "border-red-500" : "border-gray-300"
-              } focus:ring-blue-500`}
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#111622] text-slate-900 dark:text-slate-100 border ${
+                errors.postalCode ? "border-rose-500" : "border-slate-200 dark:border-white/10"
+              } focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500/30 transition-all`}
             />
             {errors.postalCode && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="mt-1 text-xs text-rose-500 dark:text-rose-400 font-mono">
                 {errors.postalCode.message}
               </p>
             )}
@@ -295,16 +295,16 @@ const AddressForm = ({
           <div className="mb-4">
             <label
               htmlFor="country"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-cinzel font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5"
             >
               Country*
             </label>
             <select
               id="country"
               {...register("country")}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.country ? "border-red-500" : "border-gray-300"
-              } focus:ring-blue-500`}
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#111622] text-slate-900 dark:text-slate-100 border ${
+                errors.country ? "border-rose-500" : "border-slate-200 dark:border-white/10"
+              } focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500/30 transition-all`}
             >
               <option value="India">India</option>
               <option value="USA">USA</option>
@@ -313,7 +313,7 @@ const AddressForm = ({
               <option value="Australia">Australia</option>
             </select>
             {errors.country && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="mt-1 text-xs text-rose-500 dark:text-rose-400 font-mono">
                 {errors.country.message}
               </p>
             )}
@@ -326,31 +326,31 @@ const AddressForm = ({
             type="checkbox"
             id="isDefault"
             {...register("isDefault")}
-            className="w-4 h-4 mr-2 text-blue-600 focus:ring-blue-500"
+            className="w-4 h-4 mr-2.5 rounded accent-amber-500 text-amber-500 focus:ring-amber-400 cursor-pointer"
           />
           <label
             htmlFor="isDefault"
-            className="text-sm font-medium text-gray-700"
+            className="text-xs font-cinzel uppercase tracking-wider text-slate-700 dark:text-slate-300 cursor-pointer"
           >
-            Set as default address
+            Designate as primary vault destination
           </label>
         </div>
 
         {/* Form Actions */}
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-3">
           <button
             type="button"
             onClick={handleReset}
-            className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 transition-all"
+            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 rounded-xl font-cinzel text-xs uppercase tracking-wider transition-all cursor-pointer"
           >
             Reset
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all disabled:opacity-50"
+            className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-cinzel font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer"
           >
-            {isEditing ? (isSubmitting ? "Updating..." : "Update Address") : (isSubmitting ? "Saving..." : "Save Address")}
+            {isEditing ? (isSubmitting ? "Updating..." : "Update Destination") : (isSubmitting ? "Saving..." : "Save Destination")}
           </button>
         </div>
       </form>

@@ -1,13 +1,13 @@
-import { createContext, useContext } from "react";
+import React, { createContext, useContext } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
 import {
   addToCart as apiAddToCart,
-  removeFromCart as apiRemoveFromCart,
   getCart as apiGetCart,
-  clearCart as apiClearCart,
+  removeFromCart as apiRemoveFromCart,
   updateCartQuantity as apiUpdateCartQuantity,
+  clearCart as apiClearCart,
 } from "@/api/users/shop/cartmgt";
+import toast from "react-hot-toast";
 
 const CartContext = createContext();
 
@@ -18,26 +18,26 @@ export const CartProvider = ({ children }) => {
   const { mutateAsync: addToCart } = useMutation({
     mutationFn: (cartItem) => apiAddToCart(userId, cartItem),
     onSuccess: () => {
-      queryClient.invalidateQueries(["cart", userId]);
-      toast.success("Added to cart!");
+      queryClient.invalidateQueries({ queryKey: ["cart", userId] });
+      toast.success("Added to shopping bag!");
     },
     onError: (error) => {
- if (error.message ===`token is missing`) {
-        toast.error("please login/signup for add products to cartlist");
+      if (error.message === "token is missing") {
+        toast.error("Please login or create an account to curate your shopping bag.");
       } else {
-        toast.error(error.message || "Failed to add to cart");
-      }    
+        toast.error(error.message || "Failed to add timepiece to bag");
+      }
     },
   });
 
   const { mutateAsync: removeFromCart } = useMutation({
     mutationFn: (productId) => apiRemoveFromCart(userId, productId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["cart", userId]);
-      toast.success("Removed from cart!");
+      queryClient.invalidateQueries({ queryKey: ["cart", userId] });
+      toast.success("Timepiece removed from bag.");
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to remove from cart");
+      toast.error(error.message || "Failed to remove item");
     },
   });
 
@@ -45,7 +45,7 @@ export const CartProvider = ({ children }) => {
     mutationFn: ({ productId, action }) =>
       apiUpdateCartQuantity(userId, productId, action),
     onSuccess: () => {
-      queryClient.invalidateQueries(["cart", userId]);
+      queryClient.invalidateQueries({ queryKey: ["cart", userId] });
     },
     onError: (error) => {
       toast.error(error.message || "Failed to update quantity");
@@ -55,8 +55,8 @@ export const CartProvider = ({ children }) => {
   const { mutate: clearCart } = useMutation({
     mutationFn: () => apiClearCart(userId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["cart", userId]);
-      toast.success("Cart cleared successfully!");
+      queryClient.invalidateQueries({ queryKey: ["cart", userId] });
+      toast.success("Shopping bag cleared.");
     },
     onError: (error) => {
       toast.error(error.message || "Failed to clear cart");
@@ -96,10 +96,4 @@ export const CartProvider = ({ children }) => {
   );
 };
 
-export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart must be used within a CartProvider");
-  }
-  return context;
-};
+export const useCart = () => useContext(CartContext);

@@ -1,4 +1,5 @@
 import React from "react";
+import { MapPin, Edit3, Trash2, CheckCircle2, ShieldCheck, Plus } from "lucide-react";
 
 const AddressList = ({
   addresses = [],
@@ -9,40 +10,28 @@ const AddressList = ({
   isSettingDefault,
 }) => {
   return (
-    <div>
-      <h3 className="text-xl font-semibold mb-4 pb-2 border-b">
-        Your Addresses
-      </h3>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/5">
+        <h3 className="font-cinzel text-xs font-bold uppercase tracking-[0.2em] text-amber-800 dark:text-amber-300">
+          Saved Destinations ({addresses.length})
+        </h3>
+      </div>
+
       {addresses.length === 0 ? (
-        <div className="bg-gray-50 rounded-lg p-8 text-center border border-dashed border-gray-300">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-12 w-12 mx-auto text-gray-400 mb-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
-          <p className="text-gray-500 mb-4">
-            No addresses found. Please add an address.
+        <div className="rounded-2xl bg-white dark:bg-[#0B0F17] border border-dashed border-amber-500/30 dark:border-amber-500/20 p-12 text-center space-y-4 shadow-sm transition-colors">
+          <MapPin className="w-12 h-12 text-amber-600 dark:text-amber-400/50 mx-auto" />
+          <h4 className="font-cinzel text-lg font-bold text-slate-900 dark:text-white">
+            No Destinations Configured
+          </h4>
+          <p className="text-xs text-slate-600 dark:text-slate-400 max-w-sm mx-auto">
+            You have not registered any delivery destinations yet. Add an address to facilitate swift white-glove transit.
           </p>
           <button
-            onClick={() => onEdit(null)} // Trigger form to add new address
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all"
+            onClick={() => onEdit(null)}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-cinzel font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 cursor-pointer"
           >
-            Add Your First Address
+            <Plus className="w-4 h-4" />
+            <span>Add First Address</span>
           </button>
         </div>
       ) : (
@@ -50,76 +39,74 @@ const AddressList = ({
           {addresses.map((address) => (
             <div
               key={address._id}
-              className={`border rounded-lg p-5 relative ${
+              className={`rounded-2xl p-6 relative transition-all duration-300 flex flex-col justify-between ${
                 address.isDefault
-                  ? "border-blue-500 bg-blue-50 shadow-md"
-                  : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
-              } transition-all`}
+                  ? "bg-amber-500/5 dark:bg-[#0D1424] border-2 border-amber-600/70 dark:border-amber-400/70 shadow-[0_8px_30px_rgba(212,175,55,0.15)]"
+                  : "bg-white dark:bg-[#0B0F17] border border-slate-200 dark:border-white/5 hover:border-amber-500/40 shadow-sm"
+              }`}
             >
               {address.isDefault && (
-                <span className="absolute top-2 right-2 bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
-                  Default
-                </span>
+                <div className="absolute top-4 right-4 flex items-center gap-1 bg-amber-500/20 border border-amber-500/40 text-amber-800 dark:text-amber-300 text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full">
+                  <CheckCircle2 className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                  <span>Primary Vault Destination</span>
+                </div>
               )}
-              <div className="mb-4">
-                <h4 className="font-bold text-lg">{address.fullName}</h4>
-                <p className="text-sm text-gray-600">
-                  {address.phone}
-                  {address.alternatePhone && `, ${address.alternatePhone}`}
-                </p>
+
+              <div className="space-y-3">
+                <div className="space-y-0.5">
+                  <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500 dark:text-slate-400 block">
+                    Recipient
+                  </span>
+                  <h4 className="font-cinzel text-base font-bold text-slate-900 dark:text-white">
+                    {address.fullName}
+                  </h4>
+                  <p className="text-xs font-mono text-slate-500 dark:text-slate-400">
+                    Phone: {address.phone}
+                    {address.alternatePhone && ` • Alt: ${address.alternatePhone}`}
+                  </p>
+                </div>
+
+                <div className="text-xs text-slate-600 dark:text-slate-300 space-y-0.5 pt-2 border-t border-slate-200 dark:border-white/5">
+                  <p className="text-slate-900 dark:text-white font-medium">{address.streetAddress}</p>
+                  {address.landmark && (
+                    <p className="text-slate-500 dark:text-slate-400 text-[11px]">
+                      Landmark: {address.landmark}
+                    </p>
+                  )}
+                  <p>
+                    {address.city}, {address.state} - {address.postalCode}
+                  </p>
+                  <p className="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                    {address.country}
+                  </p>
+                </div>
               </div>
-              <div className="mb-4">
-                <p className="text-gray-700">{address.streetAddress}</p>
-                {address.landmark && (
-                  <p className="text-gray-700">Landmark: {address.landmark}</p>
-                )}
-                <p className="text-gray-700">
-                  {address.city}, {address.state} - {address.postalCode}
-                </p>
-                <p className="text-gray-700">{address.country}</p>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200">
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2 mt-6 pt-4 border-t border-slate-200 dark:border-white/5">
                 {!address.isDefault && (
                   <button
                     onClick={() => onSetDefault(address._id)}
                     disabled={isSettingDefault}
-                    className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded border border-gray-300 hover:bg-gray-200 transition-all disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-600/30 dark:border-amber-500/30 text-xs font-cinzel uppercase tracking-wider transition-all disabled:opacity-40 cursor-pointer font-semibold"
                   >
-                    {isSettingDefault ? "Setting..." : "Set as Default"}
+                    {isSettingDefault ? "Configuring..." : "Set as Primary"}
                   </button>
                 )}
                 <button
                   onClick={() => onEdit(address)}
                   disabled={isDeleting}
-                  className="px-3 py-1 text-sm bg-blue-50 text-blue-700 rounded border border-blue-200 hover:bg-blue-100 transition-all disabled:opacity-50 flex items-center"
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10 text-xs font-cinzel uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 mr-1"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                  </svg>
-                  Edit
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit</span>
                 </button>
                 <button
                   onClick={() => onDelete(address._id)}
-                  className="px-3 py-1 text-sm bg-red-50 text-red-700 rounded border border-red-200 hover:bg-red-100 transition-all disabled:opacity-50 flex items-center"
+                  className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-cinzel uppercase tracking-wider flex items-center gap-1.5 transition-all ml-auto cursor-pointer font-semibold"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 mr-1"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  {isDeleting ? "Deleting..." : "Delete"}
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Remove</span>
                 </button>
               </div>
             </div>

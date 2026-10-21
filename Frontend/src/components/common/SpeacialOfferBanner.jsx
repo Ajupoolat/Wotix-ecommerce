@@ -1,95 +1,75 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-
-const validateProps = ({ products }) => {
-  if (products && !Array.isArray(products)) {
-    throw new Error("SpecialOfferBanner: 'products' prop must be an array");
-  }
-  if (products?.length) {
-    products.forEach((product, index) => {
-      if (product.offer) {
-        if (typeof product.offer !== "object" || product.offer === null) {
-          throw new Error(
-            `SpecialOfferBanner: 'products[${index}].offer' must be an object`
-          );
-        }
-        if (typeof product.offer.discountValue !== "number") {
-          throw new Error(
-            `SpecialOfferBanner: 'products[${index}].offer.discountValue' must be a number`
-          );
-        }
-        if (typeof product.offer.title !== "string") {
-          throw new Error(
-            `SpecialOfferBanner: 'products[${index}].offer.title' must be a string`
-          );
-        }
-      }
-    });
-  }
-};
+import { Sparkles, ArrowRight, Timer, Percent } from "lucide-react";
 
 const SpecialOfferBanner = ({ products }) => {
   const navigate = useNavigate();
 
-  // Validate props 
-  validateProps({ products });
+  // Safely check for products with offers without throwing runtime exceptions
+  if (!Array.isArray(products) || products.length === 0) {
+    return null;
+  }
 
-  if (!products?.some((product) => product.offer)) {
+  const productsWithOffer = products.filter(
+    (p) => p && p.offer && typeof p.offer === "object" && typeof p.offer.discountValue === "number"
+  );
+
+  if (productsWithOffer.length === 0) {
     return null;
   }
 
   const maxDiscount = Math.max(
-    ...products.filter((p) => p.offer).map((p) => p.offer.discountValue)
+    ...productsWithOffer.map((p) => p.offer.discountValue || 0)
   );
 
-  // Handle button click with loading state
-  const handleShopNow = () => {
-    setTimeout(() => {
-      navigate("/shop");
-    }, 500); // Simulated delay
-  };
+  if (maxDiscount <= 0) return null;
 
   return (
-    <div className="relative bg-black text-white text-center py-8 px-4 sm:px-8 mb-8 rounded-xl shadow-lg overflow-hidden mx-2 sm:mx-4 transition-all hover:shadow-xl">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width%3D%2240%22 height%3D%2240%22 viewBox%3D%220 0 40 40%22 xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath d%3D%22M20 0v20h20V0H20zm0 40V20h20v20H20zM0 20v20h20V20H0zm0-20v20h20V0H0z%22 fill%3D%22%23D1D5DB%22 fill-opacity%3D%220.1%22/%3E%3C/svg%3E')] opacity-10"></div>
+    <div className="relative overflow-hidden rounded-2xl mx-4 sm:mx-6 lg:mx-8 mb-10 border border-amber-500/30 bg-gradient-to-r from-[#0C101A] via-[#141A28] to-[#0C101A] shadow-[0_10px_35px_rgba(0,0,0,0.5)]">
+      {/* Ambient gold glow backdrops */}
+      <div className="absolute top-0 right-1/4 w-72 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-10 -left-10 w-64 h-32 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Animated light gold accent */}
-      <div className="absolute top-3 left-3 w-5 h-5 bg-[#F3E5AB] rounded-full opacity-40 animate-ping"></div>
-      <div className="absolute bottom-3 right-3 w-6 h-6 bg-[#F3E5AB] rounded-full opacity-30 animate-pulse"></div>
+      {/* Decorative corner tag */}
+      <div className="absolute top-0 right-0">
+        <div className="flex items-center gap-1.5 bg-gradient-to-l from-amber-500 to-amber-600 text-slate-950 text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 px-4 rounded-bl-xl shadow-lg">
+          <Sparkles className="w-3 h-3" />
+          <span>Exclusive Vault Access</span>
+        </div>
+      </div>
 
-      {/* Main content */}
-      <h2 className="relative text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3 tracking-wide text-white animate-fade-in">
-        ✨ FLASH SALE! Up to{" "}
-        <span className="text-[#F3E5AB] font-black">{maxDiscount}%</span> OFF ✨
-      </h2>
-      <p className="relative text-base sm:text-lg font-medium text-gray-300 mb-4 max-w-xl mx-auto">
-        Exclusive deals on luxury watches. Don’t miss out!
-      </p>
+      <div className="px-6 py-7 sm:px-10 sm:py-9 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+        {/* Left Content */}
+        <div className="text-center md:text-left max-w-xl space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium tracking-wider uppercase mb-1">
+            <Timer className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+            <span>Limited Allocation Window</span>
+          </div>
 
-      {/* CTA Button */}
-      <button
-        onClick={handleShopNow}
-        className="relative bg-[#F3E5AB] hover:bg-[#E6D48F] text-black font-bold text-base sm:text-lg py-2.5 px-8 rounded-full shadow-md transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#F3E5AB]/50"
-      >
-        SHOP NOW
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5 inline-block ml-2"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path
-            fillRule="evenodd"
-            d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
-            clipRule="evenodd"
-          />
-        </svg>
-      </button>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-cinzel text-white tracking-wide">
+            Private Vault Sale: Up to{" "}
+            <span className="bg-gradient-to-r from-amber-300 via-amber-200 to-yellow-500 bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(212,175,55,0.4)]">
+              {maxDiscount}% Privilege
+            </span>
+          </h2>
 
-      {/* Corner badge */}
-      <div className="absolute top-0 right-0 bg-[#F3E5AB] text-black text-xs sm:text-sm font-bold px-3 py-1 rounded-bl-lg shadow-sm">
-        LIMITED OFFER
+          <p className="text-xs sm:text-sm text-slate-300/80 leading-relaxed font-sans">
+            Acquire mastercrafted horological complications at curated collector privileges.
+            Available strictly while allocated vault reserve lasts.
+          </p>
+        </div>
+
+        {/* Right CTA */}
+        <div className="shrink-0 flex flex-col sm:flex-row items-center gap-3">
+          <button
+            onClick={() => navigate("/shop?offers=true")}
+            className="group relative inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 font-semibold text-xs sm:text-sm uppercase tracking-widest shadow-[0_4px_20px_rgba(212,175,55,0.35)] hover:shadow-[0_6px_25px_rgba(212,175,55,0.55)] transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"
+          >
+            <Percent className="w-4 h-4 text-slate-950" />
+            <span>Unlock Vault Offers</span>
+            <ArrowRight className="w-4 h-4 text-slate-950 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
       </div>
     </div>
   );

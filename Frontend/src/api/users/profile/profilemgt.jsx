@@ -113,7 +113,7 @@ export const setdefaultadress = async (addressid) => {
   const userId = localStorage.getItem("userId");
 
   try {
-    const response = await api.put(
+    const response = await apiUser.put(
       `/setdefault/${addressid}/${userId}`
     );
     return response.data;

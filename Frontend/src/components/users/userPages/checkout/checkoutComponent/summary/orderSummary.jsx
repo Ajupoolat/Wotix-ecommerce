@@ -1,17 +1,17 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Tag, Sparkles, X, Check, ShieldCheck } from "lucide-react";
 import { toast } from "react-hot-toast";
+import watchPlaceholder from "@/assets/watch image.jpg";
 
 const OrderSummary = ({
   cart,
-  appliedCoupons,
+  appliedCoupons = [],
   subtotal,
   totalDiscount,
   shipping,
   finalTotal,
-  availableCoupons,
+  availableCoupons = [],
   isApplyingCoupon,
   couponForm,
   applyCouponMutate,
@@ -21,100 +21,112 @@ const OrderSummary = ({
 }) => {
   return (
     <div className="w-full">
-      <div className="bg-gray-50 p-6 rounded-lg mb-8">
-        <h2 className="text-lg font-medium mb-4">Order Summary</h2>
-        <div className="space-y-4 mb-6">
-          {cart?.items?.map((item) => (
-            <div
-              key={item.product._id}
-              className="flex items-start border-b pb-4"
-            >
-              <div className="flex-1">
-                <h3 className="font-medium">{item.product.name}</h3>
-                <p className="text-sm text-gray-600">
-                  {item.product.brand}
-                </p>
-                <div className="flex flex-col">
-                  {item.discountedPrice < item.originalPrice ? (
-                    <>
-                      <span className="font-bold text-green-600">
-                        ₹{(item.discountedPrice * item.quantity).toLocaleString("en-IN")}/-
-                      </span>
-                      <span className="text-xs text-gray-500 line-through">
-                        ₹{(item.originalPrice * item.quantity).toLocaleString("en-IN")}/-
-                      </span>
-                    </>
-                  ) : (
-                    <span className="font-bold">
-                      ₹{(item.discountedPrice * item.quantity).toLocaleString("en-IN")}/-
-                    </span>
-                  )}
-                  {item.offer && (
-                    <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded mt-1 inline-block">
-                      {item.offer.title} {item.offer.discountValue}% OFF
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm">Qty: {item.quantity}</p>
-              </div>
-              <div className="w-24 h-24">
-                <img
-                  src={item.product.images?.[0] || "https://via.placeholder.com/100"}
-                  alt={item.product.name}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            </div>
-          ))}
+      <div className="rounded-2xl bg-white dark:bg-[#0B0F17] border border-slate-200 dark:border-amber-500/20 p-6 shadow-xl dark:shadow-2xl space-y-6 transition-colors">
+        <div className="pb-3 border-b border-slate-200 dark:border-white/5 flex items-center justify-between">
+          <h2 className="font-cinzel text-xs font-bold uppercase tracking-[0.18em] text-amber-800 dark:text-amber-300">
+            Order Review & Valuation
+          </h2>
+          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
+            {cart?.items?.length || 0} Timepieces
+          </span>
         </div>
 
-        {/* Coupon Section */}
-        <div className="mb-6">
-          {availableCoupons?.length > 0 && !appliedCoupons.length && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-              <p className="text-sm text-green-800 font-medium mb-2">
-                Available Coupons:
-              </p>
-              <ul className="space-y-2">
-                {availableCoupons.map((coupon) => (
-                  <li
-                    key={coupon._id}
-                    className="flex justify-between items-center cursor-pointer hover:bg-gray-100 p-2 rounded"
-                    onClick={() => {
-                      if (countapply <= 0) {
-                        couponForm.setValue("couponCode", coupon.code);
-                        applyCouponMutate(coupon.code);
-                      } else {
-                        toast.error("Only one coupon can be applied");
-                      }
+        {/* Cart items list */}
+        <div className="space-y-3.5 max-h-72 overflow-y-auto pr-1">
+          {cart?.items?.map((item) => {
+            const product = item.product || {};
+            const img = product.images?.[0] || watchPlaceholder;
+            const originalPrice = item.originalPrice ?? product.price ?? 0;
+            const discountedPrice = item.discountedPrice ?? item.price ?? originalPrice;
+            const hasOffer = discountedPrice < originalPrice;
+
+            return (
+              <div
+                key={product._id}
+                className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-[#0D121D] border border-slate-200/80 dark:border-white/5 transition-colors"
+              >
+                <div className="w-14 h-14 rounded-lg bg-white dark:bg-[#080B11] p-1 border border-slate-200 dark:border-white/10 shrink-0">
+                  <img
+                    src={img}
+                    alt={product.name}
+                    className="w-full h-full object-contain filter drop-shadow"
+                    onError={(e) => {
+                      e.target.src = watchPlaceholder;
                     }}
-                  >
-                    <div>
-                      <span className="font-bold">{coupon.code}</span>
-                      {coupon.discountType === "flat"
-                        ? ` (₹${coupon.discountValue} off)`
-                        : ` (${coupon.discountValue}% off)`}
-                      {coupon.minPurchaseAmount > 0 && (
-                        <span className="block text-xs">
-                          Min. purchase: ₹{coupon.minPurchaseAmount}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-cinzel text-xs font-semibold text-slate-900 dark:text-white truncate">
+                    {product.name}
+                  </h4>
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                    <span>Qty: {item.quantity}</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-cinzel text-amber-800 dark:text-amber-300 font-bold">
+                        ₹{(discountedPrice * item.quantity).toLocaleString("en-IN")}
+                      </span>
+                      {hasOffer && (
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 line-through">
+                          ₹{(originalPrice * item.quantity).toLocaleString("en-IN")}
                         </span>
                       )}
                     </div>
-                  </li>
-                ))}
-              </ul>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Available Coupons Banner */}
+        {availableCoupons?.length > 0 && !appliedCoupons.length && (
+          <div className="rounded-xl bg-amber-500/10 border border-amber-500/25 p-3.5 space-y-2">
+            <div className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300 text-xs font-cinzel font-semibold tracking-wider uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Privilege Vouchers Available</span>
             </div>
-          )}
+            <div className="space-y-1.5">
+              {availableCoupons.map((coupon) => (
+                <div
+                  key={coupon._id}
+                  onClick={() => {
+                    if (countapply <= 0) {
+                      couponForm.setValue("couponCode", coupon.code);
+                      applyCouponMutate(coupon.code);
+                    } else {
+                      toast.error("Only one privilege voucher can be redeemed per transaction.");
+                    }
+                  }}
+                  className="flex items-center justify-between p-2 rounded-lg bg-white/90 dark:bg-[#0D121D]/80 hover:bg-slate-100 dark:hover:bg-[#141C2E] border border-amber-500/20 text-xs cursor-pointer transition-all"
+                >
+                  <div className="flex items-center gap-2">
+                    <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    <span className="font-mono font-bold text-amber-800 dark:text-amber-300">{coupon.code}</span>
+                    <span className="text-[11px] text-slate-600 dark:text-slate-300">
+                      ({coupon.discountType === "flat" ? `₹${coupon.discountValue} Off` : `${coupon.discountValue}% Off`})
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-amber-700 dark:text-amber-400 uppercase tracking-wider font-cinzel font-semibold">
+                    Tap to Apply
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Voucher Input Form */}
+        <div>
           <Form {...couponForm}>
             <form
               onSubmit={couponForm.handleSubmit((data) => {
                 if (countapply <= 0) {
                   applyCouponMutate(data.couponCode);
                 } else {
-                  toast.error("Only one coupon can be applied");
+                  toast.error("Only one privilege voucher can be applied.");
                 }
               })}
-              className="flex"
+              className="flex gap-2"
             >
               <FormField
                 control={couponForm.control}
@@ -122,93 +134,97 @@ const OrderSummary = ({
                 render={({ field }) => (
                   <FormItem className="flex-1">
                     <FormControl>
-                      <Input
+                      <input
                         type="text"
-                        placeholder="Enter coupon code"
-                        className="bg-gray-200 border-0"
+                        placeholder="Enter privilege voucher code"
+                        className="w-full bg-slate-50 dark:bg-[#111622] text-xs text-slate-800 dark:text-slate-200 uppercase tracking-widest px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 focus:outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500/30 dark:focus:ring-amber-400/30 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:normal-case placeholder:tracking-normal"
                         {...field}
-                        onChange={(e) => {
-                          field.onChange(e);
-                        }}
                         disabled={isApplyingCoupon}
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-[11px] text-rose-500 dark:text-rose-400 mt-1" />
                   </FormItem>
                 )}
               />
-              <Button
+              <button
                 type="submit"
-                className="ml-2 bg-black text-white hover:bg-gray-800"
                 disabled={isApplyingCoupon}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-cinzel font-bold uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer shadow-md"
               >
-                {isApplyingCoupon ? "Applying..." : "Apply"}
-              </Button>
+                {isApplyingCoupon ? "Validating..." : "Apply"}
+              </button>
             </form>
           </Form>
+
+          {/* Applied Coupons Tag */}
           {appliedCoupons.length > 0 && (
-            <div className="mt-4">
-              <h4 className="text-sm font-medium mb-2">Applied Coupons:</h4>
-              <ul className="space-y-2">
-                {appliedCoupons.map((coupon) => (
-                  <li
-                    key={coupon._id}
-                    className="flex justify-between items-center bg-gray-200 p-2 rounded"
+            <div className="mt-3 space-y-1.5">
+              {appliedCoupons.map((coupon) => (
+                <div
+                  key={coupon._id}
+                  className="flex items-center justify-between p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs"
+                >
+                  <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+                    <Check className="w-3.5 h-3.5" />
+                    <span className="font-mono font-bold">{coupon.code}</span>
+                    <span>
+                      ({coupon.discountType === "flat" ? `₹${coupon.discountValue} Off` : `${coupon.discountValue}% Off`})
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveCoupon(coupon._id)}
+                    className="text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-colors p-1"
                   >
-                    <div>
-                      <span className="font-medium">{coupon.code}</span> -
-                      {coupon.discountType === "flat" ? (
-                        <span> ₹{coupon.discountValue} off</span>
-                      ) : (
-                        <span> {coupon.discountValue}% off</span>
-                      )}
-                      {coupon.minPurchaseAmount > 0 && (
-                        <span className="block text-xs">
-                          Min. purchase: ₹{coupon.minPurchaseAmount}
-                        </span>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveCoupon(coupon._id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      Remove
-                    </Button>
-                  </li>
-                ))}
-              </ul>
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
+
           {couponError && (
-            <p className="text-red-500 text-sm mt-2">{couponError}</p>
+            <p className="text-rose-500 dark:text-rose-400 text-xs mt-1.5">{couponError}</p>
           )}
         </div>
 
-        {/* Price Summary */}
-        <div className="space-y-2 mb-6">
-          <div className="flex justify-between py-2">
+        {/* Valuation Breakdown */}
+        <div className="space-y-2.5 pt-3 border-t border-slate-200 dark:border-white/5 text-xs text-slate-600 dark:text-slate-300">
+          <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>₹{subtotal.toLocaleString("en-IN")}/-</span>
+            <span className="font-mono text-slate-900 dark:text-white font-medium">
+              ₹{Number(subtotal).toLocaleString("en-IN")}
+            </span>
           </div>
+
           {appliedCoupons.length > 0 && (
-            <div className="flex justify-between py-2">
-              <span>Discount</span>
-              <span className="text-green-600">
-                -₹{totalDiscount.toLocaleString("en-IN")}/-
+            <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+              <span>Privilege Voucher Discount</span>
+              <span className="font-mono font-semibold">
+                -₹{Number(totalDiscount).toLocaleString("en-IN")}
               </span>
             </div>
           )}
-          <div className="flex justify-between py-2">
-            <span>Shipping</span>
-            <span>₹{shipping.toLocaleString("en-IN")}/-</span>
-          </div>
-          <div className="flex justify-between py-2 border-t pt-2">
-            <span className="font-medium">Total</span>
-            <span className="font-bold">
-              ₹{finalTotal.toLocaleString("en-IN", { maximumFractionDigits: 2 })}/-
+
+          <div className="flex justify-between">
+            <span>Insured White-Glove Transit</span>
+            <span className="font-mono text-slate-900 dark:text-white font-medium">
+              ₹{Number(shipping).toLocaleString("en-IN")}
             </span>
+          </div>
+
+          <div className="pt-3 border-t border-slate-200 dark:border-white/5 flex justify-between items-baseline">
+            <span className="font-cinzel text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 font-semibold">
+              Total Payable
+            </span>
+            <div className="text-right">
+              <span className="font-cinzel text-2xl font-bold text-amber-800 dark:text-amber-300">
+                ₹{Number(finalTotal).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+              </span>
+              <span className="block text-[10px] text-slate-500 font-mono">
+                All Import & Luxury Duties Included
+              </span>
+            </div>
           </div>
         </div>
       </div>
