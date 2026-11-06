@@ -2,10 +2,17 @@ const {
   adminAuthResponse,
 } = require("../../enums/Middleware/Auth/Admin/authAdmin");
 const jwt = require("jsonwebtoken");
+
 const adminAuthorization = (req, res, next) => {
-  const admintoken = req.cookies.tokenadmin;
+  let admintoken = req.cookies.tokenadmin;
   const TOKENADMIN = process.env.JWT_SECRET_ADMIN;
 
+  if (!admintoken && req.headers.authorization) {
+    const parts = req.headers.authorization.split(" ");
+    if (parts.length === 2 && parts[0] === "Bearer") {
+      admintoken = parts[1];
+    }
+  }
 
   if (!admintoken) {
     return res
@@ -19,10 +26,12 @@ const adminAuthorization = (req, res, next) => {
     if (!decocded.isAdmin)
       return res
         .status(adminAuthResponse.NOT_ADMIN.statusCode)
-        .json({message:adminAuthResponse.NOT_ADMIN.message});
-        next();
+        .json({ message: adminAuthResponse.NOT_ADMIN.message });
+    next();
   } catch (error) {
-    res.status(adminAuthResponse.INVALID_TOKEN.statusCode).json({message:adminAuthResponse.INVALID_TOKEN.message})
+    res.status(adminAuthResponse.INVALID_TOKEN.statusCode).json({
+      message: adminAuthResponse.INVALID_TOKEN.message,
+    });
   }
 };
 

@@ -26,9 +26,6 @@ const allowedOrigins = [
   "http://localhost:5174",
   "http://localhost:3000",
 ]
-  .flatMap((url) => (url ? url.split(",") : []))
-  .map((url) => url.trim().replace(/\/$/, ""))
-  .filter(Boolean);
 
 const corOptions = {
   origin: (origin, callback) => {

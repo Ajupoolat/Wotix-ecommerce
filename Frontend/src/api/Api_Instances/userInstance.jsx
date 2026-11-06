@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_BASE_URL_USER = import.meta.env.VITE_API_URL_USER;
+const API_BASE_URL_USER = import.meta.env.VITE_API_URL_USER || "/userapi/user";
 
 const apiUser = axios.create({
   baseURL: API_BASE_URL_USER,
@@ -8,6 +8,10 @@ const apiUser = axios.create({
 
 apiUser.interceptors.request.use(
   (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {

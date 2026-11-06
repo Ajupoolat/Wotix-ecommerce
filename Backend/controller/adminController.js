@@ -24,9 +24,14 @@ const intialization = async () => {
 //verify the admin
 
 const verrifyadmin = (req, res) => {
-  const admintoken = req.cookies.tokenadmin;
+  let admintoken = req.cookies.tokenadmin;
+  if (!admintoken && req.headers.authorization) {
+    const parts = req.headers.authorization.split(" ");
+    if (parts.length === 2 && parts[0] === "Bearer") {
+      admintoken = parts[1];
+    }
+  }
 
-    
   if (!admintoken) return res.status(401).json({ message: "Unauthorized" });
 
   jwt.verify(admintoken, process.env.JWT_SECRET_ADMIN, (err, admin) => {

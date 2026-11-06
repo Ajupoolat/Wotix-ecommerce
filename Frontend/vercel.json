@@ -1,5 +1,16 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    {
+      "source": "/userapi/:path*",
+      "destination": "https://wotix-server.onrender.com/userapi/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://wotix-server.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

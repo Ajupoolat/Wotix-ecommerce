@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL_ADMIN = import.meta.env.VITE_API_URL_ADMIN;
+const API_URL_ADMIN = import.meta.env.VITE_API_URL_ADMIN || "/api/admin";
 const apiAdmin = axios.create({
   baseURL: API_URL_ADMIN,
   withCredentials: true,
@@ -8,9 +8,12 @@ const apiAdmin = axios.create({
 
 apiAdmin.interceptors.request.use(
   (config) => {
+    const adminToken = localStorage.getItem("tokenadmin");
+    if (adminToken) {
+      config.headers.Authorization = `Bearer ${adminToken}`;
+    }
     return config;
   },
-
   (error) => {
     return Promise.reject(error);
   }

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import apiUser from "@/api/Api_Instances/userInstance";
 import { logoutuser } from "@/api/users/signup/signupcall";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -9,7 +9,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const API_BASE_URL = import.meta.env.VITE_API_URL;
+  const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const [socket, setSocket] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem("isAuthenticated") === "true";
@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const newSocket = io(API_BASE_URL, {
+    const newSocket = io(SOCKET_URL, {
       withCredentials: true,
       autoConnect: false,
     });
@@ -36,14 +36,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const googleUserId = searchParams.get("id");
       const success = searchParams.get("success");
+      const googleToken = searchParams.get("token");
+
+      if (googleToken) {
+        localStorage.setItem("token", googleToken);
+      }
 
       if (success === "true" && googleUserId) {
-        const response = await axios.get(
-          `${API_BASE_URL}/userapi/user/verifyuser`,
-          {
-            withCredentials: true,
-          }
-        );
+        const response = await apiUser.get('/verifyuser');
 
         setIsAuthenticated(true);
         localStorage.setItem("isAuthenticated", "true");
@@ -64,12 +64,7 @@ export const AuthProvider = ({ children }) => {
           });
         }
       } else {
-        const response = await axios.get(
-          `${API_BASE_URL}/userapi/user/verifyuser`,
-          {
-            withCredentials: true,
-          }
-        );
+        const response = await apiUser.get('/verifyuser');
 
         setIsAuthenticated(true);
         localStorage.setItem("isAuthenticated", "true");
@@ -105,14 +100,14 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/userapi/user/login`,
-        credentials,
-        { withCredentials: true }
-      );
+      const response = await apiUser.post('/login', credentials);
 
       setIsAuthenticated(true);
       localStorage.setItem("isAuthenticated", "true");
+
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+      }
 
       const username = response.data.userfind.firstName;
       const userId = response.data.userfind._id;
@@ -141,6 +136,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("username");
     localStorage.removeItem("userId");
     localStorage.removeItem("email");
+    localStorage.removeItem("token");
     window.location.href = "/login";
     if (socket) {
       socket.disconnect();

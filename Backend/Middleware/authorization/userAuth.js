@@ -4,9 +4,15 @@ const {
 const jwt = require("jsonwebtoken");
 
 const userAuthorization = (req, res, next) => {
-  const token = req.cookies.token;
+  let token = req.cookies.token;
   const TOKENUSER = process.env.JWT_USER_SECRET;
 
+  if (!token && req.headers.authorization) {
+    const parts = req.headers.authorization.split(" ");
+    if (parts.length === 2 && parts[0] === "Bearer") {
+      token = parts[1];
+    }
+  }
 
   if (!token) {
     return res
