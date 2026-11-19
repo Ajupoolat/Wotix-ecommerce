@@ -4,15 +4,8 @@ const {
 const jwt = require("jsonwebtoken");
 
 const adminAuthorization = (req, res, next) => {
-  let admintoken = req.cookies.tokenadmin;
+  const admintoken = req.cookies.tokenadmin;
   const TOKENADMIN = process.env.JWT_SECRET_ADMIN;
-
-  if (!admintoken && req.headers.authorization) {
-    const parts = req.headers.authorization.split(" ");
-    if (parts.length === 2 && parts[0] === "Bearer") {
-      admintoken = parts[1];
-    }
-  }
 
   if (!admintoken) {
     return res

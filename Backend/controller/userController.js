@@ -463,7 +463,7 @@ const googleauth = async (req, res) => {
     res.redirect(
       `${process.env.FRONTEND_URL}?success=true&name=${encodeURIComponent(
         userfind.firstName || ""
-      )}&id=${userfind._id || ""}&token=${token}`
+      )}&id=${userfind._id || ""}`
     );
   } catch (error) {
     res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
@@ -505,20 +505,14 @@ const login = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    res.status(200).json({ message: "Login successful", userfind, token });
+    res.status(200).json({ message: "Login successful", userfind });
   } catch (error) {
     res.status(500).json({ message: "something error" });
   }
 };
 
 const verifyToken = async (req, res) => {
-  let token = req.cookies.token;
-  if (!token && req.headers.authorization) {
-    const parts = req.headers.authorization.split(" ");
-    if (parts.length === 2 && parts[0] === "Bearer") {
-      token = parts[1];
-    }
-  }
+  const token = req.cookies.token;
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized: No token provided" });

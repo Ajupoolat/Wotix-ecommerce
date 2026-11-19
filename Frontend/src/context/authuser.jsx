@@ -36,11 +36,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const googleUserId = searchParams.get("id");
       const success = searchParams.get("success");
-      const googleToken = searchParams.get("token");
-
-      if (googleToken) {
-        localStorage.setItem("token", googleToken);
-      }
 
       if (success === "true" && googleUserId) {
         const response = await apiUser.get('/verifyuser');
@@ -105,10 +100,6 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       localStorage.setItem("isAuthenticated", "true");
 
-      if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
-      }
-
       const username = response.data.userfind.firstName;
       const userId = response.data.userfind._id;
       const email = response.data.userfind.email;
@@ -136,7 +127,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("username");
     localStorage.removeItem("userId");
     localStorage.removeItem("email");
-    localStorage.removeItem("token");
     window.location.href = "/login";
     if (socket) {
       socket.disconnect();

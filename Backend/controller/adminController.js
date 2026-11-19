@@ -24,13 +24,7 @@ const intialization = async () => {
 //verify the admin
 
 const verrifyadmin = (req, res) => {
-  let admintoken = req.cookies.tokenadmin;
-  if (!admintoken && req.headers.authorization) {
-    const parts = req.headers.authorization.split(" ");
-    if (parts.length === 2 && parts[0] === "Bearer") {
-      admintoken = parts[1];
-    }
-  }
+  const admintoken = req.cookies.tokenadmin;
 
   if (!admintoken) return res.status(401).json({ message: "Unauthorized" });
 
@@ -71,7 +65,7 @@ const adminlogin = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "Login successful", tokenadmin: tokenadmin });
+      .json({ message: "Login successful" });
   } catch (error) {
     res.status(500).json({ message: "something error" });
   }
