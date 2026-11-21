@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import logo from "../../../assets/Wotix removed-BG.png";
 import basketballHoop from "../../../assets/baskectBall.jpg";
 import { Link, useNavigate } from "react-router-dom";
-import { sendOtpforgot } from "@/api/users/signup/signupcall";
+import { requestOtpApi } from "@/api/common/otpApi";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -22,7 +22,7 @@ const ForgotPasswordEmail = () => {
 
   // Mutation for sending OTP
   const { mutate } = useMutation({
-    mutationFn: sendOtpforgot,
+    mutationFn: (email) => requestOtpApi({ email, type: "forgot" }),
     onSuccess: () => {
       toast.success("OTP sent successfully!");
       navigate("/verify-otp", { state: { emailid: email } });

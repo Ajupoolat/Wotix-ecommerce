@@ -1,22 +1,12 @@
 const User = require("../models/userSchema");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const userSchema = require("../models/userSchema");
 const wallet = require("../models/wallet");
-const { RedisClient } = require("../config/redisUpstash");
+const otpService = require("../services/otpService");
 
 const JWT_USER_SECRET = process.env.JWT_USER_SECRET;
-
-let otpStore = {};
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
 
 const sendOtp = async (req, res) => {
   const { email } = req.body;
@@ -28,23 +18,13 @@ const sendOtp = async (req, res) => {
     return res.status(400).json({ message: "Email already registered" });
   }
 
-  // Generate OTP
-  const otp = crypto.randomInt(100000, 999999).toString();
-  console.log('the otp of users:', otp)
-
-  const expiry = Date.now() + 300 * 1000; // 30 seconds
-  otpStore[email] = { otp, expiry };
-
-  console.log('the otpStore is: ',otpStore)
-  // Send OTP through Email
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Your OTP Code",
-    text: `Your OTP is: ${otp}. It is valid for 5 minutes.`,
-  };
   try {
-    await transporter.sendMail(mailOptions);
+    await otpService.sendAndStoreOtp({
+      email,
+      purpose: "signup",
+      ttl: 300,
+      subject: "Your WOTIX Signup Verification Code",
+    });
     res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to send OTP", error });
@@ -52,7 +32,7 @@ const sendOtp = async (req, res) => {
 };
 
 const sendOtpeditprofile = async (req, res) => {
-  const { email, userId } = req.body; // Assuming you're passing userId from frontend
+  const { email, userId } = req.body;
 
   if (!email || !userId) {
     return res.status(400).json({ message: "Email and userId are required" });
@@ -67,19 +47,13 @@ const sendOtpeditprofile = async (req, res) => {
       .json({ message: "Email already registered by another user" });
   }
 
-  // Generate and send OTP
-  const otp = crypto.randomInt(100000, 999999).toString();
-
-  otpStore[email] = otp;
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Your OTP Code",
-    text: `Your OTP is: ${otp}. It is valid for 30 seconds.`,
-  };
   try {
-    await transporter.sendMail(mailOptions);
+    await otpService.sendAndStoreOtp({
+      email,
+      purpose: "editprofile",
+      ttl: 300,
+      subject: "Your WOTIX Profile Update Verification Code",
+    });
     res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to send OTP", error });
@@ -97,25 +71,19 @@ const sendotpchangepassword = async (req, res) => {
   const existingUser = await User.findOne({ _id: userId });
 
   // If email exists AND it's not the current user's own email
-  if (existingUser.email !== emailId) {
+  if (!existingUser || existingUser.email !== emailId) {
     return res
       .status(400)
       .json({ message: "please enter your resgistred email" });
   }
 
-  // Generate and send OTP
-  const otp = crypto.randomInt(100000, 999999).toString();
-
-  otpStore[emailId] = otp;
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: emailId,
-    subject: "Your OTP Code",
-    text: `Your OTP is: ${otp}. It is valid for 30 seconds.`,
-  };
   try {
-    await transporter.sendMail(mailOptions);
+    await otpService.sendAndStoreOtp({
+      email: emailId,
+      purpose: "forgot",
+      ttl: 300,
+      subject: "Your WOTIX Password Change Verification Code",
+    });
     res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to send OTP", error });
@@ -124,29 +92,19 @@ const sendotpchangepassword = async (req, res) => {
 
 const sendOtpforgot = async (req, res) => {
   const { email } = req.body;
-
-
   if (!email) return res.status(400).json({ message: "Email is required" });
 
   const userfind = await userSchema.findOne({ email });
 
-  if(!userfind)return res.status(404).json({message:'the user not found'})
+  if (!userfind) return res.status(404).json({ message: "the user not found" });
 
-  // Generate OTP
-  const otp = crypto.randomInt(100000, 999999).toString();
-  console.log('otp of forgot passowod:',otp);
-  
-  // Store OTP in Redis with 5 minutes TTL
-  await RedisClient.set(`otp:forgot:${email}`, otp, { ex: 300 });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Your OTP Code",
-    text: `Your OTP is: ${otp}. It is valid for 5 minutes.`,
-  };
   try {
-    await transporter.sendMail(mailOptions);
+    await otpService.sendAndStoreOtp({
+      email,
+      purpose: "forgot",
+      ttl: 300,
+      subject: "Your WOTIX Password Reset Code",
+    });
     res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to send OTP", error });
@@ -164,7 +122,7 @@ const resetPassword = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized: No reset token provided" });
     }
 
-    const email = await RedisClient.get(`password-reset:${resetToken}`);
+    const email = await otpService.verifyAndConsumeResetToken(resetToken);
     if (!email) {
       return res.status(400).json({ message: "Invalid or expired reset token" });
     }
@@ -185,8 +143,6 @@ const resetPassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    // Consume the reset token
-    await RedisClient.del(`password-reset:${resetToken}`);
     res.clearCookie("resetToken", {
       httpOnly: true,
       secure: true,
@@ -216,13 +172,16 @@ const verifyOtpAndUpdateProfile = async (req, res) => {
     }
 
     // Verify OTP first
-    if (!otpStore[email] || otpStore[email] !== otp) {
+    const verification = await otpService.verifyAndConsumeOtp({
+      email,
+      otp,
+      purpose: "editprofile",
+    });
+    if (!verification.isValid) {
       return res.status(400).json({
-        message: "Invalid or expired OTP",
+        message: verification.message || "Invalid or expired OTP",
       });
     }
-
-    delete otpStore[email];
 
     // Find the existing user
     const user = await User.findOne({ _id: userId });
@@ -290,22 +249,18 @@ const verifyOtpAndUpdateProfile = async (req, res) => {
 const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
 
-  console.log('otp and email came into verifyopt controller: ', email, otp);
-
-  const storedOtp = await RedisClient.get(`otp:forgot:${email}`);
-console.log('the stored otp :',storedOtp)
-  if (!storedOtp || String(storedOtp) !== String(otp)) {
-    return res.status(400).json({ message: "Invalid or expired OTP" });
+  const verification = await otpService.verifyAndConsumeOtp({
+    email,
+    otp,
+    purpose: "forgot",
+  });
+  if (!verification.isValid) {
+    return res.status(400).json({ message: verification.message || "Invalid or expired OTP" });
   }
-
-  // Consume OTP
-  await RedisClient.del(`otp:forgot:${email}`);
 
   // Generate password reset token
   const resetToken = crypto.randomBytes(32).toString('hex');
-  
-  // Store reset token in Redis with 10 minutes TTL
-  await RedisClient.set(`password-reset:${resetToken}`, email, { ex: 600 });
+  await otpService.storeResetToken(resetToken, email, 600);
 
   // Set the token as an httpOnly cookie
   res.cookie('resetToken', resetToken, {
@@ -325,15 +280,14 @@ const signup = async (req, res) => {
     const { firstName, lastName, email, password, otp, refferalId } = req.body;
 
     // OTP Verification
-    if (!otpStore[email] || otpStore[email].otp !== otp) {
-      return res.status(400).json({ message: "Invalid OTP" });
+    const verification = await otpService.verifyAndConsumeOtp({
+      email,
+      otp,
+      purpose: "signup",
+    });
+    if (!verification.isValid) {
+      return res.status(400).json({ message: verification.message || "Invalid or expired OTP" });
     }
-
-    if (Date.now() > otpStore[email].expiry) {
-      delete otpStore[email];
-      return res.status(400).json({ message: "OTP has expired" });
-    }
-    delete otpStore[email];
 
     // Check if user exists
     const existingUser = await User.findOne({ email });

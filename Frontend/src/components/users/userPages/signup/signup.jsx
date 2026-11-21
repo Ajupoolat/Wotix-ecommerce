@@ -6,7 +6,7 @@ import logo from "../../../../assets/Wotix removed-BG.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
-import { sendOtp } from "@/api/users/signup/signupcall";
+import { requestOtpApi } from "@/api/common/otpApi";
 import toast from "react-hot-toast";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -77,7 +77,7 @@ const Signup = () => {
   });
 
   const { mutate, isPending, error } = useMutation({
-    mutationFn: sendOtp,
+    mutationFn: (email) => requestOtpApi({ email, type: "signup" }),
     onSuccess: () => {
       toast.success("OTP sent successfully!");
       navigate("/otp", { state: { email, mode: "signup" } });

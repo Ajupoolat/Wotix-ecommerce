@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { sendOtpforgot } from "../../../../api/users/signup/signupcall";
+import { requestOtpApi } from "@/api/common/otpApi";
 import { useMutation } from "@tanstack/react-query";
 import baskectball from "../../../../assets/baskectBall.jpg";
 import logo from "../../../../assets/Wotix removed-BG.png";
@@ -22,7 +22,7 @@ const EmailVerification = () => {
 
   // Mutation for sending OTP
   const { mutate } = useMutation({
-    mutationFn: sendOtpforgot,
+    mutationFn: (email) => requestOtpApi({ email, type: "forgot" }),
     onSuccess: () => {
       toast.success("OTP sent successfully!");
       navigate("/otp", { state: { emailid: email } });

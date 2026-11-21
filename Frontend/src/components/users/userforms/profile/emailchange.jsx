@@ -6,7 +6,7 @@ import basketballHoop from "../../../../assets/baskectBall.jpg";
 import logo from "../../../../assets/Wotix removed-BG.png";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import { sendotpchangepassword } from "@/api/users/profile/profilemgt";
+import { requestOtpApi } from "@/api/common/otpApi";
 import toast from "react-hot-toast";
 
 const ChangePasswordEmail = () => {
@@ -24,7 +24,8 @@ const ChangePasswordEmail = () => {
 
   // Mutation for sending OTP
   const { mutate } = useMutation({
-    mutationFn: ({ emailId, userId }) => sendotpchangepassword({emailId, userId}),
+    mutationFn: ({ emailId, userId }) =>
+      requestOtpApi({ email: emailId, type: "changepassword", userId }),
 
     onSuccess: () => {
       toast.success("OTP sent successfully!");

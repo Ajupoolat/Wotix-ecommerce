@@ -17,7 +17,7 @@ import { viewprofile } from "@/api/users/profile/profilemgt";
 import { PencilIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 import logo from "../../../../assets/Wotix removed-BG.png";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { sendotpedit } from "@/api/users/profile/profilemgt";
+import { requestOtpApi } from "@/api/common/otpApi";
 import toast from "react-hot-toast";
 
 // Zod schema for form validation
@@ -68,7 +68,8 @@ const EditProfilePage = () => {
 
   // Mutation for sending OTP
   const { mutate: sendOtpMutation, isPending } = useMutation({
-    mutationFn: ({ email, userId }) => sendotpedit(email, userId),
+    mutationFn: ({ email, userId }) =>
+      requestOtpApi({ email, type: "editprofile", userId }),
 
     onSuccess: () => {
       toast.success("OTP sent successfully!");
